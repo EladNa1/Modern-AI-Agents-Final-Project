@@ -8,8 +8,10 @@ from openai import OpenAI
 from PIL import Image
 
 BASE_URL   = os.getenv("LLMOD_BASE_URL", "https://api.llmod.ai/v1")
-API_KEY    = os.getenv("LLMOD_KEY", "sk-ifkPJSYVPR6uv1ow3UfK0g")
+API_KEY    = os.getenv("LLMOD_KEY")  # set in env / .env.local — never hardcode (old key was rotated)
 MODEL      = os.getenv("LLMOD_MODEL", "MB5R2CF-azure/gpt-5.4-mini")
+if not API_KEY:
+    raise SystemExit("Set LLMOD_KEY in your environment (see .env.example).")
 
 # Real 64x64 solid-red PNG. detail=low keeps token cost fixed (~85) regardless of size.
 _buf = io.BytesIO()

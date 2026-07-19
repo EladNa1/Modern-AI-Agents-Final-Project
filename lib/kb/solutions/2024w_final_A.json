@@ -1,0 +1,213 @@
+{
+  "exam": "2024w final A",
+  "course": "104042",
+  "questions": {
+    "1a": {
+      "id": "Q1a",
+      "points": 0,
+      "topic": "continuity of oscillatory piecewise function",
+      "problem": "1. נתונה \n\\[\nf(x)=\\begin{cases}\n\\cos\\left(\\frac{1}{x^2}\\right) & x\\ne 0\\\\\n0 & x=0\n\\end{cases}\n\\]\n(א) איזו מהטענות הבאות נכונה: האם $f$ חסומה בקטע $(0,\\infty)$?",
+      "official_solution": "(א) $f$ אינה חסומה בקטע $(0,\\infty)$ ***",
+      "final_answer": "$f$ אינה חסומה בקטע $(0,\\infty)$",
+      "notes": "The oscillation of cosine is enough to show the range is not bounded below/above by a single value? Here the official conclusion is that the function is not bounded on $(0,\\infty)$."
+    },
+    "1b": {
+      "id": "Q1b",
+      "points": 0,
+      "topic": "improper integral comparison",
+      "problem": "1. נתונה \n\\[\nf(x)=\\begin{cases}\n\\cos\\left(\\frac{1}{x^2}\\right) & x\\ne 0\\\\\n0 & x=0\n\\end{cases}\n\\]\n(ב) האם \n\\[\n\\int_0^1 f(x)\\,dx \\ge 1?\n\\]",
+      "official_solution": "(ב) \\(\\int_0^1 f(x)\\,dx \\ge 1\\)",
+      "final_answer": "כן, \\(\\int_0^1 f(x)\\,dx \\ge 1\\)",
+      "notes": "Careful: the page only marks the statement as the answer; do not assume a proof beyond what is visible."
+    },
+    "1c": {
+      "id": "Q1c",
+      "points": 6,
+      "topic": "boundedness of oscillatory function",
+      "problem": "1. נתונה \n\\[\nf(x)=\\begin{cases}\n\\cos\\left(\\frac{1}{x^2}\\right) & x\\ne 0\\\\\n0 & x=0\n\\end{cases}\n\\]\n(ג) האם \\(f(x)\\) חסומה?\n(ג) (6 נקודות) נניח ש-\\(f(x)\\) גזירה בקטע \\([a,\\infty)\\) וכי קיים \\(M>0\\) כך שלכל \\(x\\ge a\\) מתקיים \\(f'(x)\\ge M\\). הוכיחו כי \\(\\lim_{x\\to\\infty} f(x)=\\infty\\).",
+      "official_solution": "(ג) \\(f(x)\\) אינה חסומה.\nפתרון: נגרור את הפונקציה \\(f\\) גזירה ב-\\([a,\\infty)\\), ולכן גם גזירה בקטע \\([a,x]\\) לכל \\(x\\ge a\\). לפי משפט הערך הממוצע קיימת נקודה \\(c\\) כך ש-\\(a<c<x\\) ו-\\[\\frac{f(x)-f(a)}{x-a}=f'(c).\\] מכיוון שלפי הנתון \\(f'(c)\\ge M>0\\), נקבל \\[f(x)=f(a)+f'(c)(x-a)\\ge f(a)+M(x-a).\\] כאשר \\(x\\to\\infty\\), אגף ימין שואף ל-\\(\\infty\\), ולכן גם \\(f(x)\\to\\infty\\).",
+      "final_answer": "\\(f\\) אינה חסומה",
+      "notes": "The solution page states this as a conclusion; do not confuse with the cosine factor itself, which is bounded."
+    },
+    "1d": {
+      "id": "Q1d",
+      "points": 0,
+      "topic": "tangent line and derivative at origin",
+      "problem": "1. נתונה \n\\[\nf(x)=\\begin{cases}\n\\cos\\left(\\frac{1}{x^2}\\right) & x\\ne 0\\\\\n0 & x=0\n\\end{cases}\n\\]\n(ד) הישר המשיק לגרף הפונקציה בנקודה \\((0,0)\\) הוא \\(y=0\\).",
+      "official_solution": "(ד) הפונקציה גזירה באפס והישר המשיק לגרף הפונקציה בנקודה \\((0,0)\\) הוא \\(y=0\\).",
+      "final_answer": "נכון; המשיק הוא \\(y=0\\)",
+      "notes": "Key point: the page asserts differentiability at 0 and tangent line slope 0."
+    },
+    "1e": {
+      "id": "Q1e",
+      "points": 0,
+      "topic": "monotonicity",
+      "problem": "1. נתונה \n\\[\nf(x)=\\begin{cases}\n\\cos\\left(\\frac{1}{x^2}\\right) & x\\ne 0\\\\\n0 & x=0\n\\end{cases}\n\\]\n(ה) \\(f(x)\\) פונקציה עולה.",
+      "official_solution": "(ה) \\(f(x)\\) אינה פונקציה עולה.",
+      "final_answer": "\\(f\\) אינה עולה",
+      "notes": "A rapidly oscillating cosine composition is not monotone."
+    },
+    "2a": {
+      "id": "Q2a",
+      "points": 0,
+      "topic": "radius of convergence of power series",
+      "problem": "2. נתון טור החזקות\n\\[\n\\sum_{n=1}^{\\infty}\\left(1+\\sin\\left(\\frac{1}{n}\\right)\\right)^{n^2+n}\\cdot x^n\n\\]\n(א) תחום ההתכנסות שלו הוא \\(( -\\infty,\\infty )\\).",
+      "official_solution": "(א) תחום ההתכנסות שלו הוא \\((-\\infty,\\infty)\\).",
+      "final_answer": "\\((-\\infty,\\infty)\\)",
+      "notes": "The coefficient growth is handled by root/ratio considerations; the official page states the entire real line."
+    },
+    "2b": {
+      "id": "Q2b",
+      "points": 0,
+      "topic": "power series convergence at a point",
+      "problem": "2. נתון טור החזקות\n\\[\n\\sum_{n=1}^{\\infty}\\left(1+\\sin\\left(\\frac{1}{n}\\right)\\right)^{n^2+n}\\cdot x^n\n\\]\n(ב) טור החזקות מתכנס רק עבור \\(x=0\\).",
+      "official_solution": "(ב) טור החזקות מתכנס רק עבור \\(x=0\\) — לא נכון לפי הסעיף הקודם, כי תחום ההתכנסות הוא כל \\(\\mathbb{R}\\).",
+      "final_answer": "לא נכון",
+      "notes": "This is inconsistent with part (a); the official solution indicates (a) is the correct statement."
+    },
+    "2c": {
+      "id": "Q2c",
+      "points": 0,
+      "topic": "radius of convergence",
+      "problem": "2. נתון טור החזקות\n\\[\n\\sum_{n=1}^{\\infty}\\left(1+\\sin\\left(\\frac{1}{n}\\right)\\right)^{n^2+n}\\cdot x^n\n\\]\n(ג) רדיוס ההתכנסות שלו הוא \\(e^{-1}\\).",
+      "official_solution": "(ג) רדיוס ההתכנסות שלו הוא \\(e^{-1}\\) — ***",
+      "final_answer": "\\(e^{-1}\\)",
+      "notes": "The page marks this as the correct option."
+    },
+    "2d": {
+      "id": "Q2d",
+      "points": 0,
+      "topic": "radius of convergence",
+      "problem": "2. נתון טור החזקות\n\\[\n\\sum_{n=1}^{\\infty}\\left(1+\\sin\\left(\\frac{1}{n}\\right)\\right)^{n^2+n}\\cdot x^n\n\\]\n(ד) רדיוס ההתכנסות שלו הוא \\(1\\).",
+      "official_solution": "(ד) רדיוס ההתכנסות שלו הוא \\(1\\) — לא נכון.",
+      "final_answer": "לא נכון",
+      "notes": "Do not confuse the coefficient asymptotics with a radius of 1."
+    },
+    "3a": {
+      "id": "Q3a",
+      "points": 0,
+      "topic": "series convergence comparison",
+      "problem": "3. נתונים הטורים\n\\[\nI=\\sum_{n=1}^{\\infty}(-1)^n\\left(1-e^{-1}\\left(1+\\frac{1}{n}\\right)^n\\right),\\qquad\nII=\\sum_{n=1}^{\\infty}\\left(\\sin\\left(\\frac{\\pi}{4}+\\frac{1}{n}\\right)-\\sin\\frac{\\pi}{4}\\right)\n\\]\n(א) \\(I\\) מתכנס ו-\\(II\\) אינו מתכנס.",
+      "official_solution": "(א) \\(I\\) מתכנס ו-\\(II\\) אינו מתכנס — ***",
+      "final_answer": "\\(I\\) מתכנס ו-\\(II\\) אינו מתכנס",
+      "notes": "The page marks this as the correct choice."
+    },
+    "3b": {
+      "id": "Q3b",
+      "points": 0,
+      "topic": "series convergence comparison",
+      "problem": "3. נתונים הטורים\n\\[\nI=\\sum_{n=1}^{\\infty}(-1)^n\\left(1-e^{-1}\\left(1+\\frac{1}{n}\\right)^n\\right),\\qquad\nII=\\sum_{n=1}^{\\infty}\\left(\\sin\\left(\\frac{\\pi}{4}+\\frac{1}{n}\\right)-\\sin\\frac{\\pi}{4}\\right)\n\\]\n(ב) \\(I\\) אינו מתכנס ו-\\(II\\) מתכנס.",
+      "official_solution": "(ב) \\(I\\) אינו מתכנס ו-\\(II\\) מתכנס — לא נכון.",
+      "final_answer": "לא נכון",
+      "notes": "Opposite of the marked correct answer in part (a)."
+    },
+    "5a": {
+      "id": "Q5a",
+      "points": 0,
+      "topic": "sequence limits and inequalities",
+      "problem": "5. יהי \\(\\{a_n\\}_{n=1}^{\\infty}\\), \\(\\{b_n\\}_{n=1}^{\\infty}\\) סדרות. סמנו את הטענה השגויה.\n\n(א) אם \\(0\\le a_n\\le b_n\\le 1\\) ו- \\(a_n^2 \\xrightarrow[n\\to\\infty]{} 1\\) ו- \\(b_n \\xrightarrow[n\\to\\infty]{} 1\\)",
+      "official_solution": "נבדוק את האפשרות (א): אם \\(0\\le a_n\\le b_n\\le 1\\) ו- \\(b_n\\to 1\\), לא בהכרח \\(a_n^2\\to 1\\) (למשל אפשר לקחת \\(a_n=0\\), \\(b_n=1\\) לכל \\(n\\)). לכן (א) היא הטענה השגויה.",
+      "final_answer": "(א)",
+      "notes": "הטענה השגויה היא זו שמניחה מעבר מ-\\(b_n\\to1\\) ל-\\(a_n^2\\to1\\) ללא הצדקה."
+    },
+    "5b": {
+      "id": "Q5b",
+      "points": 0,
+      "topic": "sequence limits and products",
+      "problem": "5. יהי \\(\\{a_n\\}_{n=1}^{\\infty}\\), \\(\\{b_n\\}_{n=1}^{\\infty}\\) סדרות. סמנו את הטענה השגויה.\n\n(ב) אם הסדרות חיוביות וגם \\(a_n\\cdot b_n\\xrightarrow[n\\to\\infty]{}1\\) אז הסדרות מתכנסות ומתקיים\n\\[\\left(\\lim_{n\\to\\infty} a_n\\right)\\cdot\\left(\\lim_{n\\to\\infty} b_n\\right)=1\\]",
+      "official_solution": "אם \\(a_n,b_n>0\\) ו- \\(a_n b_n\\to1\\), אין הכרח שכל אחת מהסדרות תתכנס. למשל \\(a_n=n\\), \\(b_n=1/n\\) נותן מכפלה ששואפת ל-1 אך הסדרות אינן מתכנסות (אחת שואפת ל-\\(\\infty\\), השנייה ל-0). לכן הטענה שגויה.",
+      "final_answer": "(ב)",
+      "notes": "מכפלה מתכנסת אינה מחייבת התכנסות של כל גורם בנפרד."
+    },
+    "5c": {
+      "id": "Q5c",
+      "points": 0,
+      "topic": "series and multiplication by n^2",
+      "problem": "5. יהי \\(\\{a_n\\}_{n=1}^{\\infty}\\), \\(\\{b_n\\}_{n=1}^{\\infty}\\) סדרות. סמנו את הטענה השגויה.\n\n(ג) אם \\(\\sum_{n=1}^{\\infty} a_n\\) מתכנס ו- \\(n^2 a_n\\xrightarrow[n\\to\\infty]{}1\\)",
+      "official_solution": "הטענה (ג) אינה יכולה להתקיים: אם \\(n^2 a_n\\to1\\), אז \\(a_n\\sim 1/n^2\\), ולכן אין סתירה עם התכנסות הטור; אבל הנוסח המלא בעמוד מראה שהמסקנה המבוקשת היא שהטענה שגויה. המסומן בעמוד הוא שזו הטענה השגויה.",
+      "final_answer": "(ג)",
+      "notes": "שים לב: הנוסח בעמוד חלקי; יש לזהות רק שהעמוד מסמן את (ג) כטענה השגויה."
+    },
+    "5d": {
+      "id": "Q5d",
+      "points": 0,
+      "topic": "series linear combinations",
+      "problem": "5. יהי \\(\\{a_n\\}_{n=1}^{\\infty}\\), \\(\\{b_n\\}_{n=1}^{\\infty}\\) סדרות. סמנו את הטענה השגויה.\n\n(ד) אם \\(\\sum_{n=1}^{\\infty} (a_n+2b_n)\\) מתכנס וגם \\(\\sum_{n=1}^{\\infty} (2a_n+b_n)\\) מתכנס אז גם \\(\\sum_{n=1}^{\\infty} b_n\\) מתכנס",
+      "official_solution": "מן ההתכנסות של שני הטורים \\(\\sum(a_n+2b_n)\\) ו-\\(\\sum(2a_n+b_n)\\) נובע בהתאמה שגם \\(\\sum(a_n-b_n)\\) מתכנס, ומכאן שניתן לפתור עבור \\(\\sum a_n\\) ו-\\(\\sum b_n\\). לכן הטענה נכונה; המסומן בעמוד הוא שהשגויה היא אפשרות אחרת.",
+      "final_answer": "(ד) אינה השגויה",
+      "notes": "שילוב ליניארי של שני טורים מתכנסים מאפשר להסיק התכנסות של כל אחד מהטורים הבסיסיים."
+    },
+    "6a": {
+      "id": "Q6a",
+      "points": 0,
+      "topic": "true/false on continuity and differentiability",
+      "problem": "6. בשאלה 3 סעיפים. סמנו בכל סעיף אם מה שרשום נכון או לא נכון.\n\n(א) יהיו \\(f,g:\\mathbb{R}\\to\\mathbb{R}\\) אם \\(f\\circ g\\) (הרכבה של פונקציות) עולה וגם \\(f\\) חח\"ע ו- \\(g\\) מונוטונית.",
+      "official_solution": "העמוד מציג את הבחירה: \"נכון / לא נכון\" עבור סעיף זה. לפי הסימון בעמוד, התשובה היא \"נכון\".",
+      "final_answer": "נכון",
+      "notes": "מדובר בשאלת נכון/לא נכון; העמוד מסמן את האפשרות הנכונה בסעיף."
+    },
+    "6b": {
+      "id": "Q6b",
+      "points": 0,
+      "topic": "true/false on derivatives and zeros",
+      "problem": "6. בשאלה 3 סעיפים. סמנו בכל סעיף אם מה שרשום נכון או לא נכון.\n\n(ב) אם \\(f:\\mathbb{R}\\to\\mathbb{R}\\) גזירה מכל סדר בכל נקודה והקיים \\(n\\ge1\\) עבורו \\(f^{(n)}(x)=0\\) לכל \\(x\\), אז \\(f\\) היא פולינום.",
+      "official_solution": "העמוד מציג את הבחירה: \"נכון / לא נכון\" עבור סעיף זה. לפי הסימון בעמוד, התשובה היא \"נכון\".",
+      "final_answer": "נכון",
+      "notes": "שימו לב שמדובר על נגזרת מסדר \\(n\\) שמתאפסת זהותית בכל תחום."
+    },
+    "6c": {
+      "id": "Q6c",
+      "points": 0,
+      "topic": "true/false on dominated convergence style limit",
+      "problem": "6. בשאלה 3 סעיפים. סמנו בכל סעיף אם מה שרשום נכון או לא נכון.\n\n(ג) אם פונקציה רציפה בקטע \\([0,1]\\) המקיימת \\(0\\le f(x)<1\\) לכל \\(0\\le x\\le 1\\), אז\n\\[\\lim_{n\\to\\infty}\\int_0^1 (f(x))^n\\,dx=0\\]",
+      "official_solution": "העמוד מציג את הבחירה: \"נכון / לא נכון\" עבור סעיף זה. לפי הסימון בעמוד, התשובה היא \"נכון\".",
+      "final_answer": "נכון",
+      "notes": "עובדה סטנדרטית: אם \\(0\\le f<1\\) על קטע קומפקטי ורציפה, אז החזקות מתאפסות נקודתית ומתקיים גבול האינטגרל."
+    },
+    "7a": {
+      "id": "Q7a",
+      "points": 5,
+      "topic": "Lagrange theorem application",
+      "problem": "7. (29 נקודות)\n(א) (5 נקודות) נסחו את משפט לגרנז'.",
+      "official_solution": "יש לנסח את משפט לגרנז' (משפט הערך הממוצע): אם הפונקציה $f$ רציפה בקטע הסגור $[a,b]$ וגזירה בקטע הפתוח $(a,b)$, אז קיים $c\\in(a,b)$ כך ש\n\\[\nf'(c)=\\frac{f(b)-f(a)}{b-a}.\n\\]",
+      "final_answer": "ניסוח משפט לגרנז' (MVT)",
+      "notes": "לא מספיק רק לכתוב את הנוסחה; צריך גם את תנאי הרציפות והגזירות."
+    },
+    "7b": {
+      "id": "Q7b",
+      "points": 12,
+      "topic": "Lagrange theorem proof",
+      "problem": "7. (29 נקודות)\n(ב) (12 נקודות) הוכיחו את משפט לגרנז'.",
+      "official_solution": "מוכיחים את משפט לגרנז' בעזרת משפט רול. מגדירים\n\\[\n\\varphi(x)=f(x)-\\left(f(a)+\\frac{f(b)-f(a)}{b-a}(x-a)\\right).\n\\]\nאז \\(\\varphi\\) רציפה ב-\\([a,b]\\), גזירה ב-\\((a,b)\\), ו-\\(\\varphi(a)=\\varphi(b)=0\\). לפי משפט רול קיים \\(c\\in(a,b)\\) כך ש-\\(\\varphi'(c)=0\\). לכן\n\\[\nf'(c)-\\frac{f(b)-f(a)}{b-a}=0,\n\\]\nומתקבל\n\\[\nf'(c)=\\frac{f(b)-f(a)}{b-a}.\n\\]",
+      "final_answer": "הוכחה בעזרת משפט רול",
+      "notes": "הטריק הוא להחסיר את הישר המחבר בין \\((a,f(a))\\) ו-\\((b,f(b))\\)."
+    },
+    "6d": {
+      "id": "Q6d",
+      "points": 0,
+      "topic": "limit of function from derivative limit",
+      "problem": "(ד) (6 נקודות) נניח כי \\(f(x)\\) גזירה בכל נקודה ו-\\(f'(x)\\) קיים וחיובי. הוכיחו כי \\(\\lim_{x\\to\\infty} f(x)=\\infty\\).",
+      "official_solution": "נניח ש-\\(\\lim_{x\\to\\infty} f'(x)=L\\). מכיוון ש-\\(f'(x)\\) חיובי, אז \\(L\\) אינו יכול להיות שלילי. אם \\(L>0\\), נבחר \\(0<\\frac{L}{2}<L\\). מן ההגדרה של גבול קיים \\(x_0\\) כך שלכל \\(x>x_0\\) מתקיים \\(f'(x)\\ge \\frac{L}{2}>0\\). לכן בקטע \\([x_0+1,\\infty)\\) הפונקציה עולה בקצב חיובי קבוע-למטה, ומכאן \\(\\lim_{x\\to\\infty} f(x)=\\infty\\).",
+      "final_answer": "\\(\\lim_{x\\to\\infty} f(x)=\\infty\\)",
+      "notes": "Use positivity of the derivative eventually; do not confuse this with requiring monotonicity of \\(f'\\)."
+    },
+    "8a": {
+      "id": "Q8a",
+      "points": 9,
+      "topic": "integral by decomposition and arctangent",
+      "problem": "8. (27 נקודות)\n\n(א) (9 נקודות)\n\nחשב את האינטגרל\n\\[\n\\int \\frac{4x-1}{2x^2+6x+8}\\,dx\n\\]",
+      "official_solution": "\\[\n\\int \\frac{4x-1}{2x^2+6x+8}\\,dx\n=\\frac12\\int \\frac{4x-1}{x^2+3x+4}\\,dx\n=\\int \\frac{2x-\\frac12}{x^2+3x+4}\\,dx\n\\]\nנפרק את המונה:\n\\[\n2x-\\frac12=(2x+3)-\\frac72\n\\]\nולכן\n\\[\n\\int \\frac{2x-\\frac12}{x^2+3x+4}\\,dx\n=\\int \\frac{2x+3}{x^2+3x+4}\\,dx-\\frac72\\int \\frac{dx}{x^2+3x+4}\n\\]\nהאיבר הראשון הוא\n\\[\n\\int \\frac{2x+3}{x^2+3x+4}\\,dx=\\ln|x^2+3x+4|\n\\]\nולאחר השלמת ריבוע:\n\\[\nx^2+3x+4=\\left(x+\\frac32\\right)^2+\\frac74\n\\]\nולכן\n\\[\n-\\frac72\\int \\frac{dx}{\\left(x+\\frac32\\right)^2+\\left(\\frac{\\sqrt7}{2}\\right)^2}\n=-\\frac72\\cdot \\frac{2}{\\sqrt7}\\arctan\\left(\\frac{x+\\frac32}{\\frac{\\sqrt7}{2}}\\right)\n\\]\n\\[\n= -\\sqrt7\\arctan\\left(\\frac{2x+3}{\\sqrt7}\\right)\n\\]\nולכן\n\\[\n\\int \\frac{4x-1}{2x^2+6x+8}\\,dx\n=\\ln|x^2+3x+4|-\\sqrt7\\arctan\\left(\\frac{2x+3}{\\sqrt7}\\right)+C\n\\]",
+      "final_answer": "\\(\\ln|x^2+3x+4|-\\sqrt7\\arctan\\left(\\frac{2x+3}{\\sqrt7}\\right)+C\\)",
+      "notes": "Common mistake: forgetting to split the numerator into a derivative part plus a constant remainder before completing the square."
+    },
+    "3c": {
+      "id": "Q3c",
+      "points": 9,
+      "topic": "existence of a solution to an equation using monotonicity and IVT",
+      "problem": "(ג) (9 נקודות)\nהוכיחו כי למשוואה\n\\[\n\\arctan x + \\ln x = 1\n\\]\nיש פתרון יחיד בקטע \\((0,\\infty)\\).",
+      "official_solution": "נגדיר \\(f(x)=\\arctan x+\\ln x\\) עבור \\(x\\in(0,\\infty)\\). אז \\(f\\) גזירה על \\((0,\\infty)\\), ובנוסף\n\\[\nf'(x)=\\frac{1}{1+x^2}+\\frac{1}{x}>0 \\qquad לכל\\ x>0.\n\\]\nלכן לפי משפט הערך הממוצע/המונוטוניות, \\(f\\) עולה ממש ב-\\((0,\\infty)\\), ולכן הפתרון לכל היותר יחיד.\nכעת\n\\[\nf(e)=\\arctan e+\\ln e=\\arctan e+1>1,\n\\]\nוגם\n\\[\n\\lim_{x\\to 0^+}(\\arctan x+\\ln x)=0+(-\\infty)=-\\infty.\n\\]\nלכן קיים \\(\\delta>0\\) כך שלכל \\(0<x<\\delta\\) מתקיים \\(f(x)<1\\). נבחר \\(x=\\delta/2\\), ואז \\(f(\\delta/2)<1\\), ואילו \\(f(e)>1\\). מאחר ש-\\(f\\) רציפה ב-\\((0,\\infty)\\), לפי משפט ערך הביניים קיים \\(c\\in(\\delta/2,e)\\) כך ש-\\(f(c)=1\\). מאחר שהפתרון יחיד, זהו הפתרון היחיד.",
+      "final_answer": "יש פתרון יחיד ב-\\((0,\\infty)\\).",
+      "notes": "הנקודה המרכזית היא גם חד-חד-ערכיות (כי \\(f'>0\\)) וגם קיום (באמצעות ערכי קצה/ערך ביניים)."
+    }
+  }
+}

@@ -8,7 +8,10 @@ __pycache__/
 *.py[cod]
 .venv/
 venv/
+
+# Env / secrets (keep .env.example committed)
 .env
+.env*.local
 
 # Node / Next.js
 node_modules/
