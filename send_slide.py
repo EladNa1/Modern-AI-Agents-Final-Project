@@ -3,8 +3,10 @@ import os, sys, base64
 from openai import OpenAI
 
 BASE_URL = os.getenv("LLMOD_BASE_URL", "https://api.llmod.ai/v1")
-API_KEY  = os.getenv("LLMOD_KEY", "sk-ifkPJSYVPR6uv1ow3UfK0g")
+API_KEY  = os.getenv("LLMOD_KEY")  # set in env / .env.local — never hardcode (old key was rotated)
 MODEL    = os.getenv("LLMOD_MODEL", "MB5R2CF-azure/gpt-5.4-mini")
+if not API_KEY:
+    sys.exit("Set LLMOD_KEY in your environment (see .env.example).")
 
 img_path = sys.argv[1] if len(sys.argv) > 1 else "slide1.png"
 img_b64 = base64.b64encode(open(img_path, "rb").read()).decode()

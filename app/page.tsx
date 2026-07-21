@@ -1,36 +1,7 @@
 "use client";
 
 import { useRef, useState } from "react";
-
-type Step = {
-  module: string;
-  pattern?: string;
-  prompt: { system_prompt: string; user_prompt: string };
-  response: unknown;
-};
-type QuestionResult = {
-  id: string;
-  title: string;
-  score: number;
-  max: number;
-  status: "ok" | "partial" | "escalate";
-  mark: string;
-  feedback: string;
-};
-type ExecuteResult = {
-  status: "ok" | "error";
-  error: string | null;
-  response: string | null;
-  steps: Step[];
-  meta?: {
-    total: number;
-    max: number;
-    questions: QuestionResult[];
-    source: string;
-    mode: "full" | "subset" | "general";
-    instructions: string;
-  };
-};
+import type { QuestionResult, ExecuteResult } from "@/lib/types";
 
 type Kind = "image" | "pdf" | "word" | "other";
 
@@ -107,10 +78,11 @@ export default function Home() {
           <div className="brandname">CheckMate</div>
         </div>
         <p className="tagline">
-          An autonomous agent focused on grading <strong>Calculus&nbsp;1 (Hedva&nbsp;1)</strong> exams.
-          Upload a scanned exam — CheckMate reads every page, grades each question on the
-          student&apos;s own method, and returns the exam marked up with per-question feedback,
-          plus the full execution trace.
+          An autonomous agent that grades <strong>Calculus&nbsp;1 (Hedva&nbsp;1)</strong> exams.
+          Give it a scanned exam — CheckMate reads every page, grades each question on the
+          student&apos;s own method with partial credit and written feedback, and shows the
+          full execution trace. Feedback that is <em>fast, consistent, and fair</em> — for
+          every student, on every question.
         </p>
         <div className="metabar">
           <span className="pill">
@@ -126,13 +98,36 @@ export default function Home() {
         </div>
       </header>
 
+      <section className="problem">
+        <p className="kicker">Why CheckMate</p>
+        <h2 className="probh">Grading Calculus by hand doesn&apos;t scale</h2>
+        <div className="probgrid">
+          <div className="probitem">
+            <span className="probic">⏳</span>
+            <b>Slow feedback</b>
+            <p>Students wait days to learn where they went wrong — long after they&apos;ve moved on.</p>
+          </div>
+          <div className="probitem">
+            <span className="probic">⚖️</span>
+            <b>Inconsistent credit</b>
+            <p>Partial credit drifts between graders and across a long stack: same mistake, different score.</p>
+          </div>
+          <div className="probitem">
+            <span className="probic">🔇</span>
+            <b>Missing feedback</b>
+            <p>Often just a number lands, with no explanation of what went wrong or how to improve.</p>
+          </div>
+        </div>
+      </section>
+
       <section className="card">
         <p className="kicker">Grade an exam</p>
         <h2>Upload the scanned exam</h2>
         <p className="hint">
-          PDF, Word (.doc/.docx), or images. In this demo build the grading is simulated —
-          the annotated result and full <code>steps[]</code> trace are shaped exactly as the
-          real pipeline returns them.
+          Upload the exam as a PDF or image (PNG/JPG). CheckMate renders every page,
+          reads it with gpt-5.4-mini, grounds each grade in the official course solution,
+          and returns the marked-up result plus the full <code>steps[]</code> trace.
+          Word (.doc/.docx) support is on the way — for now those return a representative sample.
         </p>
 
         <div
@@ -336,7 +331,7 @@ export default function Home() {
             <h2>steps[] — every call the agent made</h2>
             <p className="hint">
               {result.steps.length} steps, in order — module, prompt, and response. Names
-              match the architecture diagram: Reader, Retriever, Grader, Reflector.
+              match the architecture diagram: Parser, Retriever, Grader, Reflector.
             </p>
             {result.steps.map((s, i) => (
               <details className="step" key={i}>
@@ -349,11 +344,11 @@ export default function Home() {
                 <div className="stepbody">
                   <div className="field">
                     <div className="label">System prompt</div>
-                    <pre className="code">{s.prompt.system_prompt}</pre>
+                    <pre className="code">{s.prompt.System_prompt}</pre>
                   </div>
                   <div className="field">
                     <div className="label">User prompt</div>
-                    <pre className="code">{s.prompt.user_prompt}</pre>
+                    <pre className="code">{s.prompt.User_prompt}</pre>
                   </div>
                   <div className="field">
                     <div className="label">Response</div>
@@ -366,10 +361,88 @@ export default function Home() {
         </>
       )}
 
+      <section className="card">
+        <p className="kicker">How it works</p>
+        <h2>A Reflection Agent — grade, then self-critique</h2>
+        <p className="hint">
+          CheckMate grades each question first, then critiques its own grade against the
+          retrieved course evidence and revises until it&apos;s confident. Every step is logged
+          in the <code>steps[]</code> trace above.
+        </p>
+        <figure className="archfig">
+          <img src="/architecture.png" alt="CheckMate agent architecture — Parser, Retriever, Grader, Reflector" />
+        </figure>
+        <div className="pipeline">
+          <div className="pnode">
+            <span className="pnum">1</span>
+            <b>Parser</b>
+            <p>Reads every page with vision OCR (gpt-5.4-mini) and splits the exam into questions — faithfully transcribing the student&apos;s own work.</p>
+          </div>
+          <div className="pnode">
+            <span className="pnum">2</span>
+            <b>Retriever</b>
+            <p>Pinecone vector RAG: pulls the matching official solution <em>and</em> the most relevant course-notes chunks to ground the grade.</p>
+          </div>
+          <div className="pnode">
+            <span className="pnum">3</span>
+            <b>Grader</b>
+            <p>Scores the student&apos;s actual method with partial credit and written feedback — persona · chain-of-thought · few-shot · structured output.</p>
+          </div>
+          <div className="pnode">
+            <span className="pnum">4</span>
+            <b>Reflector</b>
+            <p>Critiques its own grade against the evidence and revises, up to N passes — then approves, or escalates to a teacher.</p>
+          </div>
+        </div>
+      </section>
+
+      <section className="card">
+        <p className="kicker">Why the grades hold up</p>
+        <h2>Grounded, self-checked, honest about doubt</h2>
+        <div className="whygrid">
+          <div className="whyitem">
+            <span className="whyic">📚</span>
+            <b>Grounded in the source</b>
+            <p>Every grade is tied to the official solution and the course notes — not invented. No rubric is fabricated.</p>
+          </div>
+          <div className="whyitem">
+            <span className="whyic">🔁</span>
+            <b>Checks its own grade</b>
+            <p>The Reflector critiques each grade and revises until confident — capped at N passes so it always terminates.</p>
+          </div>
+          <div className="whyitem">
+            <span className="whyic">🙋</span>
+            <b>Escalates when unsure</b>
+            <p>Low-confidence grades and unclear handwriting go to the teacher for review — never silently guessed.</p>
+          </div>
+        </div>
+      </section>
+
+      <section className="card">
+        <p className="kicker">The knowledge base</p>
+        <h2>Two sources, embedded for RAG</h2>
+        <div className="kbgrid">
+          <div className="kbitem">
+            <b>① Official solutions</b>
+            <p>
+              Per-question solutions from past finals, with point values and grading notes —
+              the ground truth each grade is measured against.
+            </p>
+          </div>
+          <div className="kbitem">
+            <b>② Course material (Calculus 1)</b>
+            <p>
+              The full lecture notes, embedded chunk-by-chunk into Pinecone, so every grade is
+              grounded in the course&apos;s own source of truth instead of the model&apos;s guesswork.
+            </p>
+          </div>
+        </div>
+      </section>
+
       <p className="foot">
-        CheckMate · <em>Modern AI Agents</em> course · demo build (grading simulated).
-        <br />
-        Real pipeline: OCR · Pinecone RAG · gpt-5.4-mini · $13 budget.
+        <strong>CheckMate</strong> · <em>Modern AI Agents</em> course project<br />
+        Elad Nachalieli · Shiri Haboob · Yaron Mozes<br />
+        <span className="footsub">Reflection Agent · vision OCR + Pinecone RAG · gpt-5.4-mini · escalates when unsure.</span>
       </p>
     </div>
   );

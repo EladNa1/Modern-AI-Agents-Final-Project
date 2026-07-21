@@ -1,41 +1,12 @@
 // CheckMate — mock agent.
 // Produces a correctly-shaped /api/execute payload with a realistic steps[] trace.
 // No real LLM / OCR yet. Module names match the deck architecture (fixed pipeline):
-//   Reader (OCR) -> Retriever (rubric match) -> Grader (score+feedback) -> Reflector (conditional)
+//   Parser (Vision OCR) -> Retriever (rubric match) -> Grader (score+feedback) -> Reflector (conditional)
 // Reflection runs only when a grade is shaky and picks one action:
 //   APPROVE · REVISE (<=1) · RETRY_OCR (<=1) · ESCALATE (send to teacher).
 
-export type Step = {
-  module: string;
-  pattern?: string;
-  prompt: { system_prompt: string; user_prompt: string };
-  response: unknown;
-};
-
-export type QuestionResult = {
-  id: string;
-  title: string;
-  score: number;
-  max: number;
-  status: "ok" | "partial" | "escalate";
-  mark: string; // short margin stamp, e.g. "✓" / "3/5"
-  feedback: string;
-};
-
-export type ExecuteResult = {
-  status: "ok" | "error";
-  error: string | null;
-  response: string | null;
-  steps: Step[];
-  meta?: {
-    total: number;
-    max: number;
-    questions: QuestionResult[];
-    source: string;
-    mode: "full" | "subset" | "general";
-    instructions: string;
-  };
-};
+import type { Step, QuestionResult, ExecuteResult } from "./types";
+export type { Step, QuestionResult, ExecuteResult };
 
 const clip = (s: string, n = 600) =>
   s.length > n ? s.slice(0, n) + " …[truncated]" : s;
@@ -90,7 +61,7 @@ const SAMPLE_QUESTIONS: QuestionResult[] = [
     status: "escalate",
     mark: "?",
     feedback:
-      "Handwriting on the remainder bound is ambiguous (two overwritten symbols). Reader confidence low; escalated to the teacher rather than guessed.",
+      "Handwriting on the remainder bound is ambiguous (two overwritten symbols). Parser confidence low; escalated to the teacher rather than guessed.",
   },
 ];
 
@@ -100,12 +71,12 @@ function buildSteps(source: string, qs: QuestionResult[], instructions: string):
 
   // 1) Reader — one OCR pass over all pages, splits the exam into questions.
   steps.push({
-    module: "Reader",
-    pattern: "OCR",
+    module: "Parser",
+    pattern: "Vision OCR",
     prompt: {
-      system_prompt:
+      System_prompt:
         "Read all pages of the scanned Calculus 1 exam. Return each question's handwritten work as text/LaTeX, with a confidence score per question. Do not grade.",
-      user_prompt: `[exam file: ${clip(source, 120)} — pages 1–4]${instrLine}`,
+      User_prompt: `[exam file: ${clip(source, 120)} — pages 1–4]${instrLine}`,
     },
     response: {
       questions: qs.map((q) => ({
@@ -121,9 +92,9 @@ function buildSteps(source: string, qs: QuestionResult[], instructions: string):
       module: "Retriever",
       pattern: "RAG",
       prompt: {
-        system_prompt:
+        System_prompt:
           "Match this question to the knowledge base: pull the official solution, rubric, and graded examples.",
-        user_prompt: `${q.id}: ${q.title}`,
+        User_prompt: `${q.id}: ${q.title}`,
       },
       response: { matched: `rubric/${q.id}`, graded_examples: 2, max_points: q.max },
     });
@@ -132,9 +103,9 @@ function buildSteps(source: string, qs: QuestionResult[], instructions: string):
       module: "Grader",
       pattern: "Few-shot",
       prompt: {
-        system_prompt:
+        System_prompt:
           "Grade the student's OWN method against the retrieved rubric and graded examples. Award partial credit. Return score, max, and written feedback.",
-        user_prompt: `Grade ${q.id} from OCR text + retrieved rubric.`,
+        User_prompt: `Grade ${q.id} from OCR text + retrieved rubric.`,
       },
       response: { score: q.score, max: q.max, feedback: clip(q.feedback, 300) },
     });
@@ -146,9 +117,9 @@ function buildSteps(source: string, qs: QuestionResult[], instructions: string):
         module: "Reflector",
         pattern: "Reflection",
         prompt: {
-          system_prompt:
+          System_prompt:
             "The grade looks shaky (borderline partial credit, or low OCR confidence, or score/feedback disagree). Critique it and choose exactly ONE action: APPROVE · REVISE(≤1) · RETRY_OCR(≤1) · ESCALATE.",
-          user_prompt: `Review ${q.id}: ${q.score}/${q.max}, OCR confidence ${
+          User_prompt: `Review ${q.id}: ${q.score}/${q.max}, OCR confidence ${
             q.status === "escalate" ? 0.58 : 0.94
           }.`,
         },
@@ -199,12 +170,12 @@ export function runMockAgent(source: string, instructions = ""): ExecuteResult {
   if (instr && isGeneral(lc)) {
     const steps: Step[] = [
       {
-        module: "Reader",
-        pattern: "OCR",
+        module: "Parser",
+        pattern: "Vision OCR",
         prompt: {
-          system_prompt:
+          System_prompt:
             "Read all pages of the scanned Calculus 1 exam and return the student's work as text/LaTeX. Do not grade.",
-          user_prompt: `[exam file: ${clip(source, 120)}]\nUser instructions: ${clip(instr, 200)}`,
+          User_prompt: `[exam file: ${clip(source, 120)}]\nUser instructions: ${clip(instr, 200)}`,
         },
         response: { questions_read: SAMPLE_QUESTIONS.length },
       },
@@ -212,9 +183,9 @@ export function runMockAgent(source: string, instructions = ""): ExecuteResult {
         module: "Grader",
         pattern: "Few-shot",
         prompt: {
-          system_prompt:
+          System_prompt:
             "The user asked for a GENERAL opinion of the student's exam — no per-question scores. Write a short holistic assessment: overall command of the material, strengths, recurring weaknesses, and one suggestion. Do not output numeric grades.",
-          user_prompt: `Give a general assessment of the exam.\nUser instructions: ${clip(instr, 200)}`,
+          User_prompt: `Give a general assessment of the exam.\nUser instructions: ${clip(instr, 200)}`,
         },
         response: {
           assessment:
