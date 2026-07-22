@@ -127,7 +127,10 @@ def retrieve(question_id: str, question_text: str, log: StepLog, exam: str | Non
     method = ""
     score = None
 
-    # Primary: semantic vector search, scoped to the exam when known.
+    # Primary: semantic vector search, scoped to the exam when known. Content is used to
+    # match (not the parser's question-number label, which is unreliable -- it may read a
+    # "שאלה 2" part as Q1); scoping to the exam already prevents drift onto another exam's
+    # look-alike question, and the exact-id match below is only a fallback.
     if HAS_PINECONE and question_text.strip():
         sem = _find_semantic(question_text, exam)
         if sem and sem["found"]:

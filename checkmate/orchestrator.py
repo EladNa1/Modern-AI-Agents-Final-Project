@@ -6,6 +6,7 @@ approve|escalate. Falls back to the mock when there is no API key or no image to
 """
 from __future__ import annotations
 
+from collections import Counter
 from dataclasses import asdict
 
 from .env import HAS_LLM
@@ -75,9 +76,25 @@ def _group_by_retrieved_question(fragments: list[ParsedFragment], log: StepLog, 
     """Retrieve once per fragment and bucket fragments by the question they matched.
     Fragments that match nothing go into ONE bucket -- reported and escalated, not attached
     to a real question."""
+    matches = [(f, retrieve(f.id, f"{f.text} {f.latex or ''}", log, exam)) for f in fragments]
+
+    # Cross-exam consistency: one uploaded booklet is one exam. When the run was NOT scoped
+    # (Auto) and the fragments mostly matched a single exam, pin the outliers to that majority
+    # exam and re-retrieve them there. A stray match to a look-alike question in another exam
+    # is worse than dropping the fragment to "unmatched", so keep whatever the scoped retry
+    # returns (possibly nothing) rather than the cross-exam guess.
+    if not exam:
+        matched_exams = [r.exam for _, r in matches if r]
+        if matched_exams:
+            majority = Counter(matched_exams).most_common(1)[0][0]
+            matches = [
+                (f, retrieve(f.id, f"{f.text} {f.latex or ''}", log, majority)
+                    if (r and r.exam != majority) else r)
+                for f, r in matches
+            ]
+
     groups: dict[str, dict] = {}
-    for f in fragments:
-        retrieved = retrieve(f.id, f"{f.text} {f.latex or ''}", log, exam)
+    for f, retrieved in matches:
         key = retrieved.entry.id if retrieved else UNMATCHED
         if key in groups:
             groups[key]["fragments"].append(f)

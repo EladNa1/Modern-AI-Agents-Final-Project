@@ -71,6 +71,19 @@ GRADING RULES
    not all of it.
 6. True/False and multiple choice: all-or-nothing per item, based on the circled
    answer only. Side notes do not change the score.
+7. Examples and counterexamples: when a student proves or disproves a claim with a
+   specific example, INDEPENDENTLY VERIFY that the example actually satisfies EVERY
+   required property on the EXACT domain/interval stated — do not take the student's
+   assertion on trust. Check each limit, bound, or (un)boundedness claim yourself on that
+   interval (e.g. tan x is BOUNDED on (0,1) because pi/2 > 1; it is unbounded only at pi/2,
+   which is outside (0,1)). If the example fails any required property it does NOT prove the
+   claim: award little or no credit even when the final true/false verdict is coincidentally
+   correct, and name the property that fails in the feedback.
+   For a "prove or disprove" task, a COUNTEREXAMPLE disproves the claim: a valid one must
+   satisfy the claim's HYPOTHESIS but VIOLATE its conclusion — it need NOT satisfy the
+   conclusion, so do not penalize it for that. Judge it against the NEGATION of the claim.
+   (E.g. to disprove "if f'(x) vanishes then f has at least two zeros", f(x)=x^2 IS a valid
+   counterexample: f' vanishes at 0 while f has exactly ONE zero, fewer than two.)
 
 FEW-SHOT (calibrated on the RED-PEN scores of the Winter 2024 Moed A graded booklet)
 --- Example 1 (full credit, alternative-but-valid structure) ---

@@ -62,14 +62,15 @@
       </div>
 
       <div class="instrblock">
-        <label class="instrlabel" for="exam">Which exam? <span class="opt">(recommended — scopes grading to this exam's solutions)</span></label>
+        <label class="instrlabel" for="exam">Which exam? <span class="opt">(required — scopes grading to this exam's solutions)</span></label>
         <select id="exam" class="instr">
-          <option value="">Auto — search all exams (may mismatch across exams)</option>
+          <option value="">— Select the exam —</option>
         </select>
       </div>
 
       <div class="controls">
         <button class="btn" id="gradeBtn" disabled>Grade exam</button>
+        <span class="hint" id="gradeHint" style="margin-left:.6rem">Select the exam above to enable grading.</span>
       </div>
     </section>
 
@@ -110,6 +111,14 @@
     }
     const STATUS_LABEL = { ok: "full credit", partial: "partial", escalate: "escalate" };
 
+    // Grading needs BOTH a file and a chosen exam -- an unscoped run can mismatch a question
+    // against a look-alike in another exam, so the exam is required, not optional.
+    const canGrade = () => !!file && !!$("exam").value;
+    function refreshGrade() {
+      $("gradeBtn").disabled = !canGrade();
+      $("gradeHint").style.display = canGrade() ? "none" : "";
+    }
+
     // Populate the exam picker.
     fetch("/api/exams").then((r) => r.json()).then((d) => {
       for (const x of (d.exams || [])) {
@@ -117,6 +126,7 @@
         o.value = x.value; o.textContent = x.label; $("exam").appendChild(o);
       }
     }).catch(() => {});
+    $("exam").addEventListener("change", refreshGrade);
 
     function setFile(f) {
       $("results").innerHTML = ""; $("error").style.display = "none";
@@ -124,7 +134,7 @@
       file = f || null;
       if (!file) {
         previewUrl = null; $("dzEmpty").style.display = ""; $("dzFile").style.display = "none";
-        $("gradeBtn").disabled = true; return;
+        refreshGrade(); return;
       }
       previewUrl = URL.createObjectURL(file);
       const kind = kindOf(file.name);
@@ -132,7 +142,7 @@
       $("fileName").textContent = file.name;
       $("fileSize").textContent = Math.round(file.size / 1024) + " KB · " + kind.toUpperCase();
       $("dzEmpty").style.display = "none"; $("dzFile").style.display = "";
-      $("gradeBtn").disabled = false;
+      refreshGrade();
     }
 
     const dz = $("dropzone");
