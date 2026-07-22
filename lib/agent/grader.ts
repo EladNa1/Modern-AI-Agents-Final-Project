@@ -3,7 +3,7 @@
 // It grades the student's OWN method, grounded strictly in the retrieved official
 // solution, and awards partial credit. It does not invent a rubric.
 import { chat, extractJson, StepLog, type Usage } from "../llm";
-import type { ParsedQuestion } from "./parser";
+import type { ParsedFragment } from "./parser";
 import type { Retrieved, NotesChunk } from "./retriever";
 
 export type Grade = {
@@ -38,7 +38,7 @@ Return ONLY a JSON object, no prose, no code fences:
 Rules: status "ok" only if score == max; "partial" if 0 < score < max; "escalate" if you cannot grade fairly.`;
 
 export async function runGrader(
-  q: ParsedQuestion,
+  q: ParsedFragment,
   retrieved: Retrieved,
   log: StepLog,
   notes: NotesChunk[] = []

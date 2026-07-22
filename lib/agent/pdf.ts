@@ -5,7 +5,9 @@
 import type { ImageInput } from "../llm";
 
 const RENDER_DPI = 150; // enough for handwritten-math OCR; keeps the base64 payload small
-const MAX_PAGES = 12; // guard against runaway cost/time on an oversized upload
+// Guard against runaway cost/time on an oversized upload. Default 12 keeps a run
+// inside Vercel's 300s ceiling; dev harnesses raise it to read a full exam booklet.
+const MAX_PAGES = Number(process.env.CHECKMATE_MAX_PAGES) || 12;
 
 export type PdfRender = {
   images: ImageInput[]; // one high-detail PNG data URL per rendered page

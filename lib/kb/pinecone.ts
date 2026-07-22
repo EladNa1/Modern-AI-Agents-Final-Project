@@ -11,6 +11,11 @@ export type KBKind = "solution" | "notes";
 
 export type SolutionMetadata = {
   kind: "solution";
+  // Which indexing run wrote this vector. Re-ingesting an exam can change its question
+  // ids, and this index rejects deletes, so superseded vectors stay in the store
+  // forever. The Retriever filters on the current generation, which makes anything
+  // written by an earlier run unreachable instead of silently competing for matches.
+  gen: string;
   entryId: string; // e.g. "Q3c"
   points: number;
   topic: string;

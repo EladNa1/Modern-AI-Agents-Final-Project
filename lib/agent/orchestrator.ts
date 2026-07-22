@@ -6,18 +6,24 @@
 import { StepLog, type ImageInput } from "../llm";
 import { hasLLM } from "../env";
 import type { ExecuteResult, QuestionResult } from "../types";
-import { runParser } from "./parser";
+import { runParser, type ParsedFragment } from "./parser";
 import { retrieve, retrieveNotes } from "./retriever";
 import { runGrader, type Grade } from "./grader";
 import { runReflector } from "./reflector";
 import { runMockAgent } from "../mockAgent";
 
 const MAX_REVISE_PASSES = 2;
+// Bucket for transcribed work that matches no knowledge-base question.
+const UNMATCHED = "Unmatched work";
 
 export type AgentInput = {
   images: ImageInput[];
   instructions?: string;
   sourceLabel: string; // e.g. "exam.png (186 KB)" — for the response + meta
+  // Which exam this scan belongs to (the `exam` label in the KB, e.g. "2025s final A").
+  // Scopes retrieval so a shared question id grounds on the right exam. Optional — when
+  // omitted retrieval stays global, as before.
+  exam?: string;
 };
 
 export async function runAgent(input: AgentInput): Promise<ExecuteResult> {
@@ -30,9 +36,9 @@ export async function runAgent(input: AgentInput): Promise<ExecuteResult> {
   const log = new StepLog();
 
   try {
-    const { questions } = await runParser(input.images, log, instructions);
+    const { fragments } = await runParser(input.images, log, instructions);
 
-    if (questions.length === 0) {
+    if (fragments.length === 0) {
       return {
         status: "error",
         error:
@@ -42,10 +48,20 @@ export async function runAgent(input: AgentInput): Promise<ExecuteResult> {
       };
     }
 
+    // Group the transcribed fragments by the exam question they actually answer.
+    // A student's answer routinely spans several pages, and the label they wrote (if
+    // any) is unreliable, so grouping on the Parser's guess produced duplicate and
+    // mismatched questions. The Retriever matches each fragment on CONTENT, and that
+    // match is what defines a question here — so every page of one answer is graded
+    // together, exactly once.
+    const groups = await groupByRetrievedQuestion(fragments, log, input.exam);
+
     const results: QuestionResult[] = [];
-    for (const q of questions) {
+    for (const group of groups) {
+      const merged = mergeFragments(group.fragments);
+      const q = group.retrieved ? merged : { ...merged, id: UNMATCHED };
+      const retrieved = group.retrieved;
       const query = `${q.text} ${q.latex ?? ""}`;
-      const retrieved = await retrieve(q.id, query, log);
       const notes = await retrieveNotes(query, log);
       let grade = await runGrader(q, retrieved, log, notes);
 
@@ -76,6 +92,48 @@ export async function runAgent(input: AgentInput): Promise<ExecuteResult> {
       steps: log.steps,
     };
   }
+}
+
+type Group = {
+  key: string; // canonical KB question id, or "unmatched:<label>"
+  retrieved: Awaited<ReturnType<typeof retrieve>>;
+  fragments: ParsedFragment[];
+};
+
+// Retrieve once per fragment and bucket fragments by the question they matched.
+// Fragments that match nothing in the knowledge base are kept in their own bucket so
+// they are reported and escalated rather than silently attached to a real question.
+async function groupByRetrievedQuestion(
+  fragments: ParsedFragment[],
+  log: StepLog,
+  exam?: string
+): Promise<Group[]> {
+  const groups = new Map<string, Group>();
+  for (const f of fragments) {
+    const retrieved = await retrieve(f.id, `${f.text} ${f.latex ?? ""}`, log, exam);
+    // Everything the knowledge base could not place goes into ONE bucket: it becomes a
+    // single escalation for the teacher rather than a scatter of bogus one-line
+    // "questions" named after whatever label the Parser invented.
+    const key = retrieved ? retrieved.entry.id : UNMATCHED;
+    const existing = groups.get(key);
+    if (existing) existing.fragments.push(f);
+    else groups.set(key, { key, retrieved, fragments: [f] });
+  }
+  return [...groups.values()];
+}
+
+// Stitch every page of one answer back into a single body of work to grade.
+function mergeFragments(fragments: ParsedFragment[]): ParsedFragment {
+  const ordered = [...fragments].sort((a, b) => a.page - b.page);
+  const first = ordered[0];
+  if (ordered.length === 1) return first;
+  return {
+    id: first.id,
+    text: ordered.map((f) => f.text).filter(Boolean).join("\n"),
+    latex: ordered.map((f) => f.latex).filter(Boolean).join("\n") || undefined,
+    confidence: Math.min(...ordered.map((f) => f.confidence)),
+    page: first.page,
+  };
 }
 
 function applyRevision(

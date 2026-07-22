@@ -30,6 +30,8 @@ export async function POST(req: Request) {
       const file = form.get("file");
       const instr = form.get("instructions");
       const instructions = typeof instr === "string" ? instr : "";
+      const examField = form.get("exam");
+      const exam = typeof examField === "string" && examField.trim() ? examField.trim() : undefined;
 
       if (!file || typeof file === "string") {
         return bad("No exam file in the upload.");
@@ -71,7 +73,7 @@ export async function POST(req: Request) {
             : `${name} (${Math.round(file.size / 1024)} KB, ${render.pageCount} page${render.pageCount > 1 ? "s" : ""})`;
       }
 
-      const result = await runAgent({ images, instructions, sourceLabel });
+      const result = await runAgent({ images, instructions, sourceLabel, exam });
       return NextResponse.json(result, {
         status: result.status === "error" ? 400 : 200,
       });

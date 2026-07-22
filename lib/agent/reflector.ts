@@ -3,7 +3,7 @@
 // solution and chooses ONE action: APPROVE · REVISE (corrected grade) · ESCALATE.
 // The orchestrator applies revisions up to N passes, then approves or escalates.
 import { chat, extractJson, StepLog, type Usage } from "../llm";
-import type { ParsedQuestion } from "./parser";
+import type { ParsedFragment } from "./parser";
 import type { Retrieved } from "./retriever";
 import type { Grade } from "./grader";
 
@@ -33,7 +33,7 @@ Output ONLY a JSON object, no prose, no code fences:
 {"action":"APPROVE|REVISE|ESCALATE","score":<number 0..max, or null>,"feedback":"<corrected student-facing feedback if REVISE, else empty>","note":"<one line: why>","confidence":<0..1>}`;
 
 export async function runReflector(
-  q: ParsedQuestion,
+  q: ParsedFragment,
   grade: Grade,
   retrieved: Retrieved,
   log: StepLog

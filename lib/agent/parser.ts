@@ -3,15 +3,21 @@
 // and splits it into questions. It does NOT grade. Prompt adapted from send_slide.py.
 import { chat, extractJson, StepLog, type ImageInput, type Usage } from "../llm";
 
-export type ParsedQuestion = {
-  id: string; // e.g. "Q3c" — as written on the exam; best guess if unlabelled
+// One block of student work found on one page. The Parser's `id` is only its reading
+// of whatever label the student wrote — handwriting is often unlabelled or mislabelled,
+// so it is a hint, not an identity. The Retriever decides which exam question a
+// fragment actually answers (see the orchestrator), which is what fragments get
+// grouped by.
+export type ParsedFragment = {
+  id: string; // the label as written, or the Parser's best guess
   text: string; // faithful transcription of the student's work (Hebrew + math preserved)
   latex?: string; // math re-expressed in LaTeX where helpful
   confidence: number; // 0..1 legibility/transcription confidence
+  page: number; // 1-based page the fragment was read from
 };
 
 export type ParseResult = {
-  questions: ParsedQuestion[];
+  fragments: ParsedFragment[];
   raw: string; // the model's raw reply, for debugging
   usage: Usage;
 };
@@ -35,13 +41,15 @@ export async function runParser(
   log: StepLog,
   instructions = ""
 ): Promise<ParseResult> {
-  // One vision call PER PAGE (not all pages at once): more robust on long exams,
-  // and each page is logged as its own Parser step in the trace. Questions are then
-  // merged across pages so a part split by a page break becomes one question.
+  // One vision call PER PAGE (not all pages at once): more robust on long exams, and
+  // each page is logged as its own Parser step in the trace. Fragments are returned
+  // per page and deliberately NOT merged here — merging on the Parser's own guess of
+  // the question label is what previously split one answer across two ids and grouped
+  // unrelated work under a shared wrong one. The orchestrator groups them by the
+  // question the Retriever matches instead.
   const total = { prompt: 0, completion: 0, total: 0 } as Usage;
   const raws: string[] = [];
-  const merged = new Map<string, ParsedQuestion>();
-  const order: string[] = [];
+  const fragments: ParsedFragment[] = [];
 
   for (let p = 0; p < images.length; p++) {
     const pageTag = images.length > 1 ? ` (page ${p + 1} of ${images.length})` : "";
@@ -58,8 +66,11 @@ export async function runParser(
       // Note: gpt-5.4-mini via the gateway only supports the default temperature.
     });
 
-    const pageQs = normalizeQuestions(extractJson<{ questions?: ParsedQuestion[] }>(text)?.questions);
-    mergePage(merged, order, pageQs);
+    const pageQs = normalizeFragments(
+      extractJson<{ questions?: ParsedFragment[] }>(text)?.questions,
+      p + 1
+    );
+    fragments.push(...pageQs);
     raws.push(text);
     total.prompt += usage.prompt;
     total.completion += usage.completion;
@@ -75,37 +86,13 @@ export async function runParser(
     );
   }
 
-  const questions = order.map((k) => merged.get(k)!);
-  return { questions, raw: raws.join("\n\n"), usage: total };
+  return { fragments, raw: raws.join("\n\n"), usage: total };
 }
 
-// Merge key: same question part written across a page break should collapse into
-// one. Normalize away spacing/punctuation/case so "3ג", "Q3c", "3 c" align.
-function mergeKey(id: string): string {
-  return id.toLowerCase().replace(/[\s.()·\-–]/g, "");
-}
-
-function mergePage(
-  merged: Map<string, ParsedQuestion>,
-  order: string[],
-  pageQs: ParsedQuestion[]
-): void {
-  for (const q of pageQs) {
-    const key = mergeKey(q.id);
-    const existing = merged.get(key);
-    if (!existing) {
-      merged.set(key, { ...q });
-      order.push(key);
-      continue;
-    }
-    // Continuation of the same part on a later page — append the extra work.
-    existing.text = `${existing.text}\n${q.text}`.trim();
-    if (q.latex) existing.latex = existing.latex ? `${existing.latex}\n${q.latex}` : q.latex;
-    existing.confidence = Math.min(existing.confidence, q.confidence);
-  }
-}
-
-function normalizeQuestions(qs: ParsedQuestion[] | undefined): ParsedQuestion[] {
+function normalizeFragments(
+  qs: ParsedFragment[] | undefined,
+  page: number
+): ParsedFragment[] {
   if (!Array.isArray(qs)) return [];
   return qs
     .filter((q) => q && (q.text || q.latex))
@@ -117,5 +104,6 @@ function normalizeQuestions(qs: ParsedQuestion[] | undefined): ParsedQuestion[] 
         typeof q.confidence === "number"
           ? Math.max(0, Math.min(1, q.confidence))
           : 0.5,
+      page,
     }));
 }

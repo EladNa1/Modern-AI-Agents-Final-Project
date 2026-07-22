@@ -10,17 +10,20 @@ import { runGrader } from "../lib/agent/grader";
 async function main() {
   const imgPath =
     process.argv[2] ?? join(process.cwd(), "public", "exam_q3c_scan.png");
+  // Optional 2nd arg: the exam label to scope retrieval to (e.g. "2026w final B").
+  const exam = process.argv[3] || undefined;
   const buf = readFileSync(imgPath);
   const ext = imgPath.toLowerCase().endsWith(".png") ? "png" : "jpeg";
   const dataUrl = `data:image/${ext};base64,${buf.toString("base64")}`;
 
   const log = new StepLog();
 
-  const { questions } = await runParser([{ dataUrl, detail: "high" }], log);
+  const { fragments: questions } = await runParser([{ dataUrl, detail: "high" }], log);
   console.log(`Parsed ${questions.length} question(s).`);
 
+  if (exam) console.log(`Scoped to exam: ${exam}`);
   for (const q of questions) {
-    const retrieved = await retrieve(q.id, `${q.text} ${q.latex ?? ""}`, log);
+    const retrieved = await retrieve(q.id, `${q.text} ${q.latex ?? ""}`, log, exam);
     console.log(
       `\nRetrieved for ${q.id}:`,
       retrieved ? `${retrieved.entry.id} (${retrieved.entry.points} pts)` : "NONE"

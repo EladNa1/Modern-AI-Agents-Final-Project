@@ -1,21 +1,42 @@
 // Dev harness (Phase 4) — runs the full orchestrator (incl. Reflector loop).
-// Run: node --env-file=.env.local --import tsx scripts/test_agent.ts [imagePath]
+// Accepts an image or a PDF (PDF takes the same render path as /api/execute).
+// Run: node --env-file=.env.local --import tsx scripts/test_agent.ts [path]
 import { readFileSync } from "node:fs";
 import { join } from "node:path";
 import { runAgent } from "../lib/agent/orchestrator";
+import { renderPdfToImages } from "../lib/agent/pdf";
+import type { ImageInput } from "../lib/llm";
 
 async function main() {
-  const imgPath =
+  const path =
     process.argv[2] ?? join(process.cwd(), "public", "exam_q3c_scan.png");
-  const buf = readFileSync(imgPath);
-  const ext = imgPath.toLowerCase().endsWith(".png") ? "png" : "jpeg";
-  const dataUrl = `data:image/${ext};base64,${buf.toString("base64")}`;
+  const buf = readFileSync(path);
+  const name = path.split(/[\\/]/).pop()!;
+  const kb = Math.round(buf.length / 1024);
 
-  const result = await runAgent({
-    images: [{ dataUrl, detail: "high" }],
-    instructions: "",
-    sourceLabel: `${imgPath.split(/[\\/]/).pop()} (${Math.round(buf.length / 1024)} KB)`,
-  });
+  let images: ImageInput[];
+  let sourceLabel: string;
+  if (path.toLowerCase().endsWith(".pdf")) {
+    const { images: pages, pageCount, rendered } = await renderPdfToImages(buf);
+    images = pages;
+    sourceLabel =
+      rendered < pageCount
+        ? `${name} (${kb} KB, ${rendered}/${pageCount} pages)`
+        : `${name} (${kb} KB, ${pageCount} pages)`;
+    console.log(`rendered ${rendered}/${pageCount} PDF pages`);
+  } else {
+    const ext = path.toLowerCase().endsWith(".png") ? "png" : "jpeg";
+    images = [
+      { dataUrl: `data:image/${ext};base64,${buf.toString("base64")}`, detail: "high" },
+    ];
+    sourceLabel = `${name} (${kb} KB)`;
+  }
+
+  const t0 = Date.now();
+  // Optional 2nd arg: exam label to scope retrieval to (e.g. "2025s final A").
+  const exam = process.argv[3] || undefined;
+  const result = await runAgent({ images, instructions: "", sourceLabel, exam });
+  console.log(`elapsed: ${((Date.now() - t0) / 1000).toFixed(1)}s`);
 
   console.log("status:", result.status, "| error:", result.error);
   console.log("\n=== RESPONSE ===\n" + result.response);

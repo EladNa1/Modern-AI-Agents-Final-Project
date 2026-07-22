@@ -18,7 +18,7 @@ async function main() {
   const res = await runParser([{ dataUrl, detail: "high" }], log);
 
   console.log("\n=== PARSED QUESTIONS ===");
-  for (const q of res.questions) {
+  for (const q of res.fragments) {
     console.log(`\n[${q.id}] confidence=${q.confidence}`);
     console.log(q.text);
     if (q.latex) console.log("LaTeX: " + q.latex);
@@ -36,7 +36,7 @@ async function main() {
         2
       )
   );
-  if (res.questions.length === 0) {
+  if (res.fragments.length === 0) {
     console.log("\n=== RAW REPLY (no JSON parsed) ===\n" + res.raw.slice(0, 1200));
   }
 }

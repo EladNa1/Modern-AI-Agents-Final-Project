@@ -1,7 +1,9 @@
 "use client";
 
-import { useRef, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import type { QuestionResult, ExecuteResult } from "@/lib/types";
+
+type ExamOption = { value: string; course: string; label: string };
 
 type Kind = "image" | "pdf" | "word" | "other";
 
@@ -28,7 +30,18 @@ export default function Home() {
   const [result, setResult] = useState<ExecuteResult | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [drag, setDrag] = useState(false);
+  const [exams, setExams] = useState<ExamOption[]>([]);
+  const [exam, setExam] = useState("");
   const inputRef = useRef<HTMLInputElement>(null);
+
+  // Load the list of bundled exams for the picker. Scoping the grade to the right exam
+  // keeps retrieval from matching a shared question id against the wrong exam.
+  useEffect(() => {
+    fetch("/api/exams")
+      .then((r) => r.json())
+      .then((d) => setExams(Array.isArray(d?.exams) ? d.exams : []))
+      .catch(() => setExams([]));
+  }, []);
 
   function pick(f: File | null) {
     setResult(null);
@@ -52,6 +65,7 @@ export default function Home() {
       const fd = new FormData();
       fd.append("file", file);
       if (instructions.trim()) fd.append("instructions", instructions.trim());
+      if (exam) fd.append("exam", exam);
       const res = await fetch("/api/execute", { method: "POST", body: fd });
       const data: ExecuteResult = await res.json();
       if (data.status === "error") {
@@ -178,6 +192,25 @@ export default function Home() {
               </button>
             </div>
           )}
+        </div>
+
+        <div className="instrblock">
+          <label className="instrlabel" htmlFor="exam">
+            Which exam? <span className="opt">(recommended — scopes grading to this exam&apos;s solutions)</span>
+          </label>
+          <select
+            id="exam"
+            className="instr"
+            value={exam}
+            onChange={(e) => setExam(e.target.value)}
+          >
+            <option value="">Auto — search all exams (may mismatch across exams)</option>
+            {exams.map((x) => (
+              <option key={x.value} value={x.value}>
+                {x.label}
+              </option>
+            ))}
+          </select>
         </div>
 
         <div className="instrblock">

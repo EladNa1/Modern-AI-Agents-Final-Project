@@ -8,34 +8,16 @@
 import { StepLog, embed } from "../llm";
 import { hasPinecone } from "../env";
 import { kbIndex, type SolutionMetadata, type NotesMetadata } from "../kb/pinecone";
-import exam2023A from "../kb/solutions/2023w_final_A.json";
-import exam2024A from "../kb/solutions/2024w_final_A.json";
-import exam2025A from "../kb/solutions/2025w_final_A.json";
+import generation from "../kb/generation.json";
+import { EXAMS, type ExamKB, type SolutionEntry } from "../kb/exams";
 
-export type SolutionEntry = {
-  id: string;
-  points: number;
-  topic?: string;
-  problem: string;
-  official_solution: string;
-  final_answer?: string;
-  notes?: string;
-};
+export type { SolutionEntry };
 
-type ExamKB = {
-  exam: string;
-  course: string;
-  questions: Record<string, SolutionEntry>;
-};
-
-// Registry of bundled exams (offline exact-id fallback). Add an import per ingested
-// exam. Pinecone holds the same content embedded — the PRIMARY, content-based matcher,
-// which is what disambiguates a shared id (e.g. "Q3c" exists in several exams).
-const KB: ExamKB[] = [
-  exam2023A as unknown as ExamKB,
-  exam2024A as unknown as ExamKB,
-  exam2025A as unknown as ExamKB,
-];
+// Registry of bundled exams (offline exact-id fallback), from the shared source of truth
+// so a newly ingested exam is picked up here too. Pinecone holds the same content
+// embedded — the PRIMARY, content-based matcher — which, once scoped to the right exam,
+// disambiguates an id shared across exams (e.g. "Q1" exists in every exam).
+const KB: ExamKB[] = EXAMS;
 
 export type Retrieved = {
   entry: SolutionEntry;
@@ -72,8 +54,11 @@ function looksLikeSinSqrtLimit(text: string): boolean {
   return /sin/.test(t) && /(√|sqrt)/.test(t) && /(x\^?9|x9|x⁹)/.test(t);
 }
 
-function findExact(want: string): Retrieved {
+function findExact(want: string, exam?: string): Retrieved {
   for (const kb of KB) {
+    // When the teacher named the exam, only its own questions may ground the grade —
+    // a shared id must not pull a different exam's solution.
+    if (exam && kb.exam !== exam) continue;
     for (const [key, entry] of Object.entries(kb.questions)) {
       if (normId(key) === want || normId(entry.id) === want) {
         return { entry, exam: kb.exam, course: kb.course };
@@ -105,7 +90,8 @@ export type NotesChunk = { source: string; page: number; text: string; score: nu
 // Pinecone semantic query over SOLUTION records only. Returns the best match above
 // MIN_SCORE, or null. Never throws — a Pinecone outage must not break grading.
 async function findSemantic(
-  text: string
+  text: string,
+  exam?: string
 ): Promise<{ found: Retrieved; score: number } | null> {
   try {
     const [vector] = await embed(text.slice(0, 4000));
@@ -113,7 +99,16 @@ async function findSemantic(
       topK: 1,
       vector,
       includeMetadata: true,
-      filter: { kind: { $eq: "solution" } },
+      // Pin to the current indexing generation: superseded vectors from an earlier
+      // ingest are still physically in the index (it rejects deletes) and would
+      // otherwise ground a grade on a question that is no longer on the exam.
+      // When the exam is known, scope to it as well — question ids and topics repeat
+      // across exams, so an unscoped nearest-neighbour can match the wrong exam.
+      filter: {
+        kind: { $eq: "solution" },
+        gen: { $eq: generation.gen },
+        ...(exam ? { exam: { $eq: exam } } : {}),
+      },
     });
     const top = res.matches?.[0];
     if (!top?.metadata || (top.score ?? 0) < MIN_SCORE) {
@@ -164,17 +159,19 @@ export async function retrieveNotes(
 export async function retrieve(
   questionId: string,
   questionText: string,
-  log: StepLog
+  log: StepLog,
+  exam?: string
 ): Promise<Retrieved> {
   const want = normId(questionId);
   let found: Retrieved = null;
   let method = "";
   let score: number | undefined;
 
-  // Primary: semantic vector search over the embedded KB. Content-based, so it
-  // disambiguates a question id shared across exams (many exams have a "Q3c").
+  // Primary: semantic vector search over the embedded KB. Content-based, and — when the
+  // exam is known — scoped to it, so a question id shared across exams (every exam has a
+  // "Q1") grounds on the right exam's solution.
   if (hasPinecone && questionText.trim()) {
-    const sem = await findSemantic(questionText);
+    const sem = await findSemantic(questionText, exam);
     if (sem?.found) {
       found = sem.found;
       method = "semantic";
@@ -186,7 +183,7 @@ export async function retrieve(
 
   // Fallback (offline / Pinecone miss): exact question-id over the bundled KB.
   if (!found) {
-    found = findExact(want);
+    found = findExact(want, exam);
     if (found) method = "exact-id";
   }
 
