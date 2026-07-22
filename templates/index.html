@@ -68,11 +68,6 @@
         </select>
       </div>
 
-      <div class="instrblock">
-        <label class="instrlabel" for="instr">Specific instructions <span class="opt">(optional)</span></label>
-        <textarea id="instr" class="instr" placeholder='e.g. "Grade only Q3 and Q4" · "General feedback on the exam, no scoring". Leave empty to grade the whole exam.'></textarea>
-      </div>
-
       <div class="controls">
         <button class="btn" id="gradeBtn" disabled>Grade exam</button>
       </div>
@@ -222,7 +217,6 @@
       try {
         const fd = new FormData();
         fd.append("file", file);
-        if ($("instr").value.trim()) fd.append("instructions", $("instr").value.trim());
         if ($("exam").value) fd.append("exam", $("exam").value);
         const res = await fetch("/api/execute", { method: "POST", body: fd });
         const data = await res.json();

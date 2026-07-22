@@ -1,0 +1,141 @@
+{
+  "exam": "2024w moed A",
+  "course": "104041",
+  "questions": {
+    "1a": {
+      "id": "Q1a",
+      "points": 10,
+      "topic": "pointwise inequality via monotonicity",
+      "problem": "1. (20 נק') סעיף א (10 נק'): הראו כי לכל x in [0, pi/2] מתקיים  sin^2(x)/2 <= ln(1+2 sin^2 x) <= 4x.",
+      "official_solution": "Right inequality ln(1+2 sin^2 x) <= 4x: let h(x)=4x - ln(1+2 sin^2 x). h(0)=0 and h'(x)=4 - (2 sin 2x)/(1+2 sin^2 x). Since |2 sin 2x| <= 2 and 1+2 sin^2 x >= 1, the subtracted term is <= 2, so h'(x) >= 2 > 0; h is increasing and h(0)=0, hence h >= 0 on [0, pi/2].\nLeft inequality sin^2(x)/2 <= ln(1+2 sin^2 x): let g(x)=ln(1+2 sin^2 x) - sin^2(x)/2. g(0)=0 and g'(x)= sin 2x*(2/(1+2 sin^2 x) - 1/2). On [0, pi/2], sin 2x >= 0 and 1 <= 1+2 sin^2 x <= 3, so 2/(1+2 sin^2 x) >= 2/3 > 1/2, making the bracket >= 0; thus g' >= 0, g increasing, g(0)=0, hence g >= 0.",
+      "final_answer": "sin^2(x)/2 <= ln(1+2 sin^2 x) <= 4x on [0, pi/2].",
+      "notes": "Both bounds follow from a monotonicity argument (define the difference, check the endpoint at 0, sign the derivative). Endpoints must be checked and the derivative bounds justified for full credit."
+    },
+    "1b": {
+      "id": "Q1b",
+      "points": 10,
+      "topic": "integral inequality by integrating a pointwise bound",
+      "problem": "1. סעיף ב (10 נק'): הראו כי  1/3 <= integral_0^{pi/2} sin(x) * ln(1+2 sin^2 x) dx <= 4.",
+      "official_solution": "On [0, pi/2] sin x >= 0, so multiply the inequality of part (a) by sin x and integrate over [0, pi/2]:\n integral_0^{pi/2} (sin^3 x)/2 dx <= integral_0^{pi/2} sin x ln(1+2 sin^2 x) dx <= integral_0^{pi/2} 4x sin x dx.\nLower bound: integral_0^{pi/2} sin^3 x dx = 2/3, so the left side = (1/2)(2/3) = 1/3.\nUpper bound: integral_0^{pi/2} 4x sin x dx = 4[ -x cos x + sin x ]_0^{pi/2} = 4(0 + 1) = 4.\nTherefore 1/3 <= I <= 4.",
+      "final_answer": "1/3 <= integral_0^{pi/2} sin(x) ln(1+2 sin^2 x) dx <= 4.",
+      "notes": "Key step is multiplying part (a) by sin x >= 0 (preserves the inequality) then evaluating integral sin^3 x = 2/3 and integral 4x sin x = 4 by parts."
+    },
+    "2a": {
+      "id": "Q2a",
+      "points": 5,
+      "topic": "statement of the Intermediate Value Theorem",
+      "problem": "2. (15 נק') סעיף א (5 נק'): נסחו את משפט ערך הביניים.",
+      "official_solution": "Intermediate Value Theorem: if f is continuous on the closed interval [a,b], then for EVERY value t between f(a) and f(b) (i.e. every t with min(f(a),f(b)) <= t <= max(f(a),f(b))) there exists a point c in [a,b] such that f(c)=t.",
+      "final_answer": "For every t between f(a) and f(b) there exists c in [a,b] with f(c)=t (f continuous on [a,b]).",
+      "notes": "The universal quantifier 'for EVERY t between f(a) and f(b)' is part of the statement. Stating it for a single unspecified t is imprecise and costs 1-2 pts of 5, not all of it."
+    },
+    "2b": {
+      "id": "Q2b",
+      "points": 10,
+      "topic": "number of real roots via even symmetry and monotonicity",
+      "problem": "2. סעיף ב (10 נק'): מצאו את מספר הפתרונות של המשוואה  x^2 + x sin(x) + cos(x) = 0.",
+      "official_solution": "Let f(x)=x^2 + x sin x + cos x. Then f'(x)=2x + (sin x + x cos x) - sin x = 2x + x cos x = x(2+cos x). Since 2+cos x > 0 for all x, f'(x) < 0 for x<0 and f'(x) > 0 for x>0, so x=0 is the global minimum. f(0)=cos 0 = 1 > 0, hence f(x) >= 1 > 0 for all x and the equation f(x)=0 has NO real solutions.",
+      "final_answer": "0 real solutions.",
+      "notes": "DISCREPANCY -- READ BEFORE GRADING. As printed the equation is x^2 + x sin x + cos x = 0, whose global minimum is f(0)=1>0, so the correct count is 0 real solutions. The graded booklet's red pen and this course's few-shot Example 3 treat '2 solutions' as correct; that answer holds only for x^2 + x sin x - cos x = 0 (there f(0)=-1, and by even symmetry + strict monotonicity on each side + IVT there are exactly 2 roots). If the intended sign of cos is negative, replace this entry's final_answer with '2 solutions'. Flag for course-staff confirmation."
+    },
+    "3": {
+      "id": "Q3",
+      "points": 15,
+      "topic": "Taylor approximation with Lagrange remainder",
+      "problem": "3. (15 נק'): חשבו את sqrt(12) ברמת דיוק של 1/100. פתחו פולינום טיילור לפונקציה f(x)=(x+9)^{1/2} סביב x=0 והציבו x=3 (שכן sqrt(12)=sqrt(3+9)).",
+      "official_solution": "f(x)=(x+9)^{1/2}: f(0)=3; f'(x)=(1/2)(x+9)^{-1/2}, f'(0)=1/6; f''(x)=-(1/4)(x+9)^{-3/2}, f''(0)=-1/108. Second-order Taylor around 0: T2(x)=3 + x/6 + (f''(0)/2) x^2 = 3 + x/6 - x^2/216.\nLagrange remainder with f'''(x)=(3/8)(x+9)^{-5/2}, 0<c<3: |R2(3)| = |f'''(c)/3! * 3^3| = 27/(16 (c+9)^{5/2}) <= 27/(16 * 9^{5/2}) = 27/3888 = 1/144 < 1/100.\nHence sqrt(12) ~ T2(3) = 3 + 1/2 - 9/216 = 3 + 1/2 - 1/24 = 83/24 ~ 3.4583, within 1/144 < 1/100 of the true value 3.4641...",
+      "final_answer": "sqrt(12) ~ T2(3) = 3 + 1/2 - 1/24 = 83/24 ~ 3.4583, with |error| <= 1/144 < 1/100.",
+      "notes": "The x^2 coefficient must include the 1/2! factor: f''(0)/2 = -1/216 (a common error is writing -1/108). Second order is required and sufficient for accuracy 1/100; computing higher derivatives than needed is unnecessary."
+    },
+    "tf1": {
+      "id": "TF-1",
+      "points": 3,
+      "topic": "limit of an alternating partial sum",
+      "problem": "נכון/לא נכון (3 נק'): lim_{n->inf} [ 1 - 2 + 3 - 4 + ... + (-1)^n n ] / n^2 = 2/3.",
+      "official_solution": "The partial sum equals -n/2 for even n and (n+1)/2 for odd n; divided by n^2 it tends to 0, not 2/3.",
+      "final_answer": "לא נכון (False).",
+      "notes": "All-or-nothing; based only on the circled answer."
+    },
+    "tf2": {
+      "id": "TF-2",
+      "points": 3,
+      "topic": "power beats logarithm asymptotically",
+      "problem": "נכון/לא נכון (3 נק'): קיים x0 > 0 כך שלכל x > x0 מתקיים  x^{0.000001} > ln(x).",
+      "official_solution": "For any eps>0, x^eps / ln x -> inf as x -> inf, so eventually x^{0.000001} > ln x. The statement is true.",
+      "final_answer": "נכון (True).",
+      "notes": "All-or-nothing; based only on the circled answer."
+    },
+    "tf3": {
+      "id": "TF-3",
+      "points": 3,
+      "topic": "subsequence conditions do not force convergence",
+      "problem": "נכון/לא נכון (3 נק'): אם lim_{n->inf} a_{4n+1} קיים ו- lim_{n->inf} (a_{4n+1} - a_{4n+2}) = 0, אזי הסדרה {a_n} מתכנסת.",
+      "official_solution": "Only the subsequences a_{4n+1} and a_{4n+2} are controlled; the terms a_{4n} and a_{4n+3} are unconstrained, so {a_n} need not converge (choose them to oscillate). The statement is false.",
+      "final_answer": "לא נכון (False).",
+      "notes": "All-or-nothing; based only on the circled answer."
+    },
+    "tf4": {
+      "id": "TF-4",
+      "points": 3,
+      "topic": "an inflection point can also be an extremum",
+      "problem": "נכון/לא נכון (3 נק'): נקודת פיתול יכולה להיות גם נקודת מינימום.",
+      "official_solution": "True. Example: f(x)=x^2 for x<=0 and f(x)=sqrt(x) for x>0 has a (global) minimum at 0, while the concavity changes there (convex on the left, concave on the right), so 0 is both a minimum and an inflection point.",
+      "final_answer": "נכון (True).",
+      "notes": "All-or-nothing; based only on the circled answer."
+    },
+    "tf5": {
+      "id": "TF-5",
+      "points": 3,
+      "topic": "one-sided differentiability implies one-sided continuity",
+      "problem": "נכון/לא נכון (3 נק'): אם f גזירה מימין בנקודה a אזי היא רציפה מימין בנקודה a.",
+      "official_solution": "True. If the right derivative exists then lim_{x->a+} (f(x)-f(a)) = lim (f(x)-f(a))/(x-a) * (x-a) = f'_+(a) * 0 = 0, i.e. f is right-continuous at a.",
+      "final_answer": "נכון (True).",
+      "notes": "All-or-nothing; based only on the circled answer."
+    },
+    "mc1": {
+      "id": "MC-1",
+      "points": 7,
+      "topic": "limit of a 1^infty indeterminate form",
+      "problem": "אמריקאי (7 נק'): הגבול של הפונקציה  lim_{x->0} ( sin(x)/x )^{ x / ln(1+x) }  הוא: א. -inf  ב. 2  ג. 1  ד. inf  ה. 0.",
+      "official_solution": "Base sin x / x -> 1, exponent x/ln(1+x) -> 1. With L the limit, ln L = lim (x/ln(1+x)) * ln(sin x / x) = 1 * 0 = 0, so L = 1.",
+      "final_answer": "ג (1).",
+      "notes": "All-or-nothing; based only on the circled option."
+    },
+    "mc2": {
+      "id": "MC-2",
+      "points": 7,
+      "topic": "convergence of two series",
+      "problem": "אמריקאי (7 נק'): נתונים I = sum_{n=2}^inf sin^2( pi/2 - arctan n )  ו-  II = sum_{n=1}^inf tan(1+1/n)/ln(1+1/n). אזי: א. I מתכנס II מתבדר  ב. II מתכנס I מתבדר  ג. שניהם מתכנסים  ד. שניהם מתבדרים.",
+      "official_solution": "sin(pi/2 - arctan n) = cos(arctan n) = 1/sqrt(1+n^2), so I = sum 1/(1+n^2) converges. In II the terms tend to tan(1)/ln(1+1/n); since ln(1+1/n) ~ 1/n -> 0 and tan 1 != 0, the terms ~ n tan 1 -> inf, so II diverges.",
+      "final_answer": "א (I converges, II diverges).",
+      "notes": "All-or-nothing; based only on the circled option."
+    },
+    "mc3": {
+      "id": "MC-3",
+      "points": 7,
+      "topic": "interval of convergence of a power series",
+      "problem": "אמריקאי (7 נק'): הטור  sum_{n=1}^inf ln(n) (x-1)^n  מתכנס עבור ה-x-ים הבאים: א. 0<=x<=2  ב. 0<=x<2  ג. 0<x<=2  ד. -inf<x<inf  ה. 0<x<2.",
+      "official_solution": "Radius: limsup ln(n)^{1/n} = 1, so R = 1 and |x-1| < 1, i.e. 0 < x < 2. At both endpoints the general term ln(n)(+-1)^n does not tend to 0, so the series diverges there; the interval is open.",
+      "final_answer": "ה (0 < x < 2).",
+      "notes": "All-or-nothing; based only on the circled option."
+    },
+    "mc4": {
+      "id": "MC-4",
+      "points": 7,
+      "topic": "fixed-point existence via IVT",
+      "problem": "אמריקאי (7 נק'): נתונה פונקציה רציפה f:[0,1]->[0,1]. אזי: א. קיימת c ב-[0,1] כך ש- f^2(c) tan(c+1) = c  ב. ... f(c)+1 = c  ג. ... f(sin c) = c  ד. ... f(c) ln(c+3) = c  ה. ... e^c f(c) = c.",
+      "official_solution": "Option ג: let g(c)=f(sin c) - c. g(0)=f(0) >= 0 and g(1)=f(sin 1) - 1 <= 0 (since f <= 1); by the IVT there is c in [0,1] with f(sin c) = c. The other options can fail (e.g. f == 1 breaks ב, ד and ה).",
+      "final_answer": "ג (there exists c in [0,1] with f(sin c) = c).",
+      "notes": "All-or-nothing; based only on the circled option."
+    },
+    "mc5": {
+      "id": "MC-5",
+      "points": 7,
+      "topic": "definite integral by substitution",
+      "problem": "אמריקאי (7 נק'): ערך האינטגרל  integral_1^e dx / ( x * (ln x)^{0.5} ): א. 4  ב. 3  ג. 2  ד. 1  ה. 0.",
+      "official_solution": "Substitute u = ln x, du = dx/x: integral_0^1 u^{-1/2} du = [ 2 sqrt(u) ]_0^1 = 2.",
+      "final_answer": "ג (2).",
+      "notes": "All-or-nothing; based only on the circled option."
+    }
+  }
+}

@@ -21,6 +21,7 @@ _SOL_DIR = os.path.join(_KB_DIR, "solutions")
 _FILES = [
     "2023w_final_A.json",
     "2024w_final_A.json",
+    "2024w_104041_A.json",
     "2025w_final_A.json",
     "2025s_final_A.json",
     "2026w_final_B.json",

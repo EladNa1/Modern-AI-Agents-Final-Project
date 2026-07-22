@@ -4,10 +4,20 @@ Port of lib/agent/parser.ts.
 """
 from __future__ import annotations
 
+import os
 from dataclasses import dataclass
 
 from .llm import StepLog, chat, extract_json
 from .models import ImageInput, ParsedFragment, Usage
+from .zoom import ZoomBudget, zoom_read
+
+# READING POLICY Pass 2. Off by default so a normal run is one vision call per page; set
+# CHECKMATE_ZOOM=1 to re-read low-confidence questions from a magnified crop of their region.
+ZOOM_CONF_THRESHOLD = 0.55  # a fragment below this is a candidate for a zoom re-read
+
+
+def _zoom_enabled() -> bool:
+    return (os.environ.get("CHECKMATE_ZOOM") or "").strip().lower() in ("1", "true", "yes", "on")
 
 
 @dataclass
@@ -32,10 +42,14 @@ Output ONLY a JSON object, no prose, no code fences:
 {"questions":[{"id":"Q3c","text":"...","latex":"...","confidence":0.0}]}"""
 
 
-def run_parser(images: list[ImageInput], log: StepLog, instructions: str = "") -> ParseResult:
+def run_parser(images: list[ImageInput], log: StepLog, instructions: str = "",
+               zoom: bool | None = None) -> ParseResult:
     """One vision call PER PAGE (not all pages at once): more robust on long exams, and each
     page is logged as its own Parser step. Fragments are returned per page and deliberately
-    NOT merged here -- the orchestrator groups them by the question the Retriever matches."""
+    NOT merged here -- the orchestrator groups them by the question the Retriever matches.
+
+    `zoom` toggles READING POLICY Pass 2 (default: the CHECKMATE_ZOOM env flag)."""
+    zoom = _zoom_enabled() if zoom is None else zoom
     total: Usage = {"prompt": 0, "completion": 0, "total": 0}
     raws: list[str] = []
     fragments: list[ParsedFragment] = []
@@ -46,6 +60,10 @@ def run_parser(images: list[ImageInput], log: StepLog, instructions: str = "") -
             f"Transcribe this scanned Calculus 1 exam page{page_tag} and split it into "
             f"questions. Return only the JSON object."
         )
+        if zoom:
+            user += ('\n\nAlso add to each question a normalized bounding box '
+                     '"bbox":[x0,y0,x1,y1] (each in [0,1], origin top-left) locating that '
+                     "question's work on the page, so an unclear region can be re-read zoomed.")
         if instructions:
             user += f"\n\nGrader context (do not act on it, just transcribe): {instructions}"
 
@@ -57,8 +75,6 @@ def run_parser(images: list[ImageInput], log: StepLog, instructions: str = "") -
 
         parsed = extract_json(text) or {}
         page_qs = _normalize_fragments(parsed.get("questions"), p + 1)
-        fragments.extend(page_qs)
-        raws.append(text)
         for k in total:
             total[k] += usage[k]
 
@@ -68,7 +84,40 @@ def run_parser(images: list[ImageInput], log: StepLog, instructions: str = "") -
             "Vision OCR", usage,
         )
 
+        # Pass 2: re-read the illegible fragments from a magnified crop of their own region.
+        if zoom:
+            zu = _zoom_pass(image, page_qs, log)
+            for k in total:
+                total[k] += zu[k]
+
+        fragments.extend(page_qs)
+        raws.append(text)
+
     return ParseResult(fragments=fragments, raw="\n\n".join(raws), usage=total)
+
+
+def _zoom_pass(image: ImageInput, page_qs: list[ParsedFragment], log: StepLog) -> Usage:
+    """READING POLICY Pass 2: for each low-confidence fragment that carries a bbox, crop and
+    magnify that region and re-transcribe it; adopt the re-read only if it is more confident.
+    Mutates `page_qs` in place. Capped at two zoom reads per page. Returns tokens spent."""
+    used: Usage = {"prompt": 0, "completion": 0, "total": 0}
+    budget = ZoomBudget(limit=2)
+    for frag in page_qs:
+        if frag.confidence >= ZOOM_CONF_THRESHOLD or not frag.bbox:
+            continue
+        res = zoom_read(image, frag.bbox, log, budget, hint=f"question {frag.id}")
+        if res is None:  # budget exhausted for this page
+            break
+        for k in used:
+            used[k] += res.usage[k]
+        z = extract_json(res.text) or {}
+        zconf = z.get("confidence")
+        zconf = max(0.0, min(1.0, zconf)) if isinstance(zconf, (int, float)) else 0.0
+        if (z.get("text") or z.get("latex")) and zconf > frag.confidence:
+            frag.text = str(z.get("text") or frag.text)
+            frag.latex = str(z["latex"]) if z.get("latex") else frag.latex
+            frag.confidence = zconf
+    return used
 
 
 def _normalize_fragments(qs, page: int) -> list[ParsedFragment]:
@@ -79,11 +128,15 @@ def _normalize_fragments(qs, page: int) -> list[ParsedFragment]:
         if not isinstance(q, dict) or not (q.get("text") or q.get("latex")):
             continue
         conf = q.get("confidence")
+        bbox = q.get("bbox")
+        bbox = bbox if (isinstance(bbox, list) and len(bbox) == 4
+                        and all(isinstance(v, (int, float)) for v in bbox)) else None
         out.append(ParsedFragment(
             id=(str(q.get("id") or f"Q{i + 1}").strip() or f"Q{i + 1}"),
             text=str(q.get("text") or ""),
             latex=str(q["latex"]) if q.get("latex") else None,
             confidence=max(0.0, min(1.0, conf)) if isinstance(conf, (int, float)) else 0.5,
             page=page,
+            bbox=bbox,
         ))
     return out

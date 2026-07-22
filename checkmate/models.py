@@ -6,7 +6,7 @@ plain dict {"prompt","completion","total"} so the StepLog can accumulate it chea
 """
 from __future__ import annotations
 
-from dataclasses import dataclass
+from dataclasses import dataclass, field
 
 Usage = dict  # {"prompt": int, "completion": int, "total": int}
 
@@ -26,6 +26,7 @@ class ParsedFragment:
     confidence: float
     latex: str | None = None
     page: int = 1
+    bbox: list | None = None  # optional normalized [x0,y0,x1,y1] of this work, for zoom Pass 2
 
 
 @dataclass
@@ -63,6 +64,13 @@ class Grade:
     feedback: str
     justification: str
     confidence: float
+    # GRADER_PROMPT v2 fields. All defaulted, so existing keyword constructors and the
+    # `Grade(**{**grade.__dict__, ...})` splat in orchestrator.py keep working unchanged.
+    question_id: str | None = None          # id the model read from the exam header, e.g. "Q2b"
+    subscores: list[dict] = field(default_factory=list)  # [{"part","score","max"}], sums to score
+    read_attempts: int = 1                  # 1|2|3 — reads the two-pass reading policy needed
+    flags: list[str] = field(default_factory=list)       # borderline_*/missing_part/retrieval_weak
+    sources: list[str] = field(default_factory=list)     # ids of solution/lecture chunks used
 
 
 @dataclass
