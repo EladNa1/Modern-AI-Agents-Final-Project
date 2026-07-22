@@ -1,162 +1,19 @@
-"""
-Grader module (Python port of lib/agent/grader.ts) -- scores one question.
+"""Grader module -- scores one question. Port of lib/agent/grader.ts.
 
 Prompt engineering (deck slide 8): PERSONA · CHAIN-OF-THOUGHT · FEW-SHOT · STRUCTURED OUTPUT.
 It grades the student's OWN method, grounded strictly in the retrieved official solution,
 and awards partial credit -- it does not invent a rubric.
 
-This file is self-contained on purpose (the trial goal is readability): the small LLM
-plumbing at the top mirrors lib/llm.ts; the grading logic below is the part worth reading.
-
-Read it (no API calls):        python lib/agent/grader.py
-Grade the built-in sample live: python lib/agent/grader.py --live   (spends LLMOD tokens)
+Inspect the prompt (no API call):  python -m checkmate.grader
+Grade the built-in sample live:     python -m checkmate.grader --live
 """
 from __future__ import annotations
 
-import json
 import math
-import os
-import re
 import sys
-from dataclasses import dataclass, field
 
-# ─────────────────────────── LLM plumbing (see lib/llm.ts) ───────────────────────────
-# Compact equivalent of lib/llm.ts's chat()/extractJson()/StepLog, inlined so this trial
-# file runs on its own. In a full port these live in one shared lib/llm.py.
-
-ROOT = os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
-
-
-def _load_env_local() -> None:
-    p = os.path.join(ROOT, ".env.local")
-    if not os.path.exists(p):
-        return
-    for line in open(p, encoding="utf-8"):
-        line = line.strip()
-        if line and not line.startswith("#") and "=" in line:
-            k, v = line.split("=", 1)
-            os.environ.setdefault(k.strip(), v.strip())
-
-
-Usage = dict  # {"prompt": int, "completion": int, "total": int}
-
-
-def chat(system: str, user: str, max_tokens: int = 1500, json_mode: bool = False) -> tuple[str, Usage]:
-    """One chat completion against the LLMod.ai OpenAI-compatible gateway."""
-    from openai import OpenAI
-
-    _load_env_local()
-    client = OpenAI(base_url=os.environ["LLMOD_BASE_URL"], api_key=os.environ["LLMOD_KEY"])
-    kwargs = {
-        "model": os.environ["LLMOD_MODEL"],
-        "max_tokens": max_tokens,
-        "messages": [
-            {"role": "system", "content": system},
-            {"role": "user", "content": user},
-        ],
-    }
-    if json_mode:
-        kwargs["response_format"] = {"type": "json_object"}
-    resp = client.chat.completions.create(**kwargs)
-    u = resp.usage
-    usage = {
-        "prompt": getattr(u, "prompt_tokens", 0) or 0,
-        "completion": getattr(u, "completion_tokens", 0) or 0,
-        "total": getattr(u, "total_tokens", 0) or 0,
-    }
-    return (resp.choices[0].message.content or ""), usage
-
-
-def extract_json(text: str):
-    """Lenient JSON extraction -- models sometimes wrap JSON in prose or ```json fences.
-    Returns the first balanced {...} object parsed, or None."""
-    fenced = re.search(r"```(?:json)?\s*([\s\S]*?)```", text, re.IGNORECASE)
-    candidate = fenced.group(1) if fenced else text
-    start = candidate.find("{")
-    if start == -1:
-        return None
-    depth = 0
-    for i in range(start, len(candidate)):
-        c = candidate[i]
-        if c == "{":
-            depth += 1
-        elif c == "}":
-            depth -= 1
-            if depth == 0:
-                try:
-                    return json.loads(candidate[start:i + 1])
-                except json.JSONDecodeError:
-                    return None
-    return None
-
-
-class StepLog:
-    """Accumulates brief-shaped steps for the /api/execute trace."""
-
-    def __init__(self) -> None:
-        self.steps: list[dict] = []
-        self.usage: Usage = {"prompt": 0, "completion": 0, "total": 0}
-
-    def add(self, module, system, user, response, pattern=None, usage=None) -> None:
-        self.steps.append({
-            "module": module, "pattern": pattern,
-            "prompt": {"System_prompt": system, "User_prompt": user},
-            "response": response,
-        })
-        if usage:
-            for k in self.usage:
-                self.usage[k] += usage.get(k, 0)
-
-
-# ───────────────────────────── data the grader works with ─────────────────────────────
-
-@dataclass
-class ParsedFragment:
-    id: str
-    text: str
-    confidence: float
-    latex: str | None = None
-    page: int = 1
-
-
-@dataclass
-class SolutionEntry:
-    id: str
-    points: int
-    problem: str
-    official_solution: str
-    topic: str | None = None
-    final_answer: str | None = None
-    notes: str | None = None
-
-
-@dataclass
-class Retrieved:
-    entry: SolutionEntry
-    exam: str
-    course: str
-
-
-@dataclass
-class NotesChunk:
-    source: str
-    page: int
-    text: str
-    score: float
-
-
-@dataclass
-class Grade:
-    id: str
-    score: float
-    max: int
-    status: str  # "ok" | "partial" | "escalate"
-    feedback: str
-    justification: str
-    confidence: float
-
-
-# ─────────────────────────────── the grading logic ───────────────────────────────
+from .llm import StepLog, chat, extract_json
+from .models import Grade, NotesChunk, ParsedFragment, Retrieved, Usage
 
 GRADER_SYSTEM = """PERSONA
 You are a senior teaching assistant grading Technion Calculus 1 (Hedva 1) exams. You are rigorous, fair, and consistent — the same mistake always costs the same. You receive ONE question at a time: the student's transcribed work and the official solution.
@@ -180,7 +37,8 @@ Return ONLY a JSON object, no prose, no code fences:
 Rules: status "ok" only if score == max; "partial" if 0 < score < max; "escalate" if you cannot grade fairly."""
 
 
-def build_grader_user(q: ParsedFragment, retrieved: Retrieved | None, notes: list[NotesChunk]) -> tuple[str, int]:
+def build_grader_user(q: ParsedFragment, retrieved: Retrieved | None,
+                      notes: list[NotesChunk]) -> tuple[str, int]:
     """Assemble the user message (grounding + student work). Returns (message, max_points).
     Pure and side-effect-free, so it can be inspected without any API call."""
     max_points = retrieved.entry.points if retrieved else 0
@@ -219,7 +77,8 @@ def build_grader_user(q: ParsedFragment, retrieved: Retrieved | None, notes: lis
     return user, max_points
 
 
-def run_grader(q: ParsedFragment, retrieved: Retrieved | None, log: StepLog, notes: list[NotesChunk] | None = None) -> Grade:
+def run_grader(q: ParsedFragment, retrieved: Retrieved | None, log: StepLog,
+               notes: list[NotesChunk] | None = None) -> Grade:
     notes = notes or []
     user, max_points = build_grader_user(q, retrieved, notes)
     text, usage = chat(GRADER_SYSTEM, user, max_tokens=1200, json_mode=True)
@@ -263,7 +122,6 @@ def _normalize_grade(qid: str, max_points: int, parser_confidence: float,
         status = "partial"
     else:
         status = "partial"
-    # Respect an explicit escalate from the model.
     if str(raw.get("status", "")).lower() == "escalate":
         status = "escalate"
 
@@ -278,7 +136,8 @@ def _normalize_grade(qid: str, max_points: int, parser_confidence: float,
 
 
 if __name__ == "__main__":
-    # Built-in sample: the calibration case from the system prompt.
+    from .models import SolutionEntry
+
     sample_q = ParsedFragment(id="Q1", text="d/dx[x^2 * ln x] = 2x * ln x", confidence=0.9)
     sample_ret = Retrieved(
         entry=SolutionEntry(

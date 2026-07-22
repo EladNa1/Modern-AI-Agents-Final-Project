@@ -1,0 +1,237 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>CheckMate — Calculus 1 exam grader</title>
+  <meta name="description" content="An autonomous agent that grades Calculus 1 exams — score, partial credit, and written feedback per question." />
+  <link rel="stylesheet" href="/static/styles.css" />
+</head>
+<body>
+  <div class="page">
+    <header class="masthead">
+      <div class="brandrow">
+        <div class="logomark">♞</div>
+        <div class="brandname">CheckMate</div>
+      </div>
+      <p class="tagline">
+        An autonomous agent that grades <strong>Calculus&nbsp;1 (Hedva&nbsp;1)</strong> exams.
+        Give it a scanned exam — CheckMate reads every page, grades each question on the
+        student's own method with partial credit and written feedback, and shows the full
+        execution trace. Feedback that is <em>fast, consistent, and fair</em>.
+      </p>
+      <div class="metabar">
+        <span class="pill"><a href="/api/team_info" target="_blank" rel="noreferrer">GET /api/team_info</a></span>
+        <span class="pill"><a href="/api/agent_info" target="_blank" rel="noreferrer">GET /api/agent_info</a></span>
+        <span class="pill"><a href="/api/model_architecture" target="_blank" rel="noreferrer">GET /api/model_architecture</a></span>
+        <span class="pill">POST /api/execute</span>
+      </div>
+    </header>
+
+    <section class="problem">
+      <p class="kicker">Why CheckMate</p>
+      <h2 class="probh">Grading Calculus by hand doesn't scale</h2>
+      <div class="probgrid">
+        <div class="probitem"><span class="probic">⏳</span><b>Slow feedback</b><p>Students wait days to learn where they went wrong — long after they've moved on.</p></div>
+        <div class="probitem"><span class="probic">⚖️</span><b>Inconsistent credit</b><p>Partial credit drifts between graders and across a long stack: same mistake, different score.</p></div>
+        <div class="probitem"><span class="probic">🔇</span><b>Missing feedback</b><p>Often just a number lands, with no explanation of what went wrong or how to improve.</p></div>
+      </div>
+    </section>
+
+    <section class="card">
+      <p class="kicker">Grade an exam</p>
+      <h2>Upload the scanned exam</h2>
+      <p class="hint">
+        Upload the exam as a PDF or image (PNG/JPG). CheckMate renders every page, reads it
+        with gpt-5.4-mini, grounds each grade in the official course solution, and returns the
+        marked-up result plus the full <code>steps[]</code> trace.
+      </p>
+
+      <div class="dropzone" id="dropzone" role="button" tabindex="0">
+        <input type="file" id="fileInput" accept=".pdf,.doc,.docx,.png,.jpg,.jpeg,.webp" hidden />
+        <div id="dzEmpty">
+          <div class="dzicon">⇪</div>
+          <div class="dztitle">Drop exam scan here</div>
+          <div class="dzsub">or click to browse — PDF · Word · images</div>
+        </div>
+        <div class="filechip" id="dzFile" style="display:none">
+          <span class="fileic" id="fileIcon">📄</span>
+          <span class="filemeta"><span class="filename" id="fileName"></span><span class="filesize" id="fileSize"></span></span>
+          <button class="filex" id="fileRemove" aria-label="Remove file">✕</button>
+        </div>
+      </div>
+
+      <div class="instrblock">
+        <label class="instrlabel" for="exam">Which exam? <span class="opt">(recommended — scopes grading to this exam's solutions)</span></label>
+        <select id="exam" class="instr">
+          <option value="">Auto — search all exams (may mismatch across exams)</option>
+        </select>
+      </div>
+
+      <div class="instrblock">
+        <label class="instrlabel" for="instr">Specific instructions <span class="opt">(optional)</span></label>
+        <textarea id="instr" class="instr" placeholder='e.g. "Grade only Q3 and Q4" · "General feedback on the exam, no scoring". Leave empty to grade the whole exam.'></textarea>
+      </div>
+
+      <div class="controls">
+        <button class="btn" id="gradeBtn" disabled>Grade exam</button>
+      </div>
+    </section>
+
+    <div id="error" class="error" style="display:none"></div>
+    <div id="results"></div>
+
+    <section class="card">
+      <p class="kicker">How it works</p>
+      <h2>A Reflection Agent — grade, then self-critique</h2>
+      <p class="hint">CheckMate grades each question first, then critiques its own grade against the retrieved course evidence and revises until it's confident. Every step is logged in the <code>steps[]</code> trace above.</p>
+      <figure class="archfig"><img src="/static/architecture.png" alt="CheckMate agent architecture — Parser, Retriever, Grader, Reflector" /></figure>
+      <div class="pipeline">
+        <div class="pnode"><span class="pnum">1</span><b>Parser</b><p>Reads every page with vision OCR (gpt-5.4-mini) and splits the exam into questions — faithfully transcribing the student's own work.</p></div>
+        <div class="pnode"><span class="pnum">2</span><b>Retriever</b><p>Pinecone vector RAG: pulls the matching official solution <em>and</em> the most relevant course-notes chunks to ground the grade.</p></div>
+        <div class="pnode"><span class="pnum">3</span><b>Grader</b><p>Scores the student's actual method with partial credit and written feedback — persona · chain-of-thought · few-shot · structured output.</p></div>
+        <div class="pnode"><span class="pnum">4</span><b>Reflector</b><p>Critiques its own grade against the evidence and revises, up to N passes — then approves, or escalates to a teacher.</p></div>
+      </div>
+    </section>
+
+    <p class="foot">
+      <strong>CheckMate</strong> · <em>Modern AI Agents</em> course project<br />
+      Elad Nachalieli · Shiri Haboob · Yaron Mozes<br />
+      <span class="footsub">Reflection Agent · vision OCR + Pinecone RAG · gpt-5.4-mini · escalates when unsure.</span>
+    </p>
+  </div>
+
+  <script>
+    const $ = (id) => document.getElementById(id);
+    let file = null;
+    let previewUrl = null;
+
+    function kindOf(name) {
+      const n = name.toLowerCase();
+      if (/\.(png|jpe?g|webp|gif)$/.test(n)) return "image";
+      if (n.endsWith(".pdf")) return "pdf";
+      if (/\.(docx?|rtf)$/.test(n)) return "word";
+      return "other";
+    }
+    const STATUS_LABEL = { ok: "full credit", partial: "partial", escalate: "escalate" };
+
+    // Populate the exam picker.
+    fetch("/api/exams").then((r) => r.json()).then((d) => {
+      for (const x of (d.exams || [])) {
+        const o = document.createElement("option");
+        o.value = x.value; o.textContent = x.label; $("exam").appendChild(o);
+      }
+    }).catch(() => {});
+
+    function setFile(f) {
+      $("results").innerHTML = ""; $("error").style.display = "none";
+      if (previewUrl) URL.revokeObjectURL(previewUrl);
+      file = f || null;
+      if (!file) {
+        previewUrl = null; $("dzEmpty").style.display = ""; $("dzFile").style.display = "none";
+        $("gradeBtn").disabled = true; return;
+      }
+      previewUrl = URL.createObjectURL(file);
+      const kind = kindOf(file.name);
+      $("fileIcon").textContent = kind === "image" ? "🖼" : kind === "pdf" ? "📄" : "📝";
+      $("fileName").textContent = file.name;
+      $("fileSize").textContent = Math.round(file.size / 1024) + " KB · " + kind.toUpperCase();
+      $("dzEmpty").style.display = "none"; $("dzFile").style.display = "";
+      $("gradeBtn").disabled = false;
+    }
+
+    const dz = $("dropzone");
+    dz.addEventListener("click", () => $("fileInput").click());
+    $("fileInput").addEventListener("change", (e) => setFile(e.target.files[0] || null));
+    dz.addEventListener("dragover", (e) => { e.preventDefault(); dz.classList.add("over"); });
+    dz.addEventListener("dragleave", () => dz.classList.remove("over"));
+    dz.addEventListener("drop", (e) => { e.preventDefault(); dz.classList.remove("over"); if (e.dataTransfer.files[0]) setFile(e.dataTransfer.files[0]); });
+    $("fileRemove").addEventListener("click", (e) => { e.stopPropagation(); setFile(null); $("fileInput").value = ""; });
+
+    function el(tag, cls, text) { const e = document.createElement(tag); if (cls) e.className = cls; if (text != null) e.textContent = text; return e; }
+
+    function renderResult(data) {
+      const meta = data.meta; const wrap = $("results"); wrap.innerHTML = "";
+      if (!meta) return;
+      const kind = file ? kindOf(file.name) : "other";
+
+      if (meta.mode === "general") {
+        const card = el("section", "card");
+        card.appendChild(el("p", "kicker", "Result — general assessment"));
+        const a = el("div", "annot partial"); const p = el("p", "annotfb", data.response); p.style.whiteSpace = "pre-wrap"; a.appendChild(p); card.appendChild(a);
+        wrap.appendChild(card);
+      } else {
+        const card = el("section", "card");
+        card.appendChild(el("p", "kicker", "Result — graded copy"));
+        const head = el("div", "gradehead");
+        const badge = el("div", "scorebadge");
+        badge.appendChild(el("span", "big", String(meta.total)));
+        badge.appendChild(el("span", "den", "/ " + meta.max));
+        head.appendChild(badge);
+        const esc = meta.questions.filter((q) => q.status === "escalate").length;
+        head.appendChild(el("p", "summary", meta.questions.length + " questions graded with partial credit. " + (esc ? esc + " escalated to the teacher for review." : "None required human review.")));
+        card.appendChild(head);
+
+        const review = el("div", "review");
+        const scanwrap = el("div", "scanwrap"); const scanview = el("div", "scanview");
+        if ((kind === "image") && previewUrl) { const img = el("img", "scanimg"); img.src = previewUrl; img.alt = "Uploaded exam scan"; scanview.appendChild(img); }
+        else if (kind === "pdf" && previewUrl) { const fr = document.createElement("iframe"); fr.className = "scanframe"; fr.src = previewUrl; scanview.appendChild(fr); }
+        else { const ph = el("div", "docph"); ph.appendChild(el("div", "docic", "📝")); ph.appendChild(el("div", file ? file.name : "")); scanview.appendChild(ph); }
+        scanview.appendChild(el("span", "gradedstamp", "GRADED · " + meta.total + "/" + meta.max));
+        scanwrap.appendChild(scanview);
+        review.appendChild(scanwrap);
+
+        const annots = el("div", "annots"); annots.appendChild(el("div", "annotshead", "Annotations"));
+        for (const q of meta.questions) {
+          const a = el("div", "annot " + q.status);
+          const h = el("div", "annothead"); h.appendChild(el("span", "annotq", q.title));
+          const right = el("span", "annotright");
+          const tag = el("span", "tag " + (q.status === "ok" ? "ok" : q.status === "partial" ? "partial" : "escalate"), STATUS_LABEL[q.status]);
+          right.appendChild(tag); right.appendChild(el("span", "qscore", q.score + "/" + q.max));
+          h.appendChild(right); a.appendChild(h); a.appendChild(el("p", "annotfb", q.feedback));
+          annots.appendChild(a);
+        }
+        review.appendChild(annots); card.appendChild(review); wrap.appendChild(card);
+      }
+
+      // Execution trace
+      const trace = el("section", "card");
+      trace.appendChild(el("p", "kicker", "Execution trace"));
+      trace.appendChild(el("h2", null, "steps[] — every call the agent made"));
+      trace.appendChild(el("p", "hint", data.steps.length + " steps, in order — module, prompt, and response."));
+      data.steps.forEach((s, i) => {
+        const d = document.createElement("details"); d.className = "step";
+        const sum = document.createElement("summary");
+        sum.appendChild(el("span", "stepnum", String(i + 1)));
+        sum.appendChild(el("span", "stepmod", s.module));
+        if (s.pattern) sum.appendChild(el("span", "steppat", "· " + s.pattern));
+        sum.appendChild(el("span", "chev", "▸")); d.appendChild(sum);
+        const body = el("div", "stepbody");
+        const f1 = el("div", "field"); f1.appendChild(el("div", "label", "System prompt")); f1.appendChild(el("pre", "code", s.prompt.System_prompt)); body.appendChild(f1);
+        const f2 = el("div", "field"); f2.appendChild(el("div", "label", "User prompt")); f2.appendChild(el("pre", "code", s.prompt.User_prompt)); body.appendChild(f2);
+        const f3 = el("div", "field"); f3.appendChild(el("div", "label", "Response")); f3.appendChild(el("pre", "code", JSON.stringify(s.response, null, 2))); body.appendChild(f3);
+        d.appendChild(body); trace.appendChild(d);
+      });
+      wrap.appendChild(trace);
+    }
+
+    $("gradeBtn").addEventListener("click", async () => {
+      if (!file) return;
+      const btn = $("gradeBtn"); btn.disabled = true; btn.textContent = "Grading…";
+      $("error").style.display = "none"; $("results").innerHTML = "";
+      try {
+        const fd = new FormData();
+        fd.append("file", file);
+        if ($("instr").value.trim()) fd.append("instructions", $("instr").value.trim());
+        if ($("exam").value) fd.append("exam", $("exam").value);
+        const res = await fetch("/api/execute", { method: "POST", body: fd });
+        const data = await res.json();
+        if (data.status === "error") { $("error").textContent = "⚠ " + (data.error || "The agent returned an error."); $("error").style.display = ""; }
+        else renderResult(data);
+      } catch (e) {
+        $("error").textContent = "⚠ Could not reach /api/execute. Check the server and try again."; $("error").style.display = "";
+      } finally { btn.disabled = false; btn.textContent = "Grade exam"; }
+    });
+  </script>
+</body>
+</html>

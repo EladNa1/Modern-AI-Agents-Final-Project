@@ -1,0 +1,20 @@
+{
+  "exam": "2023w final A",
+  "course": "104041",
+  "source": {
+    "exam_pdf": "Data/מבחני עבר חדווא 1/2023w/104041 2023w final A.pdf",
+    "solution_pdf": "Data/מבחני עבר חדווא 1/2023w/104041 2023w final A sol.pdf",
+    "page": 8
+  },
+  "questions": {
+    "Q3c": {
+      "id": "Q3c",
+      "points": 9,
+      "topic": "improper/extended limit via FTC + L'Hopital",
+      "problem": "(ג) (9 נקודות)\n\nחשב את הגבול הבא אם הוא קיים במובן הרחב, או הסבירו למה אינו קיים במובן הרחב:\n$$\\lim_{x\\to 0^-}\\frac{\\int_{x^6}^{0}\\sin\\sqrt{t}\\,dt}{x^9}$$",
+      "official_solution": "(ג) (9 נקודות)\n\nחשב את הגבול הבא אם הוא קיים במובן הרחב, או הסבירו למה אינו קיים במובן הרחב:\n\n$$\\lim_{x\\to 0^-}\\frac{\\int_{x^6}^{0}\\sin\\sqrt{t}\\,dt}{x^9}$$\n\nפתרון: כיון ש-$\\sin\\sqrt{t}$ רציפה בקטע $[0,\\infty)$ כהרחבה של רציפות, וגם $x^6$ אי שלילית וגדילה, לכן לפי המשפט היסודי\n\n$$\\int_{x^6}^{0}\\sin\\sqrt{t}\\,dt$$\n\nפונקציה גזירה בכל נקודה, ובפרט\n\n$$\\lim_{x\\to 0^-}\\int_{x^6}^{0}\\sin\\sqrt{t}\\,dt=\\int_{0}^{0}\\sin\\sqrt{t}\\,dt=0$$\n\nולכן, אפשר להשתמש בלופיטל\n\n$$\\lim_{x\\to 0^-}\\frac{\\int_{x^6}^{0}\\sin\\sqrt{t}\\,dt}{x^9}\n=\\lim_{x\\to 0^-}\\frac{-\\sin(\\sqrt{x^6})6x^5}{9x^8}\n=\\lim_{x\\to 0^-}\\frac{-\\sin(-x^3)6x^5}{9x^8}$$\n\n$$=\\lim_{x\\to 0^-}2\\cdot\\frac{2}{3}\\cdot\\frac{\\sin(x^3)}{x^3}=\\frac{2}{3}$$\n\nכאשר השוויון האחרון נובע מכך ש-\n\n$$\\lim_{x\\to 0}\\frac{\\sin x}{x}=1$$\n\nוביחד עם גבול ההרכבה, כיון ש-$x^3\\neq 0$ לכל $x\\neq 0$ וכיוון ש-$x^3\\to 0$, אז\n\n$$\\frac{\\sin(x^3)}{x^3}\\xrightarrow[x\\to 0]{}1 \\Rightarrow \\frac{\\sin(x^3)}{x^3}\\xrightarrow[x\\to 0^-]{}1$$\n\n8",
+      "final_answer": "2/3",
+      "notes": "For x<0, sqrt(x^6)=|x|^3=-x^3 — a sign subtlety; a lost sign yields -2/3 instead of the correct +2/3."
+    }
+  }
+}

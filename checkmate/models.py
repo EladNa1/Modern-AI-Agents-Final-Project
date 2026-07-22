@@ -1,0 +1,94 @@
+"""Shared data types for the pipeline.
+
+The TS version spreads these across parser.ts / retriever.ts / grader.ts; collecting them
+in one module avoids circular imports between the Python pipeline stages. `Usage` stays a
+plain dict {"prompt","completion","total"} so the StepLog can accumulate it cheaply.
+"""
+from __future__ import annotations
+
+from dataclasses import dataclass
+
+Usage = dict  # {"prompt": int, "completion": int, "total": int}
+
+
+@dataclass
+class ImageInput:
+    data_url: str
+    detail: str = "high"  # "low" | "high" | "auto"
+
+
+@dataclass
+class ParsedFragment:
+    """One block of student work found on one page. `id` is only the label as read from the
+    handwriting -- a hint, not an identity; the Retriever decides the real question."""
+    id: str
+    text: str
+    confidence: float
+    latex: str | None = None
+    page: int = 1
+
+
+@dataclass
+class SolutionEntry:
+    id: str
+    points: int
+    problem: str
+    official_solution: str
+    topic: str | None = None
+    final_answer: str | None = None
+    notes: str | None = None
+
+
+@dataclass
+class Retrieved:
+    entry: SolutionEntry
+    exam: str
+    course: str
+
+
+@dataclass
+class NotesChunk:
+    source: str
+    page: int
+    text: str
+    score: float
+
+
+@dataclass
+class Grade:
+    id: str
+    score: float
+    max: int
+    status: str  # "ok" | "partial" | "escalate"
+    feedback: str
+    justification: str
+    confidence: float
+
+
+@dataclass
+class Reflection:
+    action: str  # "APPROVE" | "REVISE" | "ESCALATE"
+    score: float | None
+    feedback: str
+    note: str
+    confidence: float
+
+
+@dataclass
+class QuestionResult:
+    id: str
+    title: str
+    score: float
+    max: int
+    status: str  # "ok" | "partial" | "escalate"
+    mark: str    # short margin stamp, e.g. "✓" / "3/5"
+    feedback: str
+
+
+@dataclass
+class Step:
+    """Brief-shaped trace entry: {module, prompt:{System_prompt,User_prompt}, response}."""
+    module: str
+    prompt: dict
+    response: object
+    pattern: str | None = None
