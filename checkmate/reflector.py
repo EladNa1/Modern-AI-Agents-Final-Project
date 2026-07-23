@@ -4,6 +4,7 @@ action: APPROVE · REVISE (corrected grade) · ESCALATE. Port of lib/agent/refle
 """
 from __future__ import annotations
 
+from .env import LLMOD_GRADER_MODEL
 from .llm import StepLog, chat, extract_json
 from .models import Grade, ParsedFragment, Reflection, Retrieved, Usage
 
@@ -44,7 +45,7 @@ def run_reflector(q: ParsedFragment, grade: Grade, retrieved: Retrieved | None, 
         f"Critique the proposed grade and return only the JSON object."
     )
 
-    text, usage = chat(REFLECTOR_SYSTEM, user, max_tokens=900, json_mode=True)
+    text, usage = chat(REFLECTOR_SYSTEM, user, max_tokens=900, json_mode=True, model=LLMOD_GRADER_MODEL)
     return _normalize_reflection(text, grade.max, usage, log, user)
 
 

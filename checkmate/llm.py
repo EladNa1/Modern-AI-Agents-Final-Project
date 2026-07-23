@@ -23,15 +23,16 @@ def _client_singleton() -> OpenAI:
 
 def chat(system: str, user: str, images: list[ImageInput] | None = None,
          max_tokens: int = 1500, temperature: float | None = None,
-         json_mode: bool = False) -> tuple[str, Usage]:
+         json_mode: bool = False, model: str | None = None) -> tuple[str, Usage]:
     """One chat completion (optionally multimodal). Images ride in the user turn as
-    data-URI image_url parts, exactly like the TS client."""
+    data-URI image_url parts, exactly like the TS client. `model` overrides LLMOD_MODEL for
+    this call (used to route grading/reflection to a stronger model)."""
     parts: list[dict] = [{"type": "text", "text": user}]
     for img in images or []:
         parts.append({"type": "image_url", "image_url": {"url": img.data_url, "detail": img.detail}})
 
     kwargs: dict = {
-        "model": LLMOD_MODEL,
+        "model": model or LLMOD_MODEL,
         "max_tokens": max_tokens,
         "messages": [
             {"role": "system", "content": system},

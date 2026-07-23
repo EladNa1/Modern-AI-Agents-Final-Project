@@ -26,6 +26,11 @@ _load_env_local()
 LLMOD_BASE_URL = os.environ.get("LLMOD_BASE_URL", "https://api.llmod.ai/v1")
 LLMOD_KEY = os.environ.get("LLMOD_KEY", "")
 LLMOD_MODEL = os.environ.get("LLMOD_MODEL", "MB5R2CF-azure/gpt-5.4-mini")
+# Grading and reflection need stronger reasoning than the parser's vision OCR (the mini
+# mis-judges nuanced math, e.g. it placed pi/2 inside (0,1)). Route just those two stages to
+# a stronger model when configured. Defaults to LLMOD_MODEL, so nothing changes unless
+# LLMOD_GRADER_MODEL is set.
+LLMOD_GRADER_MODEL = os.environ.get("LLMOD_GRADER_MODEL", LLMOD_MODEL)
 LLMOD_EMBED_MODEL = os.environ.get("LLMOD_EMBED_MODEL", "MB5R2CF-azure/text-embedding-3-small")
 
 # True when a key is configured -- the real agent runs; otherwise callers fall back to the

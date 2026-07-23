@@ -10,8 +10,10 @@ Grade the built-in sample live:     python -m checkmate.grader --live
 from __future__ import annotations
 
 import math
+import os
 import sys
 
+from .env import LLMOD_GRADER_MODEL
 from .llm import StepLog, chat, extract_json
 from .models import Grade, NotesChunk, ParsedFragment, Retrieved, Usage
 
@@ -236,12 +238,71 @@ def build_grader_user(q: ParsedFragment, retrieved: Retrieved | None,
     return user, max_points
 
 
+def _grader_samples() -> int:
+    """How many times to grade each question for self-consistency (CHECKMATE_GRADER_SAMPLES,
+    default 3, clamped 1..5). The mini is non-deterministic even at the default temperature,
+    so repeated calls surface its instability instead of shipping one lucky/unlucky grade."""
+    try:
+        n = int(os.environ.get("CHECKMATE_GRADER_SAMPLES", "3"))
+    except ValueError:
+        n = 3
+    return max(1, min(5, n))
+
+
 def run_grader(q: ParsedFragment, retrieved: Retrieved | None, log: StepLog,
                notes: list[NotesChunk] | None = None) -> Grade:
     notes = notes or []
     user, max_points = build_grader_user(q, retrieved, notes)
-    text, usage = chat(GRADER_SYSTEM, user, max_tokens=1200, json_mode=True)
-    return _normalize_grade(q.id, max_points, q.confidence, text, usage, log, user)
+    n = _grader_samples()
+
+    grades: list[Grade] = []
+    total_usage: Usage = {"prompt": 0, "completion": 0, "total": 0}
+    for _ in range(n):
+        text, usage = chat(GRADER_SYSTEM, user, max_tokens=1200, json_mode=True,
+                           model=LLMOD_GRADER_MODEL)
+        for k in total_usage:
+            total_usage[k] += usage.get(k, 0)
+        grades.append(_normalize_grade(q.id, max_points, q.confidence, text))
+
+    final = _aggregate_grades(grades, max_points)
+    log.add("Grader", GRADER_SYSTEM, user,
+            {**final.__dict__, "samples": [g.score for g in grades]},
+            f"Few-shot · self-consistency x{n}", total_usage)
+    return final
+
+
+def _aggregate_grades(grades: list[Grade], max_points: int) -> Grade:
+    """Reconcile N independent grades of one question. The median is the consensus; if the
+    samples disagree by more than a tolerance band the mini was unstable, so escalate (flag
+    `grader_disagreement`) rather than trust any single score. Confidence is capped by how
+    much the samples agreed."""
+    if len(grades) == 1:
+        return grades[0]
+
+    ordered = sorted(grades, key=lambda g: g.score)
+    spread = ordered[-1].score - ordered[0].score
+    median = ordered[len(ordered) // 2]
+
+    # Tolerance: ~a quarter of the question, but at least 1.5 pts, so a genuine 2-pt swing
+    # flags but rounding-level jitter does not.
+    threshold = max(1.5, 0.25 * max_points)
+    disagree = spread > threshold
+
+    agreement = 1.0 - (spread / max_points) if max_points else 1.0
+    confidence = max(0.0, min(median.confidence, agreement))
+    status = median.status
+    flags = list(median.flags)
+    feedback = median.feedback
+    if disagree:
+        status = "escalate"
+        if "grader_disagreement" not in flags:
+            flags.append("grader_disagreement")
+        feedback = (f"Automated grading was unstable across {len(grades)} samples "
+                    f"(scores {[g.score for g in ordered]} out of {max_points}); sent to a "
+                    f"human for review. " + feedback)
+
+    return Grade(**{**median.__dict__, "status": status, "confidence": confidence,
+                    "flags": flags, "feedback": feedback})
 
 
 def _clamp(v, lo: float, hi: float) -> float:
@@ -276,15 +337,16 @@ def _coerce_subscores(raw_list, max_points: int) -> list[dict]:
     return out
 
 
-def _normalize_grade(qid: str, max_points: int, parser_confidence: float,
-                     text: str, usage: Usage, log: StepLog, user: str) -> Grade:
+def _normalize_grade(qid: str, max_points: int, parser_confidence: float, text: str) -> Grade:
+    """Turn one model reply into a Grade. Pure -- no logging -- so run_grader can call it once
+    per self-consistency sample and log only the aggregated result."""
     raw = extract_json(text)
 
     # Could not parse a grade, or nothing to ground on -> escalate, never guess.
     # Missing official solution is escalation rule E3; a blank retrieval also earns the
     # "retrieval_weak" flag so a human sees why it was not graded automatically.
     if not raw or max_points == 0:
-        grade = Grade(
+        return Grade(
             id=qid, score=0, max=max_points, status="escalate",
             feedback="Could not produce a reliable grade (unparseable model output or missing "
                      "official solution). Sent to a human teacher.",
@@ -292,8 +354,6 @@ def _normalize_grade(qid: str, max_points: int, parser_confidence: float,
             question_id=qid, subscores=[], read_attempts=1,
             flags=(["retrieval_weak"] if max_points == 0 else []), sources=[],
         )
-        log.add("Grader", GRADER_SYSTEM, user, grade.__dict__, "Few-shot", usage)
-        return grade
 
     score = _clamp(raw.get("score"), 0, max_points)
     confidence = _clamp(raw.get("confidence"), 0, 1)
@@ -324,7 +384,7 @@ def _normalize_grade(qid: str, max_points: int, parser_confidence: float,
     if str(raw.get("status", "")).lower() == "escalate":
         status = "escalate"
 
-    grade = Grade(
+    return Grade(
         id=qid, score=score, max=max_points, status=status,
         feedback=(str(raw.get("feedback", "")).strip() or "No feedback provided."),
         justification=str(raw.get("justification", "")).strip(),
@@ -332,8 +392,6 @@ def _normalize_grade(qid: str, max_points: int, parser_confidence: float,
         question_id=question_id, subscores=subscores, read_attempts=read_attempts,
         flags=flags, sources=sources,
     )
-    log.add("Grader", GRADER_SYSTEM, user, grade.__dict__, "Few-shot", usage)
-    return grade
 
 
 if __name__ == "__main__":
