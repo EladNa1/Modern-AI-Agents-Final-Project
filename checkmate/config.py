@@ -28,9 +28,11 @@ def _int(name: str, default: int, lo: int, hi: int) -> int:
 
 @dataclass(frozen=True)
 class AgentConfig:
-    # --- Grader self-consistency (grader stage) ---
-    grader_samples: int = 3            # N for open/proof questions
-    grader_samples_tf_mc: int = 3      # N for T/F + MC (6.2 target: 1; kept 3 until tuned)
+    # --- Grader self-consistency (grader stage), adaptive N by question type (6.2) ---
+    grader_samples: int = 3            # open/proof questions
+    grader_samples_high: int = 5       # high-point open questions (>= high_point_threshold)
+    grader_samples_tf_mc: int = 1      # T/F + MC: circled letter, all-or-nothing -> one call
+    high_point_threshold: int = 15     # a question worth >= this uses grader_samples_high
     disagreement_frac: float = 0.25    # escalate when spread > max(floor, frac * max_points)
     disagreement_floor: float = 1.5
 
@@ -40,10 +42,10 @@ class AgentConfig:
     # --- Parser input (render) ---
     render_max_pages: int = 12         # pages rendered per upload; 18-page booklets need >12
 
-    # --- Token budgets (per stage) ---
+    # --- Token budgets (per stage), by question type (6.4) ---
     parser_max_tokens: int = 2500
-    grader_max_tokens: int = 1200      # open (6.4 target: 1500-2000; kept until tuned)
-    grader_max_tokens_tf_mc: int = 1200  # T/F + MC (6.4 target: ~200; kept until tuned)
+    grader_max_tokens: int = 1800      # open: generous, so it can walk the argument step by step
+    grader_max_tokens_tf_mc: int = 250  # T/F + MC: just the circled answer + one-line reason
     reflector_max_tokens: int = 900
 
     # Documented, not tunable (see module docstring).
@@ -57,7 +59,8 @@ def load_config() -> AgentConfig:
     """Build the active config, honouring the few shell-tunable env overrides."""
     return AgentConfig(
         grader_samples=_int("CHECKMATE_GRADER_SAMPLES", 3, 1, 5),
-        grader_samples_tf_mc=_int("CHECKMATE_GRADER_SAMPLES_TFMC", 3, 1, 5),
+        grader_samples_tf_mc=_int("CHECKMATE_GRADER_SAMPLES_TFMC", 1, 1, 5),
+        grader_samples_high=_int("CHECKMATE_GRADER_SAMPLES_HIGH", 5, 1, 7),
         max_revise_passes=_int("CHECKMATE_MAX_REVISE_PASSES", 2, 0, 3),
         render_max_pages=_int("CHECKMATE_MAX_PAGES", 12, 1, 60),
     )

@@ -238,10 +238,18 @@ def build_grader_user(q: ParsedFragment, retrieved: Retrieved | None,
     return user, max_points
 
 
-def _grader_samples() -> int:
-    """How many times to grade each question for self-consistency (config `grader_samples`).
-    The mini is non-deterministic at the gateway default temperature, so repeated calls
-    surface its instability instead of shipping one lucky/unlucky grade."""
+def _is_tf_mc(qid: str) -> bool:
+    u = (qid or "").upper()
+    return u.startswith("MC") or u.startswith("TF")
+
+
+def _samples_for(qid: str, max_points: int) -> int:
+    """Adaptive N (6.2): T/F+MC are all-or-nothing circled letters (one call); open questions
+    get the baseline; high-point open questions get more samples where partial credit swings."""
+    if _is_tf_mc(qid):
+        return CONFIG.grader_samples_tf_mc
+    if max_points >= CONFIG.high_point_threshold:
+        return CONFIG.grader_samples_high
     return CONFIG.grader_samples
 
 
@@ -249,20 +257,29 @@ def run_grader(q: ParsedFragment, retrieved: Retrieved | None, log: StepLog,
                notes: list[NotesChunk] | None = None) -> Grade:
     notes = notes or []
     user, max_points = build_grader_user(q, retrieved, notes)
-    n = _grader_samples()
+    # Classify by the KB's canonical id when we have it (the parser label is unreliable).
+    qid = retrieved.entry.id if retrieved else q.id
+    n = _samples_for(qid, max_points)
+    cap = CONFIG.grader_max_tokens_tf_mc if _is_tf_mc(qid) else CONFIG.grader_max_tokens
 
     grades: list[Grade] = []
     total_usage: Usage = {"prompt": 0, "completion": 0, "total": 0}
+    truncated = False
     for _ in range(n):
-        text, usage = chat(GRADER_SYSTEM, user, max_tokens=CONFIG.grader_max_tokens,
+        text, usage = chat(GRADER_SYSTEM, user, max_tokens=cap,
                            json_mode=True, model=LLMOD_GRADER_MODEL)
         for k in total_usage:
             total_usage[k] += usage.get(k, 0)
+        if usage.get("completion", 0) >= cap:  # output hit the token cap -> likely cut off
+            truncated = True
         grades.append(_normalize_grade(q.id, max_points, q.confidence, text))
 
     final = _aggregate_grades(grades, max_points)
+    if truncated and "output_truncated" not in final.flags:
+        final.flags.append("output_truncated")
     log.add("Grader", GRADER_SYSTEM, user,
-            {**final.__dict__, "samples": [g.score for g in grades]},
+            {**final.__dict__, "samples": [g.score for g in grades], "n": n, "max_tokens": cap,
+             "truncated": truncated},
             f"Few-shot · self-consistency x{n}", total_usage)
     return final
 

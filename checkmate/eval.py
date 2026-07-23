@@ -118,7 +118,7 @@ def score_grading(gt: dict, got: dict[str, dict]) -> dict:
     """Compare model results to human ground truth for one booklet."""
     open_abs: list[float] = []
     tf_mc_hits = tf_mc_total = false_zeros = escalations = 0
-    false_deducts = full_credit_items = 0
+    false_deducts = full_credit_items = false_deduct_points = 0
     esc_tp = esc_fp = esc_fn = 0  # escalation precision/recall bookkeeping
     per_q = []
     for qid, truth in gt["questions"].items():
@@ -126,10 +126,11 @@ def score_grading(gt: dict, got: dict[str, dict]) -> dict:
         model = g["score"] if g else None
         status = g["status"] if g else "missing"
         human = truth["human"]
+        disputed = bool(truth.get("disputed"))  # bad human key -> don't measure against it
         # "wrong" = a shippable grade that misses the human by > tolerance (2 pts open;
         # any mismatch on all-or-nothing T/F+MC). Escalation should catch exactly these.
         tol = 2 if _is_open(qid) else 0
-        wrong = model is not None and abs(model - human) > tol
+        wrong = (not disputed) and model is not None and abs(model - human) > tol
         escalated = bool(g) and status == "escalate"
         if escalated:
             escalations += 1
@@ -138,22 +139,24 @@ def score_grading(gt: dict, got: dict[str, dict]) -> dict:
         elif wrong:
             esc_fn += 1  # shipped a wrong grade without flagging -- the dangerous miss
         if _is_open(qid):
-            if model is not None:
+            if model is not None and not disputed:
                 open_abs.append(abs(model - human))
-        else:
+        elif not disputed:
             tf_mc_total += 1
             tf_mc_hits += int(model is not None and model == human)
         # false zero: human gave credit, model said 0 and claimed no work
         if human > 0 and g and model == 0 and "no work" in (g.get("feedback", "").lower()):
             false_zeros += 1
-        # false deduction: human gave FULL marks here ("do not deduct"), model took some off.
-        # Measured cleanly on 100/100 booklets -- our only direct read on fabricated deductions.
-        if human == truth["max"]:
+        # false deduction: human gave FULL marks ("do not deduct"), model took some off.
+        # Track both RATE and SEVERITY (points wrongly removed) -- 1/12 hides "lost 5 on Q1a".
+        if human == truth["max"] and not disputed:
             full_credit_items += 1
             if model is not None and model < human:
                 false_deducts += 1
+                false_deduct_points += human - model
         per_q.append({"q": qid, "human": human, "model": model, "max": truth["max"],
-                      "status": status, "abs_err": (abs(model - human) if (model is not None and _is_open(qid)) else None)})
+                      "status": status, "disputed": disputed,
+                      "abs_err": (abs(model - human) if (model is not None and _is_open(qid) and not disputed) else None)})
     return {
         "open_mae": statistics.mean(open_abs) if open_abs else None,
         "open_max_err": max(open_abs) if open_abs else None,
@@ -161,6 +164,7 @@ def score_grading(gt: dict, got: dict[str, dict]) -> dict:
         "tf_mc_hits": tf_mc_hits, "tf_mc_total": tf_mc_total,
         "false_zeros": false_zeros, "escalations": escalations,
         "false_deductions": false_deducts, "full_credit_items": full_credit_items,
+        "false_deduction_points": false_deduct_points,
         "escalation_precision": (esc_tp / (esc_tp + esc_fp)) if (esc_tp + esc_fp) else None,
         "escalation_recall": (esc_tp / (esc_tp + esc_fn)) if (esc_tp + esc_fn) else None,
         "esc_tp": esc_tp, "esc_fp": esc_fp, "esc_fn": esc_fn,
@@ -215,7 +219,8 @@ def _print_scorecard(report: dict) -> None:
         tfm = g["tf_mc_exact"]
         print(f"  T/F+MC exact   : {tfm:.0%} ({g['tf_mc_hits']}/{g['tf_mc_total']})" if tfm is not None else "  T/F+MC exact   : n/a")
         print(f"  false zeros    : {g['false_zeros']}")
-        print(f"  false deducts  : {g['false_deductions']}/{g['full_credit_items']} (deducted where human gave full marks)")
+        print(f"  false deducts  : {g['false_deductions']}/{g['full_credit_items']} items, "
+              f"{g['false_deduction_points']} pts wrongly removed from flawless work")
         ep, er = g["escalation_precision"], g["escalation_recall"]
         print(f"  escalation P/R : P={ep:.0%} R={er:.0%}  (tp={g['esc_tp']} fp={g['esc_fp']} fn={g['esc_fn']})"
               if ep is not None and er is not None
@@ -224,7 +229,8 @@ def _print_scorecard(report: dict) -> None:
         for q in g["per_question"]:
             d = f"{q['abs_err']:.0f}" if q["abs_err"] is not None else "-"
             mdl = q["model"] if q["model"] is not None else "-"
-            print(f"    {q['q']:7} {str(q['human'])+'/'+str(q['max']):>7} {str(mdl):>7} {d:>4}  {q['status']}")
+            tag = "  DISPUTED (excl.)" if q.get("disputed") else ""
+            print(f"    {q['q']:7} {str(q['human'])+'/'+str(q['max']):>7} {str(mdl):>7} {d:>4}  {q['status']}{tag}")
 
 
 def main() -> None:
