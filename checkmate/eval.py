@@ -19,6 +19,7 @@ from __future__ import annotations
 import glob
 import json
 import os
+import re
 import statistics
 import sys
 import time
@@ -28,6 +29,13 @@ from .kb.exams import match_exam
 _ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 _GRADED = os.path.join(_ROOT, "eval", "graded")
 _REPORTS = os.path.join(_ROOT, "eval", "reports")
+_DATA = os.path.join(_ROOT, "Data")
+
+# Graded student booklet filenames encode the human total as a suffix, e.g.
+# "104041_2024_Winter_A_90.pdf" -> course 104041, winter 2024, moed A, human total 90.
+_BOOKLET_RE = re.compile(r"(?P<course>\d{6})[_ ](?P<year>\d{4})[_ ](?P<term>Winter|Spring|Summer)"
+                         r"[_ ](?P<moed>[A-Z])[_ ](?P<score>\d{2,3})\.pdf$", re.IGNORECASE)
+_TERM = {"winter": "w", "spring": "s", "summer": "s"}
 
 
 def _year_from(date) -> str | None:
@@ -39,6 +47,22 @@ def _year_from(date) -> str | None:
 def load_ground_truth() -> list[dict]:
     return [json.load(open(f, encoding="utf-8"))
             for f in sorted(glob.glob(os.path.join(_GRADED, "*.json")))]
+
+
+def discover_booklets() -> list[dict]:
+    """Every graded student booklet under Data/ (human total in the filename). None of the
+    deterministic metrics below need a KB or official solution, so this spans the WHOLE
+    corpus -- not just the exams we happen to have solutions for."""
+    out = []
+    for p in glob.glob(os.path.join(_DATA, "**", "*.pdf"), recursive=True):
+        m = _BOOKLET_RE.search(os.path.basename(p))
+        if not m:
+            continue
+        out.append({"path": p, "rel": os.path.relpath(p, _ROOT),
+                    "course": m.group("course"), "year": m.group("year"),
+                    "term": _TERM.get(m.group("term").lower(), ""),
+                    "moed": m.group("moed").upper(), "human_total": int(m.group("score"))})
+    return sorted(out, key=lambda b: (b["course"], b["year"], b["moed"]))
 
 
 def _is_open(qid: str) -> bool:
@@ -60,6 +84,26 @@ def routing_accuracy(gts: list[dict]) -> dict:
     return {"accuracy": (hits / len(gts)) if gts else None, "n": len(gts), "rows": rows}
 
 
+def ink_pass(booklets: list[dict], max_pages: int = 20) -> dict:
+    """FREE (zero LLM): ink statistics for every graded booklet. Establishes the
+    "region contains ink" side of the false-zero metric across the WHOLE corpus. The
+    inked-vs-empty-transcript JOIN needs cached parser transcripts (one OCR pass per
+    booklet) -- reported separately once that cache exists."""
+    from .ink import booklet_ink_stats
+    rows = []
+    for b in booklets:
+        with open(b["path"], "rb") as f:
+            pages = booklet_ink_stats(f.read(), max_pages=max_pages)
+        rows.append({
+            "booklet": os.path.basename(b["path"]), "course": b["course"],
+            "human_total": b["human_total"], "pages": len(pages),
+            "inked_cells": sum(p["inked_cells"] for p in pages),
+            "red_pages": sum(1 for p in pages if p["has_red"]),
+            "avg_student_frac": round(statistics.mean([p["student_frac"] for p in pages]), 4) if pages else 0.0,
+        })
+    return {"n": len(rows), "rows": rows}
+
+
 def grade_booklet_live(gt: dict) -> dict[str, dict]:
     """Run the full agent on one booklet PDF (COSTS budget). Returns {question_id: result}."""
     from .orchestrator import run_agent
@@ -74,6 +118,7 @@ def score_grading(gt: dict, got: dict[str, dict]) -> dict:
     """Compare model results to human ground truth for one booklet."""
     open_abs: list[float] = []
     tf_mc_hits = tf_mc_total = false_zeros = escalations = 0
+    false_deducts = full_credit_items = 0
     per_q = []
     for qid, truth in gt["questions"].items():
         g = got.get(qid)
@@ -91,6 +136,12 @@ def score_grading(gt: dict, got: dict[str, dict]) -> dict:
         # false zero: human gave credit, model said 0 and claimed no work
         if human > 0 and g and model == 0 and "no work" in (g.get("feedback", "").lower()):
             false_zeros += 1
+        # false deduction: human gave FULL marks here ("do not deduct"), model took some off.
+        # Measured cleanly on 100/100 booklets -- our only direct read on fabricated deductions.
+        if human == truth["max"]:
+            full_credit_items += 1
+            if model is not None and model < human:
+                false_deducts += 1
         per_q.append({"q": qid, "human": human, "model": model, "max": truth["max"],
                       "status": status, "abs_err": (abs(model - human) if (model is not None and _is_open(qid)) else None)})
     return {
@@ -99,14 +150,19 @@ def score_grading(gt: dict, got: dict[str, dict]) -> dict:
         "tf_mc_exact": (tf_mc_hits / tf_mc_total) if tf_mc_total else None,
         "tf_mc_hits": tf_mc_hits, "tf_mc_total": tf_mc_total,
         "false_zeros": false_zeros, "escalations": escalations,
+        "false_deductions": false_deducts, "full_credit_items": full_credit_items,
         "per_question": per_q,
     }
 
 
 def run(live: bool) -> dict:
     gts = load_ground_truth()
+    booklets = discover_booklets()
     report: dict = {"generated_at": time.strftime("%Y-%m-%d %H:%M:%S"), "live": live,
-                    "n_booklets": len(gts), "routing": routing_accuracy(gts), "grading": []}
+                    "n_ground_truth": len(gts), "n_booklets": len(booklets),
+                    "routing": routing_accuracy(gts),
+                    "ink": ink_pass(booklets),  # FREE, whole corpus
+                    "grading": []}
     if live:
         for gt in gts:
             got = grade_booklet_live(gt)
@@ -116,15 +172,26 @@ def run(live: bool) -> dict:
 
 def _print_scorecard(report: dict) -> None:
     r = report["routing"]
-    print("=" * 64)
-    print(f"CheckMate eval  ·  {report['n_booklets']} booklet(s)  ·  {'LIVE' if report['live'] else 'offline (routing only)'}")
-    print("=" * 64)
+    print("=" * 72)
+    print(f"CheckMate eval  ·  ground-truth {report['n_ground_truth']}  ·  corpus {report['n_booklets']}"
+          f"  ·  {'LIVE' if report['live'] else 'offline (free deterministic pass)'}")
+    print("=" * 72)
     acc = r["accuracy"]
-    print(f"Routing accuracy : {acc:.0%}" if acc is not None else "Routing accuracy : n/a", f"({r['n']})")
+    print(("Routing accuracy : %s (%d)" % (f"{acc:.0%}" if acc is not None else "n/a", r["n"])))
     for row in r["rows"]:
         print(f"  {'ok ' if row['ok'] else 'XX '} {row['exam_id']:16} pred={row['predicted']}  true={row['true']}")
+
+    ink = report.get("ink", {})
+    print(f"\nInk pass (FREE, whole corpus) : {ink.get('n', 0)} booklet(s)")
+    print(f"  {'booklet':40} {'crs':6} {'pg':>3} {'inked_cells':>11} {'red_pg':>6} {'stu_frac':>8}")
+    for row in ink.get("rows", []):
+        print(f"  {row['booklet'][:40]:40} {row['course']:6} {row['pages']:>3} "
+              f"{row['inked_cells']:>11} {row['red_pages']:>6} {row['avg_student_frac']:>8}")
+    print("  ('region contains ink' side of the false-zero metric; the inked-vs-empty-"
+          "transcript JOIN needs a cached OCR pass.)")
+
     if not report["live"]:
-        print("\nGrading metrics : not run (pass --live; costs budget).")
+        print("\nGrading metrics : not run (pass --live; costs grader budget).")
         return
     for g in report["grading"]:
         print(f"\n[{g['exam_id']}]")
@@ -133,6 +200,7 @@ def _print_scorecard(report: dict) -> None:
         tfm = g["tf_mc_exact"]
         print(f"  T/F+MC exact   : {tfm:.0%} ({g['tf_mc_hits']}/{g['tf_mc_total']})" if tfm is not None else "  T/F+MC exact   : n/a")
         print(f"  false zeros    : {g['false_zeros']}")
+        print(f"  false deducts  : {g['false_deductions']}/{g['full_credit_items']} (deducted where human gave full marks)")
         print(f"  escalations    : {g['escalations']}")
         worst = sorted((q for q in g["per_question"] if q["abs_err"] is not None), key=lambda q: -q["abs_err"])[:3]
         for q in worst:
