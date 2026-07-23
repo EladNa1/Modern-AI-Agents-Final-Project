@@ -109,7 +109,7 @@ def grade_booklet_live(gt: dict) -> dict[str, dict]:
     from .orchestrator import run_agent
     from .pdf import render_pdf_to_images
     with open(os.path.join(_ROOT, gt["booklet"]), "rb") as f:
-        render = render_pdf_to_images(f.read())
+        render = render_pdf_to_images(f.read(), max_pages=60)  # eval reads the WHOLE booklet
     res = run_agent(render.images, "", gt["exam_id"], exam=gt.get("exam_label"))
     return {q["id"]: q for q in res.get("meta", {}).get("questions", [])}
 

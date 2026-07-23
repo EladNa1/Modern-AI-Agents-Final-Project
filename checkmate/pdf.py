@@ -4,17 +4,17 @@ can read it one page at a time. Uses PyMuPDF (fitz). Port of lib/agent/pdf.ts.
 from __future__ import annotations
 
 import base64
-import os
 from dataclasses import dataclass
 
 import fitz  # pymupdf
 
+from .config import CONFIG
 from .models import ImageInput
 
 RENDER_DPI = 150  # enough for handwritten-math OCR; keeps the base64 payload small
-# Guard against runaway cost/time on an oversized upload. Default 12 keeps a run inside
-# Vercel's 300s ceiling; dev harnesses raise it via CHECKMATE_MAX_PAGES to read a booklet.
-MAX_PAGES = int(os.environ.get("CHECKMATE_MAX_PAGES") or 12)
+# Page cap lives in the config (CONFIG.render_max_pages, env CHECKMATE_MAX_PAGES). Default 12
+# keeps a run inside Vercel's 300s ceiling; an 18-page booklet needs it raised or its later
+# sections (T/F, MC) never reach the parser.
 
 
 @dataclass
@@ -24,13 +24,14 @@ class PdfRender:
     rendered: int             # pages actually rendered (min(page_count, MAX_PAGES))
 
 
-def render_pdf_to_images(pdf: bytes) -> PdfRender:
-    """Render up to MAX_PAGES of a PDF to PNG images. Raises if the bytes are not a readable
-    PDF; the caller turns that into a clean 400."""
+def render_pdf_to_images(pdf: bytes, max_pages: int | None = None) -> PdfRender:
+    """Render up to `max_pages` (default CONFIG.render_max_pages) of a PDF to PNG images.
+    Raises if the bytes are not a readable PDF; the caller turns that into a clean 400."""
+    cap = max_pages if max_pages is not None else CONFIG.render_max_pages
     doc = fitz.open(stream=pdf, filetype="pdf")
     try:
         page_count = doc.page_count
-        rendered = min(page_count, MAX_PAGES)
+        rendered = min(page_count, cap)
         scale = RENDER_DPI / 72  # PDF user space is 72 dpi
         matrix = fitz.Matrix(scale, scale)
 

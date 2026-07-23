@@ -37,6 +37,9 @@ class AgentConfig:
     # --- Reflection (orchestrator + reflector stages) ---
     max_revise_passes: int = 2         # early-exit on APPROVE
 
+    # --- Parser input (render) ---
+    render_max_pages: int = 12         # pages rendered per upload; 18-page booklets need >12
+
     # --- Token budgets (per stage) ---
     parser_max_tokens: int = 2500
     grader_max_tokens: int = 1200      # open (6.4 target: 1500-2000; kept until tuned)
@@ -56,6 +59,7 @@ def load_config() -> AgentConfig:
         grader_samples=_int("CHECKMATE_GRADER_SAMPLES", 3, 1, 5),
         grader_samples_tf_mc=_int("CHECKMATE_GRADER_SAMPLES_TFMC", 3, 1, 5),
         max_revise_passes=_int("CHECKMATE_MAX_REVISE_PASSES", 2, 0, 3),
+        render_max_pages=_int("CHECKMATE_MAX_PAGES", 12, 1, 60),
     )
 
 
