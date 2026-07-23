@@ -5,6 +5,7 @@ Port of lib/agent/parser.ts.
 from __future__ import annotations
 
 import os
+import re
 from dataclasses import dataclass
 
 from .llm import StepLog, chat, extract_json
@@ -25,6 +26,7 @@ class ParseResult:
     fragments: list[ParsedFragment]
     raw: str    # the model's raw reply, for debugging
     usage: Usage
+    exam_meta: dict | None = None  # {course,date,moed} read off the cover/headers, if any
 
 
 PARSER_SYSTEM = """You are the Parser module of CheckMate, an autonomous agent that grades Technion Calculus 1 (Hedva 1) exams.
@@ -37,9 +39,10 @@ Rules:
 - For each question, give a confidence in [0,1] for how legible/certain the transcription is. Ambiguous or overwritten handwriting → lower confidence.
 - For crossed-out or unreadable parts, write [illegible] inline.
 - Re-express the mathematics in LaTeX in the "latex" field where it helps; keep the human-readable transcription in "text".
+- If the page shows the exam's identifying information — usually the cover sheet: the course number (e.g. 104041), the exam date, and the מועד (A/B) — report it in "exam_meta". Include only fields you can actually read; omit "exam_meta" entirely on pages that show none of it (most answer pages).
 
 Output ONLY a JSON object, no prose, no code fences:
-{"questions":[{"id":"Q3c","text":"...","latex":"...","confidence":0.0}]}"""
+{"exam_meta":{"course":"104041","date":"17.4.2024","moed":"A"},"questions":[{"id":"Q3c","text":"...","latex":"...","confidence":0.0}]}"""
 
 
 def run_parser(images: list[ImageInput], log: StepLog, instructions: str = "",
@@ -53,6 +56,7 @@ def run_parser(images: list[ImageInput], log: StepLog, instructions: str = "",
     total: Usage = {"prompt": 0, "completion": 0, "total": 0}
     raws: list[str] = []
     fragments: list[ParsedFragment] = []
+    exam_meta: dict | None = None  # first page that shows the exam's identity wins
 
     for p, image in enumerate(images):
         page_tag = f" (page {p + 1} of {len(images)})" if len(images) > 1 else ""
@@ -75,6 +79,8 @@ def run_parser(images: list[ImageInput], log: StepLog, instructions: str = "",
 
         parsed = extract_json(text) or {}
         page_qs = _normalize_fragments(parsed.get("questions"), p + 1)
+        if exam_meta is None:
+            exam_meta = _clean_exam_meta(parsed.get("exam_meta"))
         for k in total:
             total[k] += usage[k]
 
@@ -93,7 +99,23 @@ def run_parser(images: list[ImageInput], log: StepLog, instructions: str = "",
         fragments.extend(page_qs)
         raws.append(text)
 
-    return ParseResult(fragments=fragments, raw="\n\n".join(raws), usage=total)
+    return ParseResult(fragments=fragments, raw="\n\n".join(raws), usage=total, exam_meta=exam_meta)
+
+
+def _clean_exam_meta(m) -> dict | None:
+    """Keep a parsed exam_meta only if it carries a usable course number (the strongest,
+    most OCR-reliable identifier). Returns {course,date,moed} with blanks dropped, else None."""
+    if not isinstance(m, dict):
+        return None
+    course = re.sub(r"\D", "", str(m.get("course") or ""))
+    if len(course) < 4:  # a real course code is 6 digits (e.g. 104041); reject noise
+        return None
+    out = {"course": course}
+    if str(m.get("date") or "").strip():
+        out["date"] = str(m["date"]).strip()
+    if str(m.get("moed") or "").strip():
+        out["moed"] = str(m["moed"]).strip().upper()[:1]
+    return out
 
 
 def _zoom_pass(image: ImageInput, page_qs: list[ParsedFragment], log: StepLog) -> Usage:

@@ -10,6 +10,7 @@ from __future__ import annotations
 
 import json
 import os
+import re
 from dataclasses import dataclass
 
 from ..models import SolutionEntry
@@ -34,6 +35,22 @@ class ExamKB:
     course: str  # e.g. "104018"
     questions: dict[str, SolutionEntry]
 
+    # Identity parsed from the exam label, for auto-matching a scan to its exam.
+    @property
+    def year(self) -> str:
+        m = re.search(r"(\d{4})", self.exam)
+        return m.group(1) if m else ""
+
+    @property
+    def term(self) -> str:  # 'w' winter / 's' spring, as written after the year
+        m = re.search(r"\d{4}\s*([wsWS])", self.exam)
+        return m.group(1).lower() if m else ""
+
+    @property
+    def moed(self) -> str:  # 'A' / 'B'
+        m = re.search(r"\b([ABab])\b", self.exam)
+        return m.group(1).upper() if m else ""
+
 
 def _entry(e: dict) -> SolutionEntry:
     return SolutionEntry(
@@ -57,3 +74,28 @@ def exam_options() -> list[dict]:
     """Compact list for the UI picker and /api/exams. `value` is the exam label stored in
     Pinecone metadata (what the Retriever filters on); `label` is what the teacher reads."""
     return [{"value": k.exam, "course": k.course, "label": f"{k.exam} · {k.course}"} for k in EXAMS]
+
+
+def match_exam(course: str | None = None, year: str | None = None,
+               moed: str | None = None, term: str | None = None) -> str | None:
+    """Map exam-identity fields read off a scan (course number, year, מועד, term) to a KB
+    exam label. Returns the label ONLY when the fields single out exactly one exam; 0 or >1
+    matches -> None, so the caller falls back to unscoped rather than grounding on a guess.
+    `course` is the strongest key (and the most reliable to OCR)."""
+    def _digits(s) -> str:
+        return re.sub(r"\D", "", str(s or ""))
+
+    cands = list(EXAMS)
+    if course and _digits(course):
+        c = _digits(course)
+        cands = [k for k in cands if _digits(k.course) == c]
+    if year and re.search(r"\d{4}", str(year)):
+        y = re.search(r"\d{4}", str(year)).group(0)
+        cands = [k for k in cands if k.year == y]
+    if moed and str(moed).strip():
+        mo = str(moed).strip().upper()[:1]
+        cands = [k for k in cands if k.moed == mo]
+    if term and str(term).strip():
+        t = str(term).strip().lower()[:1]
+        cands = [k for k in cands if k.term == t]
+    return cands[0].exam if len(cands) == 1 else None

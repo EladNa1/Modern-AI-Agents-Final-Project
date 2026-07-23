@@ -6,11 +6,13 @@ approve|escalate. Falls back to the mock when there is no API key or no image to
 """
 from __future__ import annotations
 
+import re
 from collections import Counter
 from dataclasses import asdict
 
 from .env import HAS_LLM
 from .grader import run_grader
+from .kb.exams import match_exam
 from .llm import StepLog
 from .mock_agent import run_mock_agent
 from .models import Grade, ImageInput, ParsedFragment, QuestionResult, Retrieved
@@ -37,6 +39,22 @@ def run_agent(images: list[ImageInput], instructions: str = "", source_label: st
             return {"status": "error",
                     "error": "The Parser could not read any question from the scan. Try a clearer image.",
                     "response": None, "steps": _steps(log)}
+
+        # Resolve which exam to scope retrieval to. A caller-provided exam wins (manual
+        # override from the UI); otherwise auto-detect it from the exam identity the Parser
+        # read off the scan (cover/headers); if neither is available the run stays unscoped
+        # and the consistency guard keeps a single booklet coherent.
+        exam_source = "manual" if exam else "none"
+        if not exam and parsed.exam_meta:
+            detected = match_exam(course=parsed.exam_meta.get("course"),
+                                  year=_year_from(parsed.exam_meta.get("date")),
+                                  moed=parsed.exam_meta.get("moed"))
+            if detected:
+                exam, exam_source = detected, "auto"
+        log.add("Router", "Decide which exam to scope retrieval to (manual override, else "
+                "auto-detected from the scan, else unscoped).",
+                f"exam_meta={parsed.exam_meta}",
+                {"exam": exam, "source": exam_source}, "Scope")
 
         # Group the transcribed fragments by the exam question they actually answer -- the
         # Retriever matches each fragment on CONTENT, and that match defines a question here.
@@ -65,7 +83,7 @@ def run_agent(images: list[ImageInput], instructions: str = "", source_label: st
 
             results.append(_to_question_result(q.id, grade, retrieved))
 
-        return _assemble(results, source_label, instructions, log)
+        return _assemble(results, source_label, instructions, log, exam, exam_source)
     except Exception as err:
         # Any gateway/parse failure -> a valid error payload (never raise to the route).
         return {"status": "error", "error": "The agent failed while grading: " + str(err),
@@ -136,13 +154,23 @@ def _to_question_result(qid: str, grade: Grade, retrieved: Retrieved | None) -> 
                           status=grade.status, mark=mark, feedback=grade.feedback)
 
 
-def _assemble(questions: list[QuestionResult], source: str, instructions: str, log: StepLog) -> dict:
+def _year_from(date) -> str | None:
+    """Pull a 4-digit year out of a detected date string (e.g. '17.4.2024' -> '2024')."""
+    m = re.search(r"\d{4}", str(date or ""))
+    return m.group(0) if m else None
+
+
+def _assemble(questions: list[QuestionResult], source: str, instructions: str, log: StepLog,
+              exam: str | None = None, exam_source: str = "none") -> dict:
     total = sum(q.score for q in questions)
     max_pts = sum(q.max for q in questions)
     escalated = [q for q in questions if q.status == "escalate"]
 
+    scope_line = (f"Graded as {exam} ({'auto-detected' if exam_source == 'auto' else 'selected'})."
+                  if exam else "Exam not identified — graded unscoped; pick the exam to re-grade more accurately.")
     lines = [
-        f"CheckMate graded {', '.join(q.id for q in questions)}: {total} / {max_pts}.", "",
+        f"CheckMate graded {', '.join(q.id for q in questions)}: {total} / {max_pts}.",
+        scope_line, "",
         *[f"{q.id} — {q.score}/{q.max}: {q.feedback}" for q in questions], "",
         (f"⚠ {len(escalated)} question(s) escalated to the teacher: "
          f"{', '.join(q.id for q in escalated)}.") if escalated else "No questions required human review.",
@@ -151,7 +179,8 @@ def _assemble(questions: list[QuestionResult], source: str, instructions: str, l
     return {
         "status": "ok", "error": None, "response": "\n".join(lines), "steps": _steps(log),
         "meta": {"total": total, "max": max_pts, "questions": [asdict(q) for q in questions],
-                 "source": source, "mode": "full", "instructions": instructions},
+                 "source": source, "mode": "full", "instructions": instructions,
+                 "exam": exam, "exam_source": exam_source},
     }
 
 

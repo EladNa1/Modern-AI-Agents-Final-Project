@@ -61,16 +61,9 @@
         </div>
       </div>
 
-      <div class="instrblock">
-        <label class="instrlabel" for="exam">Which exam? <span class="opt">(required — scopes grading to this exam's solutions)</span></label>
-        <select id="exam" class="instr">
-          <option value="">— Select the exam —</option>
-        </select>
-      </div>
-
       <div class="controls">
         <button class="btn" id="gradeBtn" disabled>Grade exam</button>
-        <span class="hint" id="gradeHint" style="margin-left:.6rem">Select the exam above to enable grading.</span>
+        <span class="hint" id="gradeHint" style="margin-left:.6rem">CheckMate auto-detects the exam from the scan's cover/headers.</span>
       </div>
     </section>
 
@@ -111,22 +104,17 @@
     }
     const STATUS_LABEL = { ok: "full credit", partial: "partial", escalate: "escalate" };
 
-    // Grading needs BOTH a file and a chosen exam -- an unscoped run can mismatch a question
-    // against a look-alike in another exam, so the exam is required, not optional.
-    const canGrade = () => !!file && !!$("exam").value;
+    // Grading needs only a file -- CheckMate auto-detects the exam from the scan's
+    // cover/headers. A manual override appears in the results if detection was wrong/absent.
+    let EXAMS_LIST = [];
+    const canGrade = () => !!file;
     function refreshGrade() {
       $("gradeBtn").disabled = !canGrade();
       $("gradeHint").style.display = canGrade() ? "none" : "";
     }
 
-    // Populate the exam picker.
-    fetch("/api/exams").then((r) => r.json()).then((d) => {
-      for (const x of (d.exams || [])) {
-        const o = document.createElement("option");
-        o.value = x.value; o.textContent = x.label; $("exam").appendChild(o);
-      }
-    }).catch(() => {});
-    $("exam").addEventListener("change", refreshGrade);
+    // Cache the exam list for the (results-side) manual override control.
+    fetch("/api/exams").then((r) => r.json()).then((d) => { EXAMS_LIST = d.exams || []; }).catch(() => {});
 
     function setFile(f) {
       $("results").innerHTML = ""; $("error").style.display = "none";
@@ -159,6 +147,7 @@
       const meta = data.meta; const wrap = $("results"); wrap.innerHTML = "";
       if (!meta) return;
       const kind = file ? kindOf(file.name) : "other";
+      if (meta.mode !== "general") renderScopeBanner(meta, wrap);
 
       if (meta.mode === "general") {
         const card = el("section", "card");
@@ -220,14 +209,35 @@
       wrap.appendChild(trace);
     }
 
-    $("gradeBtn").addEventListener("click", async () => {
+    // Scope banner (results-side): shows the detected/used exam and a manual override that
+    // re-grades scoped to a chosen exam -- the replacement for the old upfront dropdown.
+    function renderScopeBanner(meta, wrap) {
+      const banner = el("div", "scopebar");
+      let txt;
+      if (meta.exam) txt = "Graded as " + meta.exam + (meta.exam_source === "auto" ? " (auto-detected)" : meta.exam_source === "manual" ? " (you set this)" : "");
+      else txt = "Exam not identified from the scan — graded unscoped (generic questions may mismatch a look-alike in another exam).";
+      banner.appendChild(el("span", "scopetxt", (meta.exam ? "✅ " : "⚠ ") + txt));
+
+      const sel = document.createElement("select"); sel.className = "instr scopesel";
+      const none = el("option", null, "— set exam —"); none.value = ""; sel.appendChild(none);
+      for (const x of EXAMS_LIST) { const o = el("option", null, x.label); o.value = x.value; if (x.value === meta.exam) o.selected = true; sel.appendChild(o); }
+      const btn = el("button", "btn", "Re-grade"); btn.style.marginLeft = ".4rem";
+      btn.addEventListener("click", () => { if (sel.value) doGrade(sel.value); });
+      const row = el("div", "scopeoverride");
+      row.appendChild(el("span", "scopehint", meta.exam ? "Wrong exam? " : "Pick the exam: "));
+      row.appendChild(sel); row.appendChild(btn);
+      banner.appendChild(row);
+      wrap.appendChild(banner);
+    }
+
+    async function doGrade(examOverride) {
       if (!file) return;
       const btn = $("gradeBtn"); btn.disabled = true; btn.textContent = "Grading…";
       $("error").style.display = "none"; $("results").innerHTML = "";
       try {
         const fd = new FormData();
         fd.append("file", file);
-        if ($("exam").value) fd.append("exam", $("exam").value);
+        if (examOverride) fd.append("exam", examOverride);
         const res = await fetch("/api/execute", { method: "POST", body: fd });
         const data = await res.json();
         if (data.status === "error") { $("error").textContent = "⚠ " + (data.error || "The agent returned an error."); $("error").style.display = ""; }
@@ -235,7 +245,9 @@
       } catch (e) {
         $("error").textContent = "⚠ Could not reach /api/execute. Check the server and try again."; $("error").style.display = "";
       } finally { btn.disabled = false; btn.textContent = "Grade exam"; }
-    });
+    }
+
+    $("gradeBtn").addEventListener("click", () => doGrade(null));
   </script>
 </body>
 </html>

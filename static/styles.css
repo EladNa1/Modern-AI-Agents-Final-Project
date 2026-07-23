@@ -372,3 +372,12 @@ pre.code {
   .brandname { font-size: 25px; }
   .card { padding: 18px; }
 }
+
+/* Scope banner + manual exam override (results-side; replaces the old upfront picker) */
+.scopebar { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between;
+  gap: 10px; padding: 12px 14px; margin: 0 0 14px; border: 1px solid var(--line, #e5e7eb);
+  border-radius: 10px; background: rgba(127, 127, 127, 0.06); }
+.scopetxt { font-weight: 600; font-size: 14px; }
+.scopeoverride { display: flex; align-items: center; gap: 6px; }
+.scopehint { font-size: 13px; opacity: 0.75; }
+.scopesel { width: auto; min-width: 190px; padding: 6px 8px; }
