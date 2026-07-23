@@ -39,6 +39,7 @@ Rules:
 - Split the work into questions. Use the question label as written (e.g. "3ג" / "Q3c"); if a part is unlabelled, infer a sensible id.
 - For each question, give a confidence in [0,1] for how legible/certain the transcription is. Ambiguous or overwritten handwriting → lower confidence.
 - For crossed-out or unreadable parts, write [illegible] inline.
+- Multiple-choice and True/False items: the student's ANSWER is the circled/marked option — record it explicitly at the end of the item's text as "מסומן: <letter>" (e.g. "מסומן: ג"). Look for circles, checkmarks, or any deliberate mark on an option letter. If no option is marked, write "מסומן: אין". The printed options alone are NOT an answer.
 - Re-express the mathematics in LaTeX in the "latex" field where it helps; keep the human-readable transcription in "text".
 - If the page shows the exam's identifying information — usually the cover sheet: the course number (e.g. 104041), the exam date, and the מועד (A/B) — report it in "exam_meta". Include only fields you can actually read; omit "exam_meta" entirely on pages that show none of it (most answer pages).
 

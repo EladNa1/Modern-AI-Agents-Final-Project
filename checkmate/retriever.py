@@ -121,6 +121,42 @@ def retrieve_notes(question_text: str, log: StepLog, k: int = 3) -> list[NotesCh
     return chunks
 
 
+_WORD_RE = re.compile(r"[א-ת]{2,}|[a-zA-Z]{3,}|\d+")
+
+
+def _tokens(text: str) -> set[str]:
+    """Comparable token set for content overlap: Hebrew/Latin words + numbers, LaTeX noise
+    dropped."""
+    t = re.sub(r"\\[a-zA-Z]+|[{}()\[\]$\\]", " ", text or "")
+    return set(_WORD_RE.findall(t))
+
+
+def _find_by_content(question_text: str, exam: str, min_f1: float = 0.5) -> tuple[Retrieved, float] | None:
+    """Offline content match, scoped to one exam: F1 overlap between the fragment's tokens
+    and each KB question's PRINTED problem text; best above a floor wins. Deterministic and
+    free -- covers the Pinecone-absent case where the parser's label ('Q1' on the MC page,
+    bare '1' on the T/F page, 'b') maps to nothing -- or to the WRONG entry -- by exact id.
+    F1 (not raw containment) so a short generic problem can't outscore the actual one; the
+    0.5 floor keeps handwriting-only continuation fragments (no printed header) unmatched
+    rather than silently mis-grouped."""
+    frag = _tokens(question_text)
+    if len(frag) < 4:
+        return None
+    best: tuple[Retrieved, float] | None = None
+    for kb in EXAMS:
+        if kb.exam != exam:
+            continue
+        for entry in kb.questions.values():
+            prob = _tokens(entry.problem)
+            if len(prob) < 4:
+                continue
+            inter = len(frag & prob)
+            f1 = 2 * inter / (len(frag) + len(prob))
+            if f1 >= min_f1 and (best is None or f1 > best[1]):
+                best = (Retrieved(entry=entry, exam=kb.exam, course=kb.course), f1)
+    return best
+
+
 def retrieve(question_id: str, question_text: str, log: StepLog, exam: str | None = None) -> Retrieved | None:
     want = _norm_id(question_id)
     found: Retrieved | None = None
@@ -137,6 +173,17 @@ def retrieve(question_id: str, question_text: str, log: StepLog, exam: str | Non
             found, method, score = sem["found"], "semantic", sem["score"]
         elif sem:
             score = sem["score"]  # queried, but below threshold -- record why
+
+    # Scoped offline content match: the booklet prints the question text above the student's
+    # work, so overlap with the KB problem text identifies the question even when the parser's
+    # label lies ('Q3' on the MC page must map to MC-3, not the open Q3). A strong content hit
+    # therefore OUTRANKS the exact-id fallback; exact-id still covers handwriting-only
+    # fragments whose label is right but which restate no printed text.
+    if not found and exam:
+        hit = _find_by_content(question_text, exam)
+        if hit:
+            found, score = hit[0], round(hit[1], 3)
+            method = "content-overlap"
 
     # Fallback (offline / Pinecone miss): exact question-id over the bundled KB.
     if not found:
