@@ -56,9 +56,9 @@ async def team_info():
         "group_batch_order_number": "TBD_TBD",
         "team_name": "CheckMate",
         "students": [
-            {"name": "Elad Nahalieli", "email": "eladna97@gmail.com"},
-            {"name": "Shiri Haboob", "email": "TODO@campus.technion.ac.il"},
-            {"name": "Yaron Mozes", "email": "TODO@campus.technion.ac.il"},
+            {"name": "Elad Nahalieli", "email": "nelad@campus.technion.ac.il"},
+            {"name": "Shiri Haboob", "email": "shiri.haboob@campus.technion.ac.il"},
+            {"name": "Yaron Mozes", "email": "yaron.mozes@campus.technion.ac.il"},
         ],
     }
 
