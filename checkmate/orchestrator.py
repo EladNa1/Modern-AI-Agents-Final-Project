@@ -138,7 +138,14 @@ def _merge_fragments(fragments: list[ParsedFragment]) -> ParsedFragment:
 
 def _apply_revision(grade: Grade, new_score: float | None, new_feedback: str) -> Grade:
     score = max(0.0, min(grade.max, new_score)) if new_score is not None else grade.score
-    status = "ok" if score >= grade.max else "partial"
+    # A REVISE may correct the score/feedback, but it must NEVER downgrade an escalation:
+    # once the grade is escalated (self-consistency `grader_disagreement`, or a missing/E3
+    # key), the reflector -- the same weak model -- cannot silently mark it graded. Keeping
+    # the escalate preserves the safety net (and the flags that ride with it).
+    if grade.status == "escalate":
+        status = "escalate"
+    else:
+        status = "ok" if score >= grade.max else "partial"
     return Grade(**{**grade.__dict__, "score": score, "status": status,
                     "feedback": new_feedback.strip() or grade.feedback})
 
