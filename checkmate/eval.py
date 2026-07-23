@@ -169,7 +169,10 @@ def score_grading(gt: dict, got: dict[str, dict]) -> dict:
     """Compare model results to human ground truth for one booklet."""
     open_abs: list[float] = []
     tf_mc_hits = tf_mc_total = false_zeros = escalations = 0
-    false_deducts = full_credit_items = false_deduct_points = 0
+    # False-deduction split by type: over-deducting a complete PROOF is the fabricated-
+    # deduction failure; over-deducting a circled letter is a parsing failure. Pooling them
+    # dilutes the open-question rate, so track separately.
+    fd = {"open": {"n": 0, "items": 0, "points": 0.0}, "tf_mc": {"n": 0, "items": 0, "points": 0.0}}
     esc_tp = esc_fp = esc_fn = 0  # escalation precision/recall bookkeeping
     per_q = []
     for qid, truth in gt["questions"].items():
@@ -199,12 +202,13 @@ def score_grading(gt: dict, got: dict[str, dict]) -> dict:
         if human > 0 and g and model == 0 and "no work" in (g.get("feedback", "").lower()):
             false_zeros += 1
         # false deduction: human gave FULL marks ("do not deduct"), model took some off.
-        # Track both RATE and SEVERITY (points wrongly removed) -- 1/12 hides "lost 5 on Q1a".
+        # Track RATE and SEVERITY (points wrongly removed), split open vs T/F+MC.
         if human == truth["max"] and not disputed:
-            full_credit_items += 1
+            bucket = fd["open"] if _is_open(qid) else fd["tf_mc"]
+            bucket["n"] += 1
             if model is not None and model < human:
-                false_deducts += 1
-                false_deduct_points += human - model
+                bucket["items"] += 1
+                bucket["points"] += human - model
         per_q.append({"q": qid, "human": human, "model": model, "max": truth["max"],
                       "status": status, "disputed": disputed,
                       "abs_err": (abs(model - human) if (model is not None and _is_open(qid) and not disputed) else None)})
@@ -214,8 +218,7 @@ def score_grading(gt: dict, got: dict[str, dict]) -> dict:
         "tf_mc_exact": (tf_mc_hits / tf_mc_total) if tf_mc_total else None,
         "tf_mc_hits": tf_mc_hits, "tf_mc_total": tf_mc_total,
         "false_zeros": false_zeros, "escalations": escalations,
-        "false_deductions": false_deducts, "full_credit_items": full_credit_items,
-        "false_deduction_points": false_deduct_points,
+        "false_deduction": fd,
         "escalation_precision": (esc_tp / (esc_tp + esc_fp)) if (esc_tp + esc_fp) else None,
         "escalation_recall": (esc_tp / (esc_tp + esc_fn)) if (esc_tp + esc_fn) else None,
         "esc_tp": esc_tp, "esc_fp": esc_fp, "esc_fn": esc_fn,
@@ -276,8 +279,10 @@ def _print_scorecard(report: dict) -> None:
         tfm = g["tf_mc_exact"]
         print(f"  T/F+MC exact   : {tfm:.0%} ({g['tf_mc_hits']}/{g['tf_mc_total']})" if tfm is not None else "  T/F+MC exact   : n/a")
         print(f"  false zeros    : {g['false_zeros']}")
-        print(f"  false deducts  : {g['false_deductions']}/{g['full_credit_items']} items, "
-              f"{g['false_deduction_points']} pts wrongly removed from flawless work")
+        fdr = g["false_deduction"]
+        print(f"  false deducts  : open {fdr['open']['items']}/{fdr['open']['n']} items "
+              f"({fdr['open']['points']:g} pts)  ·  TF/MC {fdr['tf_mc']['items']}/{fdr['tf_mc']['n']} items "
+              f"({fdr['tf_mc']['points']:g} pts)")
         ep, er = g["escalation_precision"], g["escalation_recall"]
         print(f"  escalation P/R : P={ep:.0%} R={er:.0%}  (tp={g['esc_tp']} fp={g['esc_fp']} fn={g['esc_fn']})"
               if ep is not None and er is not None
