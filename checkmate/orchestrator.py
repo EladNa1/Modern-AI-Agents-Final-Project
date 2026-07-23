@@ -10,6 +10,7 @@ import re
 from collections import Counter
 from dataclasses import asdict
 
+from .config import CONFIG
 from .env import HAS_LLM
 from .grader import run_grader
 from .kb.exams import match_exam
@@ -20,7 +21,7 @@ from .parser import run_parser
 from .reflector import run_reflector
 from .retriever import retrieve, retrieve_notes
 
-MAX_REVISE_PASSES = 2
+MAX_REVISE_PASSES = CONFIG.max_revise_passes
 UNMATCHED = "Unmatched work"  # bucket for transcribed work that matches no KB question
 
 
@@ -32,6 +33,9 @@ def run_agent(images: list[ImageInput], instructions: str = "", source_label: st
 
     instructions = (instructions or "").strip()
     log = StepLog()
+    # Log the active tuning config first, so every trace/eval number is attributable to it.
+    log.add("Config", "Active tuning config for this run (section 6).", "",
+            CONFIG.to_log(), "Config")
 
     try:
         parsed = run_parser(images, log, instructions)

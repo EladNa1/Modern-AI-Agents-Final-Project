@@ -8,6 +8,7 @@ import os
 import re
 from dataclasses import dataclass
 
+from .config import CONFIG
 from .llm import StepLog, chat, extract_json
 from .models import ImageInput, ParsedFragment, Usage
 from .zoom import ZoomBudget, zoom_read
@@ -73,8 +74,9 @@ def run_parser(images: list[ImageInput], log: StepLog, instructions: str = "",
 
         text, usage = chat(
             system=PARSER_SYSTEM, user=user, images=[image],
-            max_tokens=2500, json_mode=True,
-            # Note: gpt-5.4-mini via the gateway only supports the default temperature.
+            max_tokens=CONFIG.parser_max_tokens, json_mode=True,
+            # Note: gpt-5.4-mini via the gateway rejects any explicit temperature (400);
+            # the fixed default (~1.0) is used.
         )
 
         parsed = extract_json(text) or {}

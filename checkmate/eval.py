@@ -119,14 +119,24 @@ def score_grading(gt: dict, got: dict[str, dict]) -> dict:
     open_abs: list[float] = []
     tf_mc_hits = tf_mc_total = false_zeros = escalations = 0
     false_deducts = full_credit_items = 0
+    esc_tp = esc_fp = esc_fn = 0  # escalation precision/recall bookkeeping
     per_q = []
     for qid, truth in gt["questions"].items():
         g = got.get(qid)
         model = g["score"] if g else None
         status = g["status"] if g else "missing"
         human = truth["human"]
-        if g and status == "escalate":
+        # "wrong" = a shippable grade that misses the human by > tolerance (2 pts open;
+        # any mismatch on all-or-nothing T/F+MC). Escalation should catch exactly these.
+        tol = 2 if _is_open(qid) else 0
+        wrong = model is not None and abs(model - human) > tol
+        escalated = bool(g) and status == "escalate"
+        if escalated:
             escalations += 1
+            esc_tp += int(wrong)
+            esc_fp += int(not wrong)
+        elif wrong:
+            esc_fn += 1  # shipped a wrong grade without flagging -- the dangerous miss
         if _is_open(qid):
             if model is not None:
                 open_abs.append(abs(model - human))
@@ -151,6 +161,9 @@ def score_grading(gt: dict, got: dict[str, dict]) -> dict:
         "tf_mc_hits": tf_mc_hits, "tf_mc_total": tf_mc_total,
         "false_zeros": false_zeros, "escalations": escalations,
         "false_deductions": false_deducts, "full_credit_items": full_credit_items,
+        "escalation_precision": (esc_tp / (esc_tp + esc_fp)) if (esc_tp + esc_fp) else None,
+        "escalation_recall": (esc_tp / (esc_tp + esc_fn)) if (esc_tp + esc_fn) else None,
+        "esc_tp": esc_tp, "esc_fp": esc_fp, "esc_fn": esc_fn,
         "per_question": per_q,
     }
 
@@ -158,7 +171,9 @@ def score_grading(gt: dict, got: dict[str, dict]) -> dict:
 def run(live: bool) -> dict:
     gts = load_ground_truth()
     booklets = discover_booklets()
+    from .config import CONFIG
     report: dict = {"generated_at": time.strftime("%Y-%m-%d %H:%M:%S"), "live": live,
+                    "config": CONFIG.to_log(),  # a number is only a measurement with its config
                     "n_ground_truth": len(gts), "n_booklets": len(booklets),
                     "routing": routing_accuracy(gts),
                     "ink": ink_pass(booklets),  # FREE, whole corpus
@@ -201,10 +216,15 @@ def _print_scorecard(report: dict) -> None:
         print(f"  T/F+MC exact   : {tfm:.0%} ({g['tf_mc_hits']}/{g['tf_mc_total']})" if tfm is not None else "  T/F+MC exact   : n/a")
         print(f"  false zeros    : {g['false_zeros']}")
         print(f"  false deducts  : {g['false_deductions']}/{g['full_credit_items']} (deducted where human gave full marks)")
-        print(f"  escalations    : {g['escalations']}")
-        worst = sorted((q for q in g["per_question"] if q["abs_err"] is not None), key=lambda q: -q["abs_err"])[:3]
-        for q in worst:
-            print(f"    Δ{q['abs_err']:.0f}  {q['q']:5} human {q['human']}/{q['max']}  model {q['model']}  [{q['status']}]")
+        ep, er = g["escalation_precision"], g["escalation_recall"]
+        print(f"  escalation P/R : P={ep:.0%} R={er:.0%}  (tp={g['esc_tp']} fp={g['esc_fp']} fn={g['esc_fn']})"
+              if ep is not None and er is not None
+              else f"  escalation P/R : P={'n/a' if ep is None else f'{ep:.0%}'} R={'n/a' if er is None else f'{er:.0%}'}  (tp={g['esc_tp']} fp={g['esc_fp']} fn={g['esc_fn']})")
+        print(f"  {'question':7} {'human':>7} {'model':>7} {'Δ':>4}  status")
+        for q in g["per_question"]:
+            d = f"{q['abs_err']:.0f}" if q["abs_err"] is not None else "-"
+            mdl = q["model"] if q["model"] is not None else "-"
+            print(f"    {q['q']:7} {str(q['human'])+'/'+str(q['max']):>7} {str(mdl):>7} {d:>4}  {q['status']}")
 
 
 def main() -> None:

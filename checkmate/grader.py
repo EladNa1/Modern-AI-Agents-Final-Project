@@ -10,9 +10,9 @@ Grade the built-in sample live:     python -m checkmate.grader --live
 from __future__ import annotations
 
 import math
-import os
 import sys
 
+from .config import CONFIG
 from .env import LLMOD_GRADER_MODEL
 from .llm import StepLog, chat, extract_json
 from .models import Grade, NotesChunk, ParsedFragment, Retrieved, Usage
@@ -239,14 +239,10 @@ def build_grader_user(q: ParsedFragment, retrieved: Retrieved | None,
 
 
 def _grader_samples() -> int:
-    """How many times to grade each question for self-consistency (CHECKMATE_GRADER_SAMPLES,
-    default 3, clamped 1..5). The mini is non-deterministic even at the default temperature,
-    so repeated calls surface its instability instead of shipping one lucky/unlucky grade."""
-    try:
-        n = int(os.environ.get("CHECKMATE_GRADER_SAMPLES", "3"))
-    except ValueError:
-        n = 3
-    return max(1, min(5, n))
+    """How many times to grade each question for self-consistency (config `grader_samples`).
+    The mini is non-deterministic at the gateway default temperature, so repeated calls
+    surface its instability instead of shipping one lucky/unlucky grade."""
+    return CONFIG.grader_samples
 
 
 def run_grader(q: ParsedFragment, retrieved: Retrieved | None, log: StepLog,
@@ -258,8 +254,8 @@ def run_grader(q: ParsedFragment, retrieved: Retrieved | None, log: StepLog,
     grades: list[Grade] = []
     total_usage: Usage = {"prompt": 0, "completion": 0, "total": 0}
     for _ in range(n):
-        text, usage = chat(GRADER_SYSTEM, user, max_tokens=1200, json_mode=True,
-                           model=LLMOD_GRADER_MODEL)
+        text, usage = chat(GRADER_SYSTEM, user, max_tokens=CONFIG.grader_max_tokens,
+                           json_mode=True, model=LLMOD_GRADER_MODEL)
         for k in total_usage:
             total_usage[k] += usage.get(k, 0)
         grades.append(_normalize_grade(q.id, max_points, q.confidence, text))
@@ -285,7 +281,7 @@ def _aggregate_grades(grades: list[Grade], max_points: int) -> Grade:
 
     # Tolerance: ~a quarter of the question, but at least 1.5 pts, so a genuine 2-pt swing
     # flags but rounding-level jitter does not.
-    threshold = max(1.5, 0.25 * max_points)
+    threshold = max(CONFIG.disagreement_floor, CONFIG.disagreement_frac * max_points)
     disagree = spread > threshold
 
     agreement = 1.0 - (spread / max_points) if max_points else 1.0
