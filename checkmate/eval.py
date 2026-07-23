@@ -17,6 +17,7 @@ whose graded answers sit in the prompt is never scored on itself.
 from __future__ import annotations
 
 import glob
+import hashlib
 import json
 import os
 import re
@@ -29,6 +30,7 @@ from .kb.exams import match_exam
 _ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 _GRADED = os.path.join(_ROOT, "eval", "graded")
 _REPORTS = os.path.join(_ROOT, "eval", "reports")
+_OCR = os.path.join(_ROOT, "eval", "ocr_cache")
 _DATA = os.path.join(_ROOT, "Data")
 
 # Graded student booklet filenames encode the human total as a suffix, e.g.
@@ -104,14 +106,63 @@ def ink_pass(booklets: list[dict], max_pages: int = 20) -> dict:
     return {"n": len(rows), "rows": rows}
 
 
-def grade_booklet_live(gt: dict) -> dict[str, dict]:
-    """Run the full agent on one booklet PDF (COSTS budget). Returns {question_id: result}."""
+def _parser_version() -> str:
+    """Fingerprint of the parser stage; a change here (and only here) invalidates the OCR
+    cache, per rule 6.1."""
+    src = open(os.path.join(os.path.dirname(__file__), "parser.py"), encoding="utf-8").read()
+    return hashlib.sha1(src.encode("utf-8")).hexdigest()[:12]
+
+
+def _load_cached_parse(booklet_id: str, version: str):
+    path = os.path.join(_OCR, booklet_id + ".json")
+    if not os.path.exists(path):
+        return None
+    d = json.load(open(path, encoding="utf-8"))
+    if d.get("parser_version") != version:
+        return None  # parser changed -> stale, must re-parse
+    from .models import ParsedFragment
+    from .parser import ParseResult
+    frags = [ParsedFragment(**f) for f in d["fragments"]]
+    return ParseResult(fragments=frags, raw=d.get("raw", ""),
+                       usage={"prompt": 0, "completion": 0, "total": 0}, exam_meta=d.get("exam_meta"))
+
+
+def _save_cached_parse(booklet_id: str, version: str, parsed) -> None:
+    os.makedirs(_OCR, exist_ok=True)
+    json.dump({"parser_version": version, "exam_meta": parsed.exam_meta, "raw": parsed.raw,
+               "fragments": [f.__dict__ for f in parsed.fragments]},
+              open(os.path.join(_OCR, booklet_id + ".json"), "w", encoding="utf-8"),
+              ensure_ascii=False, indent=2)
+
+
+def grade_booklet_live(gt: dict) -> tuple[dict[str, dict], dict]:
+    """Grade one booklet. Vision (parse) runs ONCE and is cached to disk (6.1); on later runs
+    where only the grader/reflector/config changed, the parse is reused for free. Returns
+    ({question_id: result}, cost_by_stage)."""
+    from .llm import StepLog
     from .orchestrator import run_agent
+    from .parser import run_parser
     from .pdf import render_pdf_to_images
-    with open(os.path.join(_ROOT, gt["booklet"]), "rb") as f:
-        render = render_pdf_to_images(f.read(), max_pages=60)  # eval reads the WHOLE booklet
-    res = run_agent(render.images, "", gt["exam_id"], exam=gt.get("exam_label"))
-    return {q["id"]: q for q in res.get("meta", {}).get("questions", [])}
+
+    bid, version = gt["exam_id"], _parser_version()
+    parsed = _load_cached_parse(bid, version)
+    parse_cost = 0.0
+    if parsed is None:  # cache miss -> pay for vision once, then persist
+        with open(os.path.join(_ROOT, gt["booklet"]), "rb") as f:
+            render = render_pdf_to_images(f.read(), max_pages=60)
+        plog = StepLog()
+        parsed = run_parser(render.images, plog)
+        parse_cost = plog.cost_by_stage()["total"]
+        _save_cached_parse(bid, version, parsed)
+
+    res = run_agent([], "", bid, exam=gt.get("exam_label"), parsed=parsed)
+    meta = res.get("meta", {})
+    got = {q["id"]: q for q in meta.get("questions", [])}
+    cost = dict(meta.get("cost", {}))
+    cost["Parser"] = round(cost.get("Parser", 0) + parse_cost, 4)  # add the (cached-once) parse
+    cost["total"] = round(cost.get("total", 0) + parse_cost, 4)
+    cost["parse_cached"] = parse_cost == 0.0
+    return got, cost
 
 
 def score_grading(gt: dict, got: dict[str, dict]) -> dict:
@@ -184,8 +235,8 @@ def run(live: bool) -> dict:
                     "grading": []}
     if live:
         for gt in gts:
-            got = grade_booklet_live(gt)
-            report["grading"].append({"exam_id": gt["exam_id"], **score_grading(gt, got)})
+            got, cost = grade_booklet_live(gt)
+            report["grading"].append({"exam_id": gt["exam_id"], "cost": cost, **score_grading(gt, got)})
     return report
 
 
@@ -231,6 +282,10 @@ def _print_scorecard(report: dict) -> None:
             mdl = q["model"] if q["model"] is not None else "-"
             tag = "  DISPUTED (excl.)" if q.get("disputed") else ""
             print(f"    {q['q']:7} {str(q['human'])+'/'+str(q['max']):>7} {str(mdl):>7} {d:>4}  {q['status']}{tag}")
+        c = g.get("cost", {})
+        stagec = " ".join(f"{k}=${c[k]:.4f}" for k in ("Parser", "Grader", "Reflector") if k in c)
+        print(f"  cost (est)     : total ${c.get('total', 0):.4f}   {stagec}"
+              + ("   [parse cached]" if c.get("parse_cached") else ""))
 
 
 def main() -> None:

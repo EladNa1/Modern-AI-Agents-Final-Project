@@ -93,6 +93,7 @@ class StepLog:
     def __init__(self) -> None:
         self.steps: list[Step] = []
         self.usage: Usage = {"prompt": 0, "completion": 0, "total": 0}
+        self.by_module: dict[str, Usage] = {}  # per-stage usage, for cost-by-stage (6.2)
 
     def add(self, module: str, system: str, user: str, response,
             pattern: str | None = None, usage: Usage | None = None) -> None:
@@ -104,3 +105,19 @@ class StepLog:
         if usage:
             for k in self.usage:
                 self.usage[k] += usage.get(k, 0)
+            m = self.by_module.setdefault(module, {"prompt": 0, "completion": 0, "total": 0})
+            for k in m:
+                m[k] += usage.get(k, 0)
+
+    def cost_by_stage(self) -> dict:
+        """Estimated $ per stage + total, from the configured token prices (6.2)."""
+        stages = {mod: round(cost_usd(u), 4) for mod, u in self.by_module.items()}
+        stages["total"] = round(sum(stages.values()), 4)
+        return stages
+
+
+def cost_usd(usage: Usage) -> float:
+    """Estimate the $ cost of one usage record from the configured token prices."""
+    from .config import CONFIG
+    return (usage.get("prompt", 0) / 1000 * CONFIG.price_input_per_1k
+            + usage.get("completion", 0) / 1000 * CONFIG.price_output_per_1k)

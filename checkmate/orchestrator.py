@@ -12,7 +12,7 @@ from dataclasses import asdict
 
 from .config import CONFIG
 from .env import HAS_LLM
-from .grader import run_grader
+from .grader import _is_tf_mc, run_grader
 from .kb.exams import match_exam
 from .llm import StepLog
 from .mock_agent import run_mock_agent
@@ -26,9 +26,9 @@ UNMATCHED = "Unmatched work"  # bucket for transcribed work that matches no KB q
 
 
 def run_agent(images: list[ImageInput], instructions: str = "", source_label: str = "",
-              exam: str | None = None) -> dict:
+              exam: str | None = None, parsed=None) -> dict:
     # Fallback: no key configured or nothing to look at -> deterministic mock.
-    if not HAS_LLM or not images:
+    if not HAS_LLM or (not images and parsed is None):
         return run_mock_agent(source_label, instructions or "")
 
     instructions = (instructions or "").strip()
@@ -38,7 +38,14 @@ def run_agent(images: list[ImageInput], instructions: str = "", source_label: st
             CONFIG.to_log(), "Config")
 
     try:
-        parsed = run_parser(images, log, instructions)
+        # `parsed` supplied -> reuse a cached transcription (6.1: never re-run vision on a
+        # booklet already parsed; re-parse only when the parser itself changes).
+        if parsed is None:
+            parsed = run_parser(images, log, instructions)
+        else:
+            log.add("Parser", "Cached transcription reused (no vision call).", "",
+                    {"cached": True, "fragments": len(parsed.fragments),
+                     "exam_meta": parsed.exam_meta}, "Cache")
         if not parsed.fragments:
             return {"status": "error",
                     "error": "The Parser could not read any question from the scan. Try a clearer image.",
@@ -65,19 +72,31 @@ def run_agent(images: list[ImageInput], instructions: str = "", source_label: st
         groups = _group_by_retrieved_question(parsed.fragments, log, exam)
 
         results: list[QuestionResult] = []
+        aborted = False
         for group in groups:
             merged = _merge_fragments(group["fragments"])
             q = merged if group["retrieved"] else ParsedFragment(
                 id=UNMATCHED, text=merged.text, latex=merged.latex,
                 confidence=merged.confidence, page=merged.page)
             retrieved = group["retrieved"]
+            qid = retrieved.entry.id if retrieved else q.id
             query = f"{q.text} {q.latex or ''}"
             notes = retrieve_notes(query, log)
             grade = run_grader(q, retrieved, log, notes)
 
-            # Reflection loop: critique, revise up to N passes, then approve or escalate.
-            for _ in range(MAX_REVISE_PASSES):
+            # Reflection loop (7.3): passes allocated by stakes, T/F+MC skipped (no argument to
+            # critique), and a cumulative per-question token budget that exits early -- a grade
+            # that ran out of review budget is flagged, not silently accepted.
+            passes = _reflection_passes(qid, grade.max)
+            refl_tokens = 0
+            for _ in range(passes):
+                if refl_tokens >= CONFIG.max_reflection_tokens_per_q:
+                    if "reflection_incomplete" not in grade.flags:
+                        grade.flags.append("reflection_incomplete")
+                    break
+                before = log.usage["total"]
                 refl = run_reflector(q, grade, retrieved, log)
+                refl_tokens += log.usage["total"] - before
                 if refl.action == "APPROVE":
                     break
                 if refl.action == "ESCALATE":
@@ -87,7 +106,12 @@ def run_agent(images: list[ImageInput], instructions: str = "", source_label: st
 
             results.append(_to_question_result(q.id, grade, retrieved))
 
-        return _assemble(results, source_label, instructions, log, exam, exam_source)
+            # Budget guardrail (6.3): stop before the next question if we've hit the ceiling.
+            if log.cost_by_stage()["total"] > CONFIG.max_run_cost_usd:
+                aborted = True
+                break
+
+        return _assemble(results, source_label, instructions, log, exam, exam_source, aborted)
     except Exception as err:
         # Any gateway/parse failure -> a valid error payload (never raise to the route).
         return {"status": "error", "error": "The agent failed while grading: " + str(err),
@@ -140,6 +164,15 @@ def _merge_fragments(fragments: list[ParsedFragment]) -> ParsedFragment:
     )
 
 
+def _reflection_passes(qid: str, max_points: int) -> int:
+    """How many reflection passes this question gets (7.3): none for T/F+MC (nothing to
+    critique), full budget for high-stakes open questions, one pass for smaller ones."""
+    if _is_tf_mc(qid) and not CONFIG.reflect_tf_mc:
+        return 0
+    return CONFIG.max_revise_passes if max_points >= CONFIG.reflection_high_threshold \
+        else CONFIG.reflection_passes_open
+
+
 def _apply_revision(grade: Grade, new_score: float | None, new_feedback: str) -> Grade:
     score = max(0.0, min(grade.max, new_score)) if new_score is not None else grade.score
     # A REVISE may correct the score/feedback, but it must NEVER downgrade an escalation:
@@ -172,10 +205,11 @@ def _year_from(date) -> str | None:
 
 
 def _assemble(questions: list[QuestionResult], source: str, instructions: str, log: StepLog,
-              exam: str | None = None, exam_source: str = "none") -> dict:
+              exam: str | None = None, exam_source: str = "none", aborted: bool = False) -> dict:
     total = sum(q.score for q in questions)
     max_pts = sum(q.max for q in questions)
     escalated = [q for q in questions if q.status == "escalate"]
+    cost = log.cost_by_stage()
 
     scope_line = (f"Graded as {exam} ({'auto-detected' if exam_source == 'auto' else 'selected'})."
                   if exam else "Exam not identified — graded unscoped; pick the exam to re-grade more accurately.")
@@ -185,13 +219,17 @@ def _assemble(questions: list[QuestionResult], source: str, instructions: str, l
         *[f"{q.id} — {q.score}/{q.max}: {q.feedback}" for q in questions], "",
         (f"⚠ {len(escalated)} question(s) escalated to the teacher: "
          f"{', '.join(q.id for q in escalated)}.") if escalated else "No questions required human review.",
+        (f"⚠ Run stopped early at the ${CONFIG.max_run_cost_usd:.2f} budget ceiling — "
+         "remaining questions were not graded.") if aborted else "",
+        f"Estimated cost: ${cost['total']:.4f}.",
     ]
 
     return {
-        "status": "ok", "error": None, "response": "\n".join(lines), "steps": _steps(log),
+        "status": "ok", "error": None, "response": "\n".join(p for p in lines if p != ""),
+        "steps": _steps(log),
         "meta": {"total": total, "max": max_pts, "questions": [asdict(q) for q in questions],
                  "source": source, "mode": "full", "instructions": instructions,
-                 "exam": exam, "exam_source": exam_source},
+                 "exam": exam, "exam_source": exam_source, "aborted": aborted, "cost": cost},
     }
 
 

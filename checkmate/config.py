@@ -36,8 +36,17 @@ class AgentConfig:
     disagreement_frac: float = 0.25    # escalate when spread > max(floor, frac * max_points)
     disagreement_floor: float = 1.5
 
-    # --- Reflection (orchestrator + reflector stages) ---
-    max_revise_passes: int = 2         # early-exit on APPROVE
+    # --- Reflection (orchestrator + reflector stages), 7.3 ---
+    max_revise_passes: int = 2               # cap for high-stakes open questions
+    reflection_passes_open: int = 1          # smaller open questions get one pass
+    reflection_high_threshold: int = 15      # >= this many points -> full max_revise_passes
+    reflect_tf_mc: bool = False              # T/F + MC have no argument -> skip reflection
+    max_reflection_tokens_per_q: int = 2200  # cumulative reflector budget/question; over -> stop
+
+    # --- Cost model + guardrail (6.2/6.3). Rates are ESTIMATES; set real gateway prices. ---
+    price_input_per_1k: float = 0.00025    # $ per 1k input tokens (incl. vision image tokens)
+    price_output_per_1k: float = 0.00100   # $ per 1k output tokens
+    max_run_cost_usd: float = 0.75         # abort a run that would exceed this
 
     # --- Parser input (render) ---
     render_max_pages: int = 12         # pages rendered per upload; 18-page booklets need >12
