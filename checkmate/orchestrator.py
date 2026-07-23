@@ -13,7 +13,8 @@ from dataclasses import asdict
 from .config import CONFIG
 from .env import HAS_LLM
 from .grader import _is_tf_mc, run_grader
-from .kb.exams import match_exam
+from .gradebook import GradeBook, entry_from_grade
+from .kb.exams import manifest_for, match_exam
 from .llm import StepLog
 from .mock_agent import run_mock_agent
 from .models import Grade, ImageInput, ParsedFragment, QuestionResult, Retrieved
@@ -71,6 +72,11 @@ def run_agent(images: list[ImageInput], instructions: str = "", source_label: st
         # Retriever matches each fragment on CONTENT, and that match defines a question here.
         groups = _group_by_retrieved_question(parsed.fragments, log, exam)
 
+        # GradeBook accumulates per-question entries; completion is judged against the KB
+        # manifest (arithmetic), never the model -- so a total is never built on missing slots.
+        gb = GradeBook(booklet_id=source_label or "booklet", exam_id=exam,
+                       config_snapshot=CONFIG.to_log(), manifest=manifest_for(exam) if exam else None)
+
         results: list[QuestionResult] = []
         aborted = False
         for group in groups:
@@ -105,13 +111,15 @@ def run_agent(images: list[ImageInput], instructions: str = "", source_label: st
                 grade = _apply_revision(grade, refl.score, refl.feedback)  # REVISE
 
             results.append(_to_question_result(q.id, grade, retrieved))
+            gb.add(qid, entry_from_grade(grade, retrieved))
 
             # Budget guardrail (6.3): stop before the next question if we've hit the ceiling.
             if log.cost_by_stage()["total"] > CONFIG.max_run_cost_usd:
                 aborted = True
                 break
 
-        return _assemble(results, source_label, instructions, log, exam, exam_source, aborted)
+        gb.cost = log.cost_by_stage()
+        return _assemble(results, source_label, instructions, log, exam, exam_source, aborted, gb)
     except Exception as err:
         # Any gateway/parse failure -> a valid error payload (never raise to the route).
         return {"status": "error", "error": "The agent failed while grading: " + str(err),
@@ -205,7 +213,8 @@ def _year_from(date) -> str | None:
 
 
 def _assemble(questions: list[QuestionResult], source: str, instructions: str, log: StepLog,
-              exam: str | None = None, exam_source: str = "none", aborted: bool = False) -> dict:
+              exam: str | None = None, exam_source: str = "none", aborted: bool = False,
+              gradebook: "GradeBook | None" = None) -> dict:
     total = sum(q.score for q in questions)
     max_pts = sum(q.max for q in questions)
     escalated = [q for q in questions if q.status == "escalate"]
@@ -229,7 +238,9 @@ def _assemble(questions: list[QuestionResult], source: str, instructions: str, l
         "steps": _steps(log),
         "meta": {"total": total, "max": max_pts, "questions": [asdict(q) for q in questions],
                  "source": source, "mode": "full", "instructions": instructions,
-                 "exam": exam, "exam_source": exam_source, "aborted": aborted, "cost": cost},
+                 "exam": exam, "exam_source": exam_source, "aborted": aborted, "cost": cost,
+                 "gradebook": gradebook.final_report() if gradebook else None,
+                 "booklet_status": gradebook.status() if gradebook else None},
     }
 
 

@@ -162,7 +162,7 @@ def grade_booklet_live(gt: dict) -> tuple[dict[str, dict], dict]:
     cost["Parser"] = round(cost.get("Parser", 0) + parse_cost, 4)  # add the (cached-once) parse
     cost["total"] = round(cost.get("total", 0) + parse_cost, 4)
     cost["parse_cached"] = parse_cost == 0.0
-    return got, cost
+    return got, cost, {"status": meta.get("booklet_status"), "report": meta.get("gradebook")}
 
 
 def score_grading(gt: dict, got: dict[str, dict]) -> dict:
@@ -235,8 +235,9 @@ def run(live: bool) -> dict:
                     "grading": []}
     if live:
         for gt in gts:
-            got, cost = grade_booklet_live(gt)
-            report["grading"].append({"exam_id": gt["exam_id"], "cost": cost, **score_grading(gt, got)})
+            got, cost, gb = grade_booklet_live(gt)
+            report["grading"].append({"exam_id": gt["exam_id"], "cost": cost,
+                                      "gradebook": gb, **score_grading(gt, got)})
     return report
 
 
@@ -265,6 +266,11 @@ def _print_scorecard(report: dict) -> None:
         return
     for g in report["grading"]:
         print(f"\n[{g['exam_id']}]")
+        gb = g.get("gradebook") or {}
+        rep = gb.get("report") or {}
+        miss = rep.get("missing_questions") or []
+        print(f"  booklet status : {gb.get('status')}"
+              + (f"  MISSING {len(miss)}: {miss}" if miss else "  (all manifest questions graded)"))
         mae = g["open_mae"]
         print(f"  open MAE       : {mae:.2f}" + (f"  (max err {g['open_max_err']:.0f})" if mae is not None else "") if mae is not None else "  open MAE       : n/a")
         tfm = g["tf_mc_exact"]

@@ -76,6 +76,17 @@ def exam_options() -> list[dict]:
     return [{"value": k.exam, "course": k.course, "label": f"{k.exam} · {k.course}"} for k in EXAMS]
 
 
+def manifest_for(exam_label: str) -> dict | None:
+    """Structure the KB knows for an exam: question ids + point values + expected total.
+    The orchestrator uses it to decide completion deterministically (8.3) -- never asking the
+    model whether a booklet is finished, and never reporting a total built on missing slots."""
+    kb = next((k for k in EXAMS if k.exam == exam_label), None)
+    if not kb:
+        return None
+    questions = [{"id": e.id, "max": e.points} for e in kb.questions.values()]
+    return {"questions": questions, "expected_total": sum(q["max"] for q in questions)}
+
+
 def match_exam(course: str | None = None, year: str | None = None,
                moed: str | None = None, term: str | None = None) -> str | None:
     """Map exam-identity fields read off a scan (course number, year, מועד, term) to a KB
