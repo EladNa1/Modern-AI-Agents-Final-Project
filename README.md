@@ -1,122 +1,240 @@
 # CheckMate
 
-**An autonomous agent that grades Calculus 1 (Hedva 1) exams.**
+**An autonomous Reflection Agent that grades Technion Calculus 1 (Hedva 1, 104041) exams.**
 
-Give it a scanned exam. It reads every page, grades each question on the student's
-*actual method* with partial credit and written feedback, and returns the full
-execution trace — reasoning through each solution the way a good TA does, grounded
-in the official solution and the course notes, not a rigid answer key.
+Give it a scanned exam. It reads every page, grades each question on the student's *actual
+method* with partial credit and written feedback, critiques its own grade against the
+official solution, and escalates to a human when unsure — grounded in the course's own
+solutions and lecture notes, not a rigid answer key.
 
 Final project · *Modern AI Agents* course · Elad Nachalieli · Shiri Haboob · Yaron Mozes.
 
 ---
 
-## The problem
+## 1. The problem
 
-Grading Calculus by hand doesn't scale. Every exam round hits the same bottleneck:
+Grading a proof-based Calculus course by hand doesn't scale, and it's a *reasoning* task,
+not a checklist: in Hedva 1 the credit lives in the **justification structure** (monotonicity
+established on each side, the quantifier present, the hypotheses stated) — not in a computable
+final answer. CheckMate hands that judgement to an agent and gives every student fast,
+consistent, grounded feedback per question, flagging for a human exactly the cases a TA
+should see.
 
-- **Slow feedback** — students wait days to learn where they went wrong, long after they've moved on.
-- **Inconsistent credit** — partial credit drifts between graders and across a long stack: same mistake, different score.
-- **Missing feedback** — often just a number lands, with no explanation of what went wrong or how to improve.
+## 2. What it does
 
-Grading is a reasoning task, not a checklist. CheckMate hands the job to an agent that
-reasons through a solution and gives every student **fast, consistent, fair** feedback
-on every question.
+1. **Input** — a scanned exam (PDF or images, all pages).
+2. **Process** — renders each page, reads it with vision OCR, auto-detects which exam it is,
+   retrieves the matching official solution, grades each question on the student's own method
+   (with self-consistency), critiques the grade, and accumulates a per-question gradebook.
+3. **Output** — a score + partial credit + feedback per question, a deterministic final
+   report (auto-graded subtotal vs. total-including-unreviewed, missing questions, a TA-review
+   queue), and the full `steps[]` execution trace.
 
-## What it does
+## 3. Architecture — a six-stage Reflection Agent
 
-1. **Input** — a scanned exam (PDF or image; all pages).
-2. **Process** — reads every page with vision OCR, splits the exam into questions, and grades
-   each on the student's own method, grounded in the retrieved official solution and course notes.
-3. **Output** — a score, partial credit, and written feedback per question, totaled into the final grade — plus the `steps[]` trace of every call the agent made.
-
-### Example — one question, graded
-
-The 2023w final, Q3(c) (9 pts): a limit `lim_{x→0⁻} (∫_{x⁶}^0 sin√t dt) / x⁹`.
-The student's method is right but they lose a sign at `√(x⁶) = |x|³ = −x³` for `x < 0`,
-reaching `−2/3` instead of the correct `+2/3`.
-
-> **CheckMate: 5 / 9 — partial**
-> - Method correct: bound flip, L'Hôpital via FTC, `sin θ/θ → 1`. **(+5)**
-> - Sign lost at `√(x⁶) = |x|³ = −x³`; answer `−2/3`, correct is `+2/3`. **(−4)**
-
-## How it works — a Reflection Agent
-
-CheckMate grades each question first, then **critiques its own grade** against the
-retrieved course evidence and revises until confident — approving, or escalating to a
-human when unsure. Every LLM call runs on **gpt-5.4-mini** through the LLMod.ai gateway,
-and every module logs a step in `steps[]`.
+The design's answer to a capacity-limited grader is **self-critique + grounding**, not a
+parallel deterministic checker. Every stage is a Python module; nothing bolts a new stage
+onto the pipeline.
 
 ```
-Scanned exam → Parser → Retriever → Grader → Reflector → Approve | Escalate → Result
-                          (RAG over the knowledge base: solutions + course notes)
+scan → Parser → Router → Retriever → Grader → Reflector → Orchestrator → GradeBook → Result
+        vision   scope    RAG        self-     critique/   assemble +     per-Q report
+        OCR      to exam   (solution  consist.  approve/    completion     + final report
+                           + notes)   median-N  escalate    (arithmetic)
 ```
 
-| Module | Pattern | Job |
-|--------|---------|-----|
-| **Parser** | Vision OCR | Reads each page, transcribes the student's work faithfully, splits it into questions. |
-| **Retriever** | RAG | Pinecone vector search: pulls the matching official solution *and* the most relevant course-notes chunks. |
-| **Grader** | Persona · CoT · Few-shot · Structured output | Scores the student's actual method with partial credit and feedback. |
-| **Reflector** | Reflection | Critiques the grade against the evidence, revises up to N passes, then approves or escalates. |
+| Stage | File | Job |
+|-------|------|-----|
+| **Parser** | `checkmate/parser.py` | Vision OCR: transcribes each page faithfully, splits into questions, reads exam identity (course/date/מועד) off the cover, and re-reads faint regions (zoom, opt-in). Does **not** grade. |
+| **Router** | `checkmate/orchestrator.py` + `kb/exams.py` | Resolves which exam to scope retrieval to: manual override → auto-detected from the scan → unscoped fallback. |
+| **Retriever** | `checkmate/retriever.py` | RAG. Pinecone semantic search scoped to the exam (with an exact question-id fallback over bundled JSON) for the official solution + top-k course-notes chunks. |
+| **Grader** | `checkmate/grader.py` | Scores the student's actual method with partial credit + feedback. **Self-consistency**: grades N times, takes the median, escalates on disagreement. |
+| **Reflector** | `checkmate/reflector.py` | Critiques the proposed grade **against the retrieved evidence** (official solution + transcript in context); APPROVE / REVISE / ESCALATE. |
+| **Orchestrator** | `checkmate/orchestrator.py` | Runs the pipeline, groups fragments by question, applies a cross-exam consistency guard, enforces the budget ceiling, and assembles the result + GradeBook. |
+| **GradeBook** | `checkmate/gradebook.py` | Accumulates per-question entries; decides completion **arithmetically** from the KB manifest (never model-detected); emits the final report + status. |
 
-**Interface:** `POST /api/execute` (multipart file, or `{ "prompt": … }` JSON) →
-`{ status, error, response, steps }`, each step `{ module, prompt: { System_prompt, User_prompt }, response }`.
-Also `GET /api/team_info`, `GET /api/agent_info`, `GET /api/model_architecture` (PNG).
+Supporting modules: `config.py` (all tuning knobs), `llm.py` (gateway client + cost model +
+`StepLog`), `pdf.py` (PDF→PNG render), `ink.py` (deterministic ink detection — the false-zero
+guard primitive), `zoom.py` (Pass-2 re-read), `eval.py` (offline eval harness), `kb/` (bundled
+solutions + Pinecone client + exam registry).
 
-## Why the grades hold up
+**Interface:** `POST /api/execute` (multipart `file`, optional `exam`) → `{ status, error,
+response, steps, meta }`. Also `GET /api/exams`, `/api/team_info`, `/api/agent_info`,
+`/api/model_architecture`. Pure-Python **FastAPI on Vercel** (Fluid Compute, 300s).
 
-- **Grounded in the source** — every grade is tied to the official solution and the course
-  lecture notes, retrieved via RAG — never invented, and no rubric is fabricated.
-- **Checks its own grade** — the Reflector critiques and revises until confident, capped at
-  N passes so it always terminates.
-- **Escalates when unsure** — low-confidence grades and unclear handwriting go to the teacher
-  for review, never silently guessed.
-- **Cheap to run** — every call uses gpt-5.4-mini; tight per-question context keeps a full exam within a ~$13 budget.
+## 4. Prompt-engineering methods
 
-## The knowledge base
+Each model-facing stage uses an explicit prompt strategy (deck slide 8: **PERSONA ·
+CHAIN-OF-THOUGHT · FEW-SHOT · STRUCTURED OUTPUT**), grounded in retrieved evidence.
 
-Two sources, embedded into **Pinecone** (1536-dim, `text-embedding-3-small`):
+### Grader — `GRADER_SYSTEM` (`grader.py`)
+- **Persona** — a rigorous, consistent senior TA; the same mistake always costs the same.
+- **Exam-structure block** — teaches the 104041 booklet layout (open Qs with א/ב sub-parts,
+  True/False ×3 pts, MC "אמריקאי" ×7 pts; red pen = grader, black/blue = student).
+- **Intake checklist** — identify sub-parts + point headers; a missing part is graded 0, not
+  escalated; confirm the retrieved solution matches the question.
+- **Two-pass reading policy** — at least two reads before declaring anything illegible; use
+  mathematical context to disambiguate; a Pass-2 zoom re-read for unclear regions.
+- **Grading rules (7)** — grade the student's *own* valid method; error carry-through (no
+  double-penalty); conceptual errors cost more than arithmetic slips; T/F & MC are
+  all-or-nothing; **rule 7**: independently verify a counterexample satisfies every required
+  property on the exact interval, and judge a "prove or disprove" counterexample against the
+  *negation* of the claim.
+- **Few-shot** — worked examples calibrated on the real red-pen scores of the Winter-2024
+  Moed-A booklet (full credit / theorem-statement deduction / justification gap / Taylor
+  factor / do-not-escalate / do-escalate).
+- **Grounding & escalation** — the official solution is the authority; escalate only under
+  E1 (>25% of points unreadable after zoom), E2 (load-bearing out-of-syllabus step
+  unverifiable), or E3 (official solution missing/contradictory).
+- **Structured output** — a strict JSON object (`question_id, score, max, subscores, status,
+  feedback, justification, confidence, read_attempts, flags, sources`).
+- **Self-consistency** (code, not prompt) — N samples → median; sample spread beyond the
+  disagreement threshold → escalate with a `grader_disagreement` flag.
 
-1. **Official solutions** — per-question solutions from past finals, with point values and
-   grading notes: the ground truth each grade is measured against.
-2. **Course material** — the full Calculus 1 lecture notes, chunked and embedded, so every
-   grade is grounded in the course's own source of truth.
+### Parser — `PARSER_SYSTEM` (`parser.py`)
+Transcribe-only persona (never grades); faithful transcription preserving Hebrew + math;
+splits into questions with a per-fragment legibility **confidence**; `[illegible]` inline;
+LaTeX for math; optional `exam_meta` (course/date/מועד) off the cover; structured JSON.
 
-Dev tooling (`scripts/`, excluded from deploy): `ingest_exam.ts` (solution PDF → KB JSON),
-`ingest_notes.ts` (lecture notes → Pinecone), `index_kb.ts` (embed + upsert solutions).
+### Reflector — `REFLECTOR_SYSTEM` (`reflector.py`)
+Receives the **proposed grade + official solution + student transcript** and critiques rather
+than re-grades from memory; chooses exactly one action (APPROVE / REVISE / ESCALATE);
+structured JSON. Skipped entirely on T/F + MC (no argument to critique).
 
-## Running locally
+## 5. Hyperparameters
+
+**All tuning knobs live in one place — `checkmate/config.py` (`AgentConfig` / `CONFIG`)** —
+and the active config is logged into every run trace and eval report (a number that can't be
+attributed to a config is not a measurement). Env vars override the marked ones without a
+redeploy.
+
+### Grader (self-consistency) — `checkmate/config.py`
+| Knob | Value | Meaning | Env override |
+|------|-------|---------|--------------|
+| `grader_samples` | **3** | N samples for open/proof questions | `CHECKMATE_GRADER_SAMPLES` |
+| `grader_samples_high` | **5** | N for high-point open questions (≥ threshold) | `CHECKMATE_GRADER_SAMPLES_HIGH` |
+| `grader_samples_tf_mc` | **1** | N for True/False + MC (all-or-nothing) | `CHECKMATE_GRADER_SAMPLES_TFMC` |
+| `high_point_threshold` | **15** | ≥ this ⇒ use `grader_samples_high` | — |
+| `disagreement_frac` | **0.25** | escalate when sample spread > max(floor, frac·max) | — |
+| `disagreement_floor` | **1.5** | floor (pts) for the disagreement threshold | — |
+
+### Reflection — `checkmate/config.py`
+| Knob | Value | Meaning | Env override |
+|------|-------|---------|--------------|
+| `max_revise_passes` | **2** | passes for high-stakes open questions | `CHECKMATE_MAX_REVISE_PASSES` |
+| `reflection_passes_open` | **1** | passes for smaller open questions | — |
+| `reflection_high_threshold` | **15** | ≥ this ⇒ full `max_revise_passes` | — |
+| `reflect_tf_mc` | **False** | reflect on T/F + MC? (skipped) | — |
+| `max_reflection_tokens_per_q` | **2200** | cumulative reflector token budget/question → early exit + `reflection_incomplete` | — |
+
+### Parser / vision — `checkmate/config.py`, `pdf.py`, `parser.py`, `zoom.py`, `ink.py`
+| Knob | Value | File | Meaning | Env override |
+|------|-------|------|---------|--------------|
+| `render_max_pages` | **12** | config.py | pages rendered per upload (18-page booklet needs > 12) | `CHECKMATE_MAX_PAGES` |
+| `parser_max_tokens` | **2500** | config.py | parser output cap | — |
+| `RENDER_DPI` | **150** | pdf.py | page render DPI | — |
+| `CHECKMATE_ZOOM` | **off** | parser.py | opt-in Pass-2 zoom re-read | `CHECKMATE_ZOOM` |
+| `ZOOM_CONF_THRESHOLD` | **0.55** | parser.py | fragment confidence below which zoom fires | — |
+| `DEFAULT_SCALE` | **2.5** | zoom.py | zoom magnification | — |
+| ink grid / dpi / stride | **(12,16) / 120 / 3** | ink.py | ink-density detector params | — |
+
+### Grader/reflector token budgets — `checkmate/config.py`
+| Knob | Value | Meaning |
+|------|-------|---------|
+| `grader_max_tokens` | **1800** | open questions (walk the argument step by step) |
+| `grader_max_tokens_tf_mc` | **250** | T/F + MC (answer + one-line reason) |
+| `reflector_max_tokens` | **900** | reflector critique |
+
+**Input is never truncated** — the student transcript and official solution for the graded
+question always go in full (truncation of either is logged as a defect, not a tuning outcome).
+
+### Retriever — `checkmate/retriever.py`
+| Knob | Value | Meaning |
+|------|-------|---------|
+| `MIN_SCORE` | **0.5** | min cosine similarity to trust a semantic solution match |
+| `NOTES_MIN_SCORE` | **0.3** | min similarity for a course-notes chunk |
+| solution top-k / notes k | **1 / 3** | exact solution match; supporting-notes breadth |
+
+### Cost / budget — `checkmate/config.py`
+| Knob | Value | Meaning |
+|------|-------|---------|
+| `price_input_per_1k` | **$0.00025** | ⚠ ESTIMATE — set the real gateway input rate |
+| `price_output_per_1k` | **$0.00100** | ⚠ ESTIMATE — set the real gateway output rate |
+| `max_run_cost_usd` | **$0.75** | per-run ceiling; the run aborts before the next question if exceeded |
+
+### Models — `checkmate/env.py` (env-driven)
+| Knob | Value | Meaning |
+|------|-------|---------|
+| `LLMOD_MODEL` | `MB5R2CF-azure/gpt-5.4-mini` | parser + default chat model |
+| `LLMOD_GRADER_MODEL` | *= `LLMOD_MODEL`* | grader + reflector model — one env var away from a stronger model **if the key allowed it** (it is currently restricted to the mini; stronger ids return HTTP 403) |
+| `LLMOD_EMBED_MODEL` | `…/text-embedding-3-small` | embeddings (1536-dim) |
+| **temperature** | **gateway default (~1.0)** | **not tunable** — gpt-5.4-mini rejects any explicit `temperature` (HTTP 400). The default varies across identical calls, which is what makes self-consistency informative; a "cold reflector" is not achievable on this model. |
+
+## 6. Knowledge base + RAG
+
+Two sources embedded into **Pinecone** (1536-dim, `text-embedding-3-small`):
+1. **Official solutions** — one chunk per question/sub-part with metadata `{exam_id, question,
+   part, max_points, verified}`, retrieved by exact metadata match (never pure semantic).
+   Bundled JSON under `checkmate/kb/solutions/`.
+2. **Course lecture notes** — chunked and embedded for grounding (definitions, theorem
+   statements, allowed tools).
+
+Because near-identical questions recur across exams ("state the IVT"), retrieval is **scoped
+to the identified exam** — the disambiguating signal is the exam identity read off the scan,
+not the student's answer. Keys are tagged `verified` vs `authored`; an offline SymPy sweep
+confirms decidable keys (it already caught the disputed 2024W-A Q2b: the printed equation
+`x²+x·sin x+cos x=0` has **0** real roots — the graded booklet's human 7/10 is a human error).
+
+## 7. Evaluation + budget model
+
+`python -m checkmate.eval` — offline, zero LLM: routing accuracy + a corpus-wide deterministic
+**ink pass** (the "region contains ink" side of the false-zero metric).
+`python -m checkmate.eval --live` — grades booklets against human red-pen ground truth
+(`eval/graded/*.json`) and reports open-question MAE, T/F+MC exact-match, **false-deduction
+rate *and severity*** (points removed from flawless work), escalation **precision/recall**, and
+**estimated cost by stage** — under the `max_run_cost_usd` ceiling.
+
+**Budget rules (hard):** vision is the scarce call. Each booklet is parsed **once** and its
+transcription cached to `eval/ocr_cache/` (keyed by a parser-source hash); re-runs where only
+the grader/reflector/config changed reuse the cache for free. Cost is instrumented per stage
+and printed; a run aborts rather than exceed the ceiling.
+
+## 8. Running locally
 
 ```bash
-npm install
-cp .env.example .env.local   # fill in LLMOD_KEY and PINECONE_API_KEY
-npm run dev                  # http://localhost:3000
+pip install -r requirements.txt
+cp .env.example .env.local          # fill in LLMOD_KEY (+ optional PINECONE_API_KEY)
+python -m uvicorn api.index:app --reload --port 8000   # http://localhost:8000
 ```
 
-Without keys the app still serves the required API contract via a deterministic mock,
-so every endpoint works with no secrets configured.
+Without keys the app still serves the full API contract via a deterministic mock, so every
+endpoint works with no secrets. Tech: **Python · FastAPI + Jinja on Vercel** · OpenAI-compatible
+LLMod.ai gateway · Pinecone · PyMuPDF (PDF render + ink detection). SymPy is an **offline-only**
+KB-verification tool, never in the request path.
 
-Tech: Next.js (App Router) · TypeScript · OpenAI-compatible LLMod.ai gateway · Pinecone ·
-mupdf (WASM) for PDF page rendering. Deploys on Vercel (`maxDuration` 300s).
+## 9. Known limitations
 
-## Roadmap
+- **Grader reasoning ceiling** — the mini makes systematic math errors even with correct
+  grounding; self-consistency catches *stochastic* disagreement but not *consistent* wrongness.
+  A stronger grader model is the real lever, and it is blocked by the restricted key (§5).
+- **Few-shot Example 3** in `GRADER_SYSTEM` still narrates "2 solutions" for the Q2b equation,
+  which the SymPy sweep disproves — a calibration defect to correct as few-shots move to
+  graded-booklet ingestion.
+- **Evaluation corpus is tiny** — two graded booklets of one paper, one disputed ground truth.
+  Numbers are a regression tripwire, not a population estimate; further tuning waits on more
+  graded booklets (ideally a second distinct exam paper).
 
-Same agent, new scope — plus deeper verification:
-
-- **Symbolic verifier (SymPy)** — cross-check derivatives, integrals, and limits deterministically.
-- **Persistence** — store runs and escalations (Supabase) for teacher review.
-- **Class analytics** — score distribution, hardest questions, recurring mistakes, topic mastery.
-
-## Repository contents
+## 10. Repository layout
 
 | Path | What it is |
 |------|-----------|
-| `app/` | Next.js app — the GUI (`page.tsx`) and the four API routes. |
-| `lib/agent/` | The agent modules: `parser`, `retriever`, `grader`, `reflector`, `orchestrator`, `pdf`. |
-| `lib/kb/` | Knowledge base — bundled solution JSON + the Pinecone client. |
+| `api/index.py` | FastAPI app — the GUI + API routes (the Vercel entrypoint). |
+| `checkmate/` | The agent: `parser`, `retriever`, `grader`, `reflector`, `orchestrator`, `gradebook`, `config`, `llm`, `pdf`, `ink`, `zoom`, `eval`. |
+| `checkmate/kb/` | Knowledge base — bundled solution JSON, exam registry, Pinecone client. |
+| `templates/` · `static/` | Jinja UI + CSS. |
+| `eval/` | Ground-truth booklet scores + generated reports + OCR cache. |
 | `scripts/` | Dev-only ingest / index / test harnesses (not deployed). |
-| `CheckMate.pptx` | Project pitch deck. |
-| `Data/` | Calculus 1 course material — lecture notes and past exams — used to build the knowledge base. |
+| `Data/` | Course material + past/graded exams used to build the KB (rights belong to the original authors). |
 
-> **Note:** `Data/` contains Technion course lecture notes and past exams, included here for
-> reproducibility of the knowledge base. All rights to that material belong to their original authors.
+> `Data/` contains Technion course material and past exams, included for reproducibility of
+> the knowledge base. All rights to that material belong to their original authors.
