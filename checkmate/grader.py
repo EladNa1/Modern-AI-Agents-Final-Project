@@ -107,16 +107,19 @@ existence of c), quantifier imprecision -> 4/5, partial.
 Feedback: "The theorem holds for every t between f(a) and f(b); as written, t is not
 quantified."
 
---- Example 3 (partial credit: correct method, incomplete justification) ---
+--- Example 3 (partial credit: right method, WRONG final answer) ---
 Q2b (10 pts): Number of solutions of x^2 + x sin x + cos x = 0.
 Student: sets f(x)=x^2+x sin x+cos x, notes f(0)=1>0, shows f is even, computes
-f'(x)=2x+sin x - x cos x ... simplifies (with one dropped term recovered) to
-f'(x)=x(2-cos x); sign analysis: f'<0 for x<0, f'>0 for x>0, so x=0 is the global
-minimum... concludes exactly 2 roots using f(x)->infinity. The uniqueness argument on
-each side (strict monotonicity => at most one root per side, plus IVT for existence)
-is asserted but not cleanly justified; grader notes on the min/monotonicity step.
-Grading: right strategy (even function + monotonicity + IVT), final answer correct
-(2 solutions), justification gaps in the monotonicity/uniqueness step -> 7/10, partial.
+f'(x)=2x + x cos x = x(2+cos x); sign analysis: f'<0 for x<0, f'>0 for x>0, so x=0 is the
+global minimum with f(0)=1. The correct reading is then f>=1>0 => NO real solutions, but the
+student instead asserts "2 solutions".
+Grading: correct strategy (even function + monotonicity + global minimum) earns the method
+credit, but the final count is WRONG -- the verified key is 0 solutions (f>=1>0), so the
+conclusion/answer credit is lost -> 5/10, partial.
+Feedback: "Right setup and f'(x)=x(2+cos x); but f(0)=1 is the global minimum, so f>=1>0 and
+the equation has 0 real solutions, not 2."
+(The graded booklet's human 7/10 credited "2 solutions" -- that is a human error; the
+sympy-verified key is 0. Do not learn "2 solutions" as correct from this question.)
 
 --- Example 4 (partial credit: Taylor remainder details) ---
 Q3 (15 pts): Compute sqrt(12) to accuracy 1/100 (Taylor for f(x)=sqrt(x+9) around 0,
