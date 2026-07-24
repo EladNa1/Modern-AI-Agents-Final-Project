@@ -1,13 +1,12 @@
 # Exclude large course material + docs from the deployment bundle.
 # The mock app does not need them; the real pipeline will load them from the DB/KB.
 Data/
+presentation/
+plans/
 *.pptx
 *.pdf
 *.zip
 Screenshot*.png
-reply.txt
-send_slide.py
-vision_test.py
-proj_text.txt
 PLAN_*.md
 scripts/
+.claude/

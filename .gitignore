@@ -23,3 +23,11 @@ next-env.d.ts
 # eval harness generated reports
 eval/reports/
 eval/ocr_cache/
+
+# Internal planning docs — local only, not for GitHub
+plans/
+PLAN_*.md
+
+# Claude Code local files
+.claude/
+CLAUDE.md

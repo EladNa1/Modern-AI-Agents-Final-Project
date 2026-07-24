@@ -4,7 +4,7 @@
 # Requires PowerPoint (COM). Run from the repo root:  powershell -File scripts/export_architecture.ps1
 $ErrorActionPreference = "Stop"
 $root = Split-Path -Parent $PSScriptRoot
-$src  = Join-Path $root "CheckMate.pptx"
+$src  = Join-Path $root "presentation\CheckMate.pptx"
 $out  = Join-Path $root "public\architecture.png"
 $slideNumber = 7
 
