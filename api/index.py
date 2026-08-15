@@ -130,12 +130,14 @@ async def agent_info():
 
 
 @app.get("/api/example_result")
-async def example_result():
-    """Replay of the bundled captured run (zero LLM calls) — lets the GUI's result view be
-    inspected without spending a grading run. Same payload /api/execute returned when the
+async def example_result(which: str = "2"):
+    """Replay of a bundled captured run (zero LLM calls) — lets the GUI's result view be
+    inspected without spending a grading run. `which`: "1" = sample booklet 1, anything
+    else = sample booklet 2 (the flagship). Same payload /api/execute returned when the
     example was captured."""
     import json
-    path = os.path.join(_ROOT, "checkmate", "kb", "samples", "example_run.json")
+    fname = "example_run_b1.json" if which == "1" else "example_run.json"
+    path = os.path.join(_ROOT, "checkmate", "kb", "samples", fname)
     try:
         return JSONResponse(json.load(open(path, encoding="utf-8"))["response"])
     except Exception:

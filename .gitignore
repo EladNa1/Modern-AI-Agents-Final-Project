@@ -13,6 +13,7 @@ venv/
 # Env / secrets (keep .env.example committed)
 .env
 .env*.local
+DEPLOY_HANDOFF.md
 
 # Node / Next.js
 node_modules/

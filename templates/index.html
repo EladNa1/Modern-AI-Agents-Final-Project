@@ -428,10 +428,13 @@
     $("sampleBtn").addEventListener("click", () => doSample(1, "sampleBtn", "Try sample booklet 1 (student scored 90)"));
     $("sample2Btn").addEventListener("click", () => doSample(2, "sample2Btn", "Sample booklet 2 (student scored 93)"));
 
-    // Dev aid: /?replay=1 renders the bundled captured run through the normal result view —
-    // zero LLM calls — so the GUI can be reviewed without spending a grading run.
-    if (new URLSearchParams(location.search).get("replay")) {
-      fetch("/api/example_result").then((r) => r.json()).then((d) => { if (d && d.status === "ok") renderResult(d); }).catch(() => {});
+    // Dev aid: /?replay=1 (booklet 1) or /?replay=2 (booklet 2) renders the bundled
+    // captured run through the normal result view — zero LLM calls — so the GUI can be
+    // reviewed without spending a grading run.
+    const replayWhich = new URLSearchParams(location.search).get("replay");
+    if (replayWhich) {
+      fetch("/api/example_result?which=" + encodeURIComponent(replayWhich))
+        .then((r) => r.json()).then((d) => { if (d && d.status === "ok") renderResult(d); }).catch(() => {});
     }
   </script>
 </body>

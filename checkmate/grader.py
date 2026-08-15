@@ -86,6 +86,11 @@ GRADING RULES
    the points iff that content matches the official solution's answer content (the
    parenthesized statement in the key). A letter mismatch with matching content is
    CORRECT; a letter match with mismatched content is WRONG.
+   CANCELLED MARKS ARE NOT AMBIGUITY: when the transcription notes a previous answer was
+   scribbled out / erased (e.g. "תשובה קודמת נמחקה"), the student's answer is ONLY the
+   final clean mark. NEVER award credit for the cancelled option's content, even if the
+   cancelled option happens to be the correct answer. Grade the final mark normally with
+   full confidence — a documented cancellation needs no escalation.
 7. Examples and counterexamples: when a student proves or disproves a claim with a
    specific example, INDEPENDENTLY VERIFY that the example actually satisfies EVERY
    required property on the EXACT domain/interval stated — do not take the student's
@@ -231,6 +236,10 @@ Return ONLY a JSON object, no prose, no code fences:
 }
 Rules: status "ok" only if score == max; "partial" if 0 < score < max; "escalate" only
 under E1-E3 above (then score/subscores may be null). Sub-part scores must sum to `score`.
+Scores are WHOLE points only (this exam's red-pen grading never uses half points).
+CONSISTENCY CHECK before you answer: the deduction your feedback narrates must EQUAL
+max - score. If your feedback says "a small deduction" or "less than a point", the score
+must actually reflect that; never output a score that contradicts your own sentence.
 Write "feedback" and "justification" in ENGLISH, always — you may quote the student's
 Hebrew verbatim when pointing at a specific line, but the surrounding sentences are English."""
 
