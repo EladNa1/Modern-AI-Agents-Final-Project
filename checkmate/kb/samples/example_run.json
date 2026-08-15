@@ -3,11 +3,11 @@
   "request": {
     "prompt": "Grade sample booklet 2"
   },
-  "elapsed_seconds": 140.7,
+  "elapsed_seconds": 143.5,
   "response": {
     "status": "ok",
     "error": null,
-    "response": "CheckMate graded Q1a, Q1b, Q2a, Q2b, Q3, MC-1, MC-2, MC-3, MC-4, MC-5, TF-1, TF-2, TF-3, TF-4, TF-5: 88.0 / 100.\nGraded as 2024w moed A (selected).\nQ1a — 10/10: Correct monotonicity method: you defined the two comparison functions, checked the endpoints at 0, computed the derivatives correctly, and established the needed sign on [0, \\pi/2]. Therefore both inequalities follow. Minor wording/legibility issues do not affect the proof.\nQ1b — 10/10: Correct proof: you multiplied the part (a) inequality by sin x \\u2265 0, integrated over [0, \\u03c0/2], and computed both bounds correctly. The lower bound becomes 1/3 and the upper bound becomes 4.\nQ2a — 4.0/5: You stated the core idea of the Intermediate Value Theorem correctly: continuity on [a,b] and existence of c with f(c)=\\alpha. The loss is that you wrote it only for the special case f(a)<\\alpha<f(b); the theorem must be stated for EVERY t between f(a) and f(b) (also when the order is reversed).\nQ2b — 10/10: Correct solution: you defined the function, checked evenness, computed F'(x)=x(2+\\cos x), and used that F is increasing on [0,\\infty) with F(0)=1>0. This implies F(x)>0 for all x, so the equation has no real solutions.\nQ3 — 11/15: You used a Taylor-remainder method correctly in spirit and reached the correct approximation 83/24, so you deserve substantial credit. However, the setup is inconsistent: you first treat the function as f(x)=\\sqrt{x} around 9, then later effectively switch to the correct problem for \\sqrt{12} via the expansion around 9. The remainder estimates shown are not cleanly justified, and the final line contains an incorrect/garbled expression before the correct result. Partial credit for the correct idea and final value, but not full credit for the earlier setup and notation errors.\nMC-1 — 0/7: Could not produce a reliable grade (unparseable model output or missing official solution). Sent to a human teacher.\nMC-2 — 7/7: Correct choice: option ג matches the content \"I converges and II diverges.\"\nMC-3 — 7/7: Correct choice: the series converges exactly on the open interval 0 < x < 2, so option ה matches the official answer content.\nMC-4 — 7/7: Correct choice: the statement \"there exists c in [0,1] such that f(sin c)=c\" is true, so marking א earns full credit.\nMC-5 — 7/7: Correct. The marked option content is 2, which matches the integral value.\nTF-1 — 3/3: Correct: the statement is false, and you marked ב (לא נכון).\nTF-2 — 3/3: Correct mark. The statement is true, and you selected א (True).\nTF-3 — 3/3: Correct mark. The statement is false, and you marked \"ב\" (לא נכון).\nTF-4 — 3/3: Correct answer: you marked א, which means True/נכון, matching the official solution. All-or-nothing item, so full credit.\nTF-5 — 3/3: Correct answer: the statement is true, and you marked א, which corresponds to נכון (True).\n⚠ 2 question(s) escalated to the teacher: Q3, MC-1.\nEstimated cost: $0.2713.",
+    "response": "CheckMate graded Q1a, Q1b, Q2a, Q2b, Q3, MC-1, MC-2, MC-3, MC-4, MC-5, TF-1, TF-2, TF-3, TF-4, TF-5: 87.0 / 100.\nGraded as 2024w moed A (selected).\nQ1a — 10/10: Correct monotonicity proof for both bounds: you checked F(0)=0, computed the right derivative, showed F'≤0 for the upper bound, then defined G(x)=ln(1+2sin^2 x)-sin^2(x)/2, found G(0)=0, and showed G'≥0 for the lower bound. Full credit.\nQ1b — 10/10: Correct argument: you multiplied the bound from part (a) by sin x 0 on [0,c0b0/2], integrated, and computed both boundary integrals correctly. Full credit.\nQ2a — 4.0/5: You stated the core conclusion of the Intermediate Value Theorem correctly, but you only wrote the special case f(a) < α < f(b). The theorem must be stated for every t between f(a) and f(b), not just for one ordered case.\nQ2b — 10/10: Correct solution: you defined the function, found that it is even, computed F'(x)=x(2+Cos x), and concluded it is increasing on [0,infty). With F(0)=1, this implies F(x)\\ge 1>0, so there are no real solutions. Your final answer matches the official result.\nQ3 — 10/15: Your solution uses the correct Taylor idea and reaches the right approximation, but the work has several serious issues in the setup and justification. You switched inconsistently between \\(f(x)=\\sqrt{x}\\) and the needed expansion around 9 for \\(\\sqrt{12}=\\sqrt{9+3}\\), and some remainder formulas are written incorrectly. In particular, the bounds for the error are not cleanly or correctly justified, and some lines are ambiguous/incorrect. Full credit is not justified. Partial credit is awarded for the correct final approximation \\(83/24\\) and the general Taylor-method approach.\nMC-1 — 0/7: The final marked option is ג, whose content is 2. The correct value is 1, so the answer is wrong. The crossed-out previous answer ב is ignored; only the final clean mark counts.\nMC-2 — 7/7: Correct choice. The marked option ג matches the official result: I converges and II diverges.\nMC-3 — 7/7: Correct choice: the series converges exactly for the open interval 0<x<2, so option ה matches the official answer content.\nMC-4 — 7/7: Correct choice. The marked option A matches the true statement: there exists c in [0,1] such that f(sin c)=c.\nMC-5 — 7/7: Correct choice: you marked ג, whose content is 2, matching the value of the integral. No deduction.\nTF-1 — 3/3: Correct: the statement is false, and you marked ב (False).\nTF-2 — 3/3: Correct answer: you marked א, which means True, matching the statement.\nTF-3 — 3/3: Correctly marked ב, which means False. The statement is false because only two subsequences are controlled and the other terms may oscillate.\nTF-4 — 3/3: Correct answer: you marked א, which means True, matching the statement.\nTF-5 — 3/3: Correct answer: you marked א, which corresponds to True. The statement is true because existence of the right derivative implies right-continuity.\n⚠ 1 question(s) escalated to the teacher: Q3.\nEstimated cost: $0.2711.",
     "steps": [
       {
         "module": "Config",
@@ -112,7 +112,7 @@
         "response": {
           "matched": "Q1a",
           "method": "semantic",
-          "score": 0.572889149,
+          "score": 0.572919428,
           "exam": "2024w moed A",
           "course": "104041",
           "points": 10,
@@ -282,7 +282,7 @@
         "response": {
           "matched": "MC-3",
           "method": "semantic",
-          "score": 0.670514107,
+          "score": 0.670871496,
           "exam": "2024w moed A",
           "course": "104041",
           "points": 7,
@@ -333,7 +333,7 @@
         "response": {
           "matched": "TF-1",
           "method": "semantic",
-          "score": 0.735476077,
+          "score": 0.735372186,
           "exam": "2024w moed A",
           "course": "104041",
           "points": 3,
@@ -350,7 +350,7 @@
         "response": {
           "matched": "TF-2",
           "method": "semantic",
-          "score": 0.641768515,
+          "score": 0.642224848,
           "exam": "2024w moed A",
           "course": "104041",
           "points": 3,
@@ -420,15 +420,15 @@
           "hits": [
             {
               "page": 66,
-              "score": 0.743659735
+              "score": 0.743977
             },
             {
               "page": 56,
-              "score": 0.729717672
+              "score": 0.729954362
             },
             {
               "page": 64,
-              "score": 0.728770494
+              "score": 0.728948832
             }
           ]
         },
@@ -445,8 +445,8 @@
           "score": 10,
           "max": 10,
           "status": "ok",
-          "feedback": "Correct monotonicity method: you defined the two comparison functions, checked the endpoints at 0, computed the derivatives correctly, and established the needed sign on [0, \\pi/2]. Therefore both inequalities follow. Minor wording/legibility issues do not affect the proof.",
-          "justification": "Matches the official solution’s method and conclusion: h(0)=g(0)=0, h'<=0 gives ln(1+2 sin^2 x)<=4x, and g'>=0 gives sin^2(x)/2<=ln(1+2 sin^2 x).",
+          "feedback": "Correct monotonicity proof for both bounds: you checked F(0)=0, computed the right derivative, showed F'≤0 for the upper bound, then defined G(x)=ln(1+2sin^2 x)-sin^2(x)/2, found G(0)=0, and showed G'≥0 for the lower bound. Full credit.",
+          "justification": "Matches the official solution’s two monotonicity arguments with the required endpoint check and derivative sign analysis; the final inequality is correct.",
           "confidence": 0.9,
           "question_id": "Q1a",
           "subscores": [
@@ -459,13 +459,13 @@
           "read_attempts": 2,
           "flags": [],
           "sources": [
-            "official_solution_Q1a_2024w_moedA",
-            "course_notes_p64"
+            "official_solution_Q1a",
+            "lecture_notes_p64"
           ],
           "samples": [
             10,
-            10,
-            9.0
+            9.0,
+            10
           ],
           "n": 3,
           "max_tokens": 1800,
@@ -477,13 +477,13 @@
         "module": "Reflector",
         "prompt": {
           "System_prompt": "You are the Reflector module of CheckMate, grading Technion Calculus 1 exams. You receive a PROPOSED grade for one question, the student's transcribed work, and the official solution. Critique the proposed grade against that evidence — do not re-grade from scratch, judge whether the grade is fair and grounded.\n\nCheck:\n- Is the score justified by the official solution and consistent partial-credit reasoning?\n- Is credit for the student's OWN valid method preserved (alternative correct methods deserve full credit)?\n- Is the student's work too ambiguous/illegible to grade fairly?\n\nChoose EXACTLY ONE action:\n- APPROVE — the grade is fair and grounded; keep it.\n- REVISE — the grade is wrong or unfair; give a corrected score and feedback.\n- ESCALATE — the work cannot be graded fairly (ambiguous handwriting or genuine uncertainty); send to a human teacher. Never guess.\n\nOutput ONLY a JSON object, no prose, no code fences:\n{\"action\":\"APPROVE|REVISE|ESCALATE\",\"score\":<number 0..max, or null>,\"feedback\":\"<corrected student-facing feedback if REVISE, else empty>\",\"note\":\"<one line: why>\",\"confidence\":<0..1>}\nWrite \"feedback\" and \"note\" in ENGLISH, always (student's Hebrew may be quoted verbatim).",
-          "User_prompt": "Question Q1a (max 10 points).\n\n=== PROPOSED GRADE ===\nscore: 10/10 (status ok, confidence 0.9)\nfeedback: Correct monotonicity method: you defined the two comparison functions, checked the endpoints at 0, computed the derivatives correctly, and established the needed sign on [0, \\pi/2]. Therefore both inequalities follow. Minor wording/legibility issues do not affect the proof.\njustification: Matches the official solution’s method and conclusion: h(0)=g(0)=0, h'<=0 gives ln(1+2 sin^2 x)<=4x, and g'>=0 gives sin^2(x)/2<=ln(1+2 sin^2 x).\n\n=== OFFICIAL SOLUTION (evidence) ===\nOfficial solution:\nRight inequality ln(1+2 sin^2 x) <= 4x: let h(x)=4x - ln(1+2 sin^2 x). h(0)=0 and h'(x)=4 - (2 sin 2x)/(1+2 sin^2 x). Since |2 sin 2x| <= 2 and 1+2 sin^2 x >= 1, the subtracted term is <= 2, so h'(x) >= 2 > 0; h is increasing and h(0)=0, hence h >= 0 on [0, pi/2].\nLeft inequality sin^2(x)/2 <= ln(1+2 sin^2 x): let g(x)=ln(1+2 sin^2 x) - sin^2(x)/2. g(0)=0 and g'(x)= sin 2x*(2/(1+2 sin^2 x) - 1/2). On [0, pi/2], sin 2x >= 0 and 1 <= 1+2 sin^2 x <= 3, so 2/(1+2 sin^2 x) >= 2/3 > 1/2, making the bracket >= 0; thus g' >= 0, g increasing, g(0)=0, hence g >= 0.\n\nCorrect final answer: sin^2(x)/2 <= ln(1+2 sin^2 x) <= 4x on [0, pi/2].\nGrading note: Both bounds follow from a monotonicity argument (define the difference, check the endpoint at 0, sign the derivative). Endpoints must be checked and the derivative bounds justified for full credit.\n\n=== STUDENT WORK (Parser confidence 0.44) ===\nשאלה 1 (20 נק׳)\nא. (10 נק׳) הראו כי \\(\\frac{\\sin^2(x)}{2} \\le \\ln(1+2\\sin^2(x)) \\le 4x\\) עבור \\(0 \\le x \\le \\frac{\\pi}{2}\\).\n\nF(x)=ln(1+2sin^2(x))−4x\nF(0)=ln(1+0)−4·0=0\n\n[illegible] כי F(x) [illegible] [illegible] [illegible]\n\nF'(x)= \\frac{2\\cdot 2\\sin x\\cos x}{1+2\\sin^2 x} − 4 = \\frac{2\\sin(2x)}{1+2\\sin^2(x)} − 4\n\nעבור \\(x\\in[0,\\frac{\\pi}{2}]\\) [illegible]\n\\(\\frac{2\\sin 2x}{1+2\\sin^2 x} \\le 4\\)  כי \\(0\\le \\sin 2x \\le 2\\)\nולכן \\(F'(x)\\le 0\\)\n\nלכן לכל x בתחום זה, הפונקציה מונוטונית יורדת [illegible].\n[illegible]\n\nולכן \\(F(x)\\le F(0)\\) כש- \\(x\\ge 0\\) [illegible] \\(\\frac{\\pi}{2}\\)\n\n\\(\\ln(1+2\\sin^2 x) - 4x \\le 0\\)  ←  \\(F(x)\\le 0\\)\n\\(\\ln(1+2\\sin^2(x)) \\le 4x\\)\nיהי \\(f(x)\\) ?\\, שאלה: \\(\\frac{\\sin^2 x}{2} \\le \\ln(1+2\\sin^2 x)\\).\n\nנגזור פונקציה חדשה: \\(G(x)=\\ln(1+2\\sin^2 x)-\\frac{\\sin^2 x}{2}\\).\n\\(G(0)=\\ln(1+0)-\\frac{0}{2}=0\\).\n\nהינו \\(G\\) גזירה בקטע \\([0,\\frac{\\pi}{2}]\\) ולכן נוכיח כי זוהי גבולית/מונוטונית.\n\n\\(G'(x)=\\frac{2\\sin 2x}{1+2\\sin^2 x}-\\frac{2\\sin x\\cos x}{2}=\\frac{2\\sin 2x}{1+2\\sin^2 x}-\\frac{2\\sin 2x}{2}\\)\n\n\\(=\\frac{4\\sin 2x-\\sin 2x(1+2\\sin^2 x)}{2+4\\sin^2 x}=\\frac{\\sin 2x(4-1-2\\sin^2 x)}{2+4\\sin^2 x}\\)\n\n\\(x\\in[0,\\frac{\\pi}{2}]\\), לכן \\(\\sin 2x\\ge 0\\) ו-\\(3-2\\sin^2 x\\ge 0\\), ולכן\n\\(G'(x)=\\frac{\\sin 2x(3-2\\sin^2 x)}{2+4\\sin^2 x}\\ge 0\\).\n\nלכן \\(G\\) עולה ממש/מונוטונית בקטע, ומכאן לפי משפט לגרנז' (ולפי מה שנכתב) מתקבל:\n\\(G(x)\\ge G(0)=0\\) עבור \\(0\\le x\\le \\frac{\\pi}{2}\\).\n\nולכן\n\\(\\ln(1+2\\sin^2 x)-\\frac{\\sin^2 x}{2}\\ge 0\\Rightarrow \\frac{\\sin^2 x}{2}\\le \\ln(1+2\\sin^2 x)\\).\n\nנסמן ונקבל גם\n\\(\\frac{\\sin^2 x}{2}\\le \\ln(1+2\\sin^2 x)\\le 4x\\).\n\nמ.ש.ל.\nכי F(x) זוהי פונקציה כלשהי ב-(R), לפחות לכל x∈[0,∞)\n⇐ 1 ≤ F(x)    ⇐ F(0) ≤ F(x)\n1 ≤ x^2 + xSin x + Cos x\nע\"י F(x) לאו דווקא [illegible] x תחום [illegible] פונקציה [illegible] שורשים בקרן. אנו נראה עבור (-∞,0] כי הפרי [illegible].\nולכן למשוואה x^2 + xSin x + Cos x = 0 אין פתרון ב R.\nLaTeX:\n\\text{שאלה 1 (20 נק׳)}\\\\\n\\text{א. (10 נק׳) הראו כי } \\frac{\\sin^2(x)}{2} \\le \\ln(1+2\\sin^2(x)) \\le 4x \\text{ עבור } 0 \\le x \\le \\frac{\\pi}{2}.\\\\\nF(x)=\\ln(1+2\\sin^2(x))-4x\\\\\nF(0)=\\ln(1+0)-4\\cdot 0=0\\\\\nF'(x)=\\frac{2\\cdot 2\\sin x\\cos x}{1+2\\sin^2 x}-4=\\frac{2\\sin(2x)}{1+2\\sin^2(x)}-4\\\\\n\\frac{2\\sin 2x}{1+2\\sin^2 x}\\le 4\\\\\nF'(x)\\le 0\\\\\n\\ln(1+2\\sin^2 x)-4x\\le 0\\\\\n\\ln(1+2\\sin^2(x))\\le 4x\n\\frac{\\sin^2 x}{2} \\le \\ln(1+2\\sin^2 x)\n\nG(x)=\\ln(1+2\\sin^2 x)-\\frac{\\sin^2 x}{2}\n\nG(0)=\\ln(1+0)-\\frac{0}{2}=0\n\nG'(x)=\\frac{2\\sin 2x}{1+2\\sin^2 x}-\\frac{2\\sin x\\cos x}{2}\n=\\frac{2\\sin 2x}{1+2\\sin^2 x}-\\frac{2\\sin 2x}{2}\n\n=\\frac{4\\sin 2x-\\sin 2x(1+2\\sin^2 x)}{2+4\\sin^2 x}\n=\\frac{\\sin 2x(4-1-2\\sin^2 x)}{2+4\\sin^2 x}\n\n\\Rightarrow G'(x)=\\frac{\\sin 2x(3-2\\sin^2 x)}{2+4\\sin^2 x}\\ge 0\n\nG(x)\\ge G(0)=0\n\n\\ln(1+2\\sin^2 x)-\\frac{\\sin^2 x}{2}\\ge 0\n\\Rightarrow \\frac{\\sin^2 x}{2}\\le \\ln(1+2\\sin^2 x)\n\n\\frac{\\sin^2 x}{2}\\le \\ln(1+2\\sin^2 x)\\le 4x\n\\(F(x)\\) היא פונקציה כלשהי ב-\\(\\mathbb{R}\\), לפחות לכל \\(x\\in[0,\\infty)\\)\n\\[\n1\\le F(x) \\qquad \\Rightarrow \\qquad F(0)\\le F(x)\n\\]\n\\[\n1\\le x^2+x\\sin x+\\cos x\n\\]\nע\"י \\(F(x)\\) לאו דווקא [illegible] \\(x\\) תחום [illegible] פונקציה [illegible] שורשים בקרן. אנו נראה עבור \\((-\\infty,0]\\) כי הפרי [illegible].\nולכן למשוואה \\(x^2+x\\sin x+\\cos x=0\\) אין פתרון ב-\\(\\mathbb{R}\\).\n\nCritique the proposed grade and return only the JSON object."
+          "User_prompt": "Question Q1a (max 10 points).\n\n=== PROPOSED GRADE ===\nscore: 10/10 (status ok, confidence 0.9)\nfeedback: Correct monotonicity proof for both bounds: you checked F(0)=0, computed the right derivative, showed F'≤0 for the upper bound, then defined G(x)=ln(1+2sin^2 x)-sin^2(x)/2, found G(0)=0, and showed G'≥0 for the lower bound. Full credit.\njustification: Matches the official solution’s two monotonicity arguments with the required endpoint check and derivative sign analysis; the final inequality is correct.\n\n=== OFFICIAL SOLUTION (evidence) ===\nOfficial solution:\nRight inequality ln(1+2 sin^2 x) <= 4x: let h(x)=4x - ln(1+2 sin^2 x). h(0)=0 and h'(x)=4 - (2 sin 2x)/(1+2 sin^2 x). Since |2 sin 2x| <= 2 and 1+2 sin^2 x >= 1, the subtracted term is <= 2, so h'(x) >= 2 > 0; h is increasing and h(0)=0, hence h >= 0 on [0, pi/2].\nLeft inequality sin^2(x)/2 <= ln(1+2 sin^2 x): let g(x)=ln(1+2 sin^2 x) - sin^2(x)/2. g(0)=0 and g'(x)= sin 2x*(2/(1+2 sin^2 x) - 1/2). On [0, pi/2], sin 2x >= 0 and 1 <= 1+2 sin^2 x <= 3, so 2/(1+2 sin^2 x) >= 2/3 > 1/2, making the bracket >= 0; thus g' >= 0, g increasing, g(0)=0, hence g >= 0.\n\nCorrect final answer: sin^2(x)/2 <= ln(1+2 sin^2 x) <= 4x on [0, pi/2].\nGrading note: Both bounds follow from a monotonicity argument (define the difference, check the endpoint at 0, sign the derivative). Endpoints must be checked and the derivative bounds justified for full credit.\n\n=== STUDENT WORK (Parser confidence 0.44) ===\nשאלה 1 (20 נק׳)\nא. (10 נק׳) הראו כי \\(\\frac{\\sin^2(x)}{2} \\le \\ln(1+2\\sin^2(x)) \\le 4x\\) עבור \\(0 \\le x \\le \\frac{\\pi}{2}\\).\n\nF(x)=ln(1+2sin^2(x))−4x\nF(0)=ln(1+0)−4·0=0\n\n[illegible] כי F(x) [illegible] [illegible] [illegible]\n\nF'(x)= \\frac{2\\cdot 2\\sin x\\cos x}{1+2\\sin^2 x} − 4 = \\frac{2\\sin(2x)}{1+2\\sin^2(x)} − 4\n\nעבור \\(x\\in[0,\\frac{\\pi}{2}]\\) [illegible]\n\\(\\frac{2\\sin 2x}{1+2\\sin^2 x} \\le 4\\)  כי \\(0\\le \\sin 2x \\le 2\\)\nולכן \\(F'(x)\\le 0\\)\n\nלכן לכל x בתחום זה, הפונקציה מונוטונית יורדת [illegible].\n[illegible]\n\nולכן \\(F(x)\\le F(0)\\) כש- \\(x\\ge 0\\) [illegible] \\(\\frac{\\pi}{2}\\)\n\n\\(\\ln(1+2\\sin^2 x) - 4x \\le 0\\)  ←  \\(F(x)\\le 0\\)\n\\(\\ln(1+2\\sin^2(x)) \\le 4x\\)\nיהי \\(f(x)\\) ?\\, שאלה: \\(\\frac{\\sin^2 x}{2} \\le \\ln(1+2\\sin^2 x)\\).\n\nנגזור פונקציה חדשה: \\(G(x)=\\ln(1+2\\sin^2 x)-\\frac{\\sin^2 x}{2}\\).\n\\(G(0)=\\ln(1+0)-\\frac{0}{2}=0\\).\n\nהינו \\(G\\) גזירה בקטע \\([0,\\frac{\\pi}{2}]\\) ולכן נוכיח כי זוהי גבולית/מונוטונית.\n\n\\(G'(x)=\\frac{2\\sin 2x}{1+2\\sin^2 x}-\\frac{2\\sin x\\cos x}{2}=\\frac{2\\sin 2x}{1+2\\sin^2 x}-\\frac{2\\sin 2x}{2}\\)\n\n\\(=\\frac{4\\sin 2x-\\sin 2x(1+2\\sin^2 x)}{2+4\\sin^2 x}=\\frac{\\sin 2x(4-1-2\\sin^2 x)}{2+4\\sin^2 x}\\)\n\n\\(x\\in[0,\\frac{\\pi}{2}]\\), לכן \\(\\sin 2x\\ge 0\\) ו-\\(3-2\\sin^2 x\\ge 0\\), ולכן\n\\(G'(x)=\\frac{\\sin 2x(3-2\\sin^2 x)}{2+4\\sin^2 x}\\ge 0\\).\n\nלכן \\(G\\) עולה ממש/מונוטונית בקטע, ומכאן לפי משפט לגרנז' (ולפי מה שנכתב) מתקבל:\n\\(G(x)\\ge G(0)=0\\) עבור \\(0\\le x\\le \\frac{\\pi}{2}\\).\n\nולכן\n\\(\\ln(1+2\\sin^2 x)-\\frac{\\sin^2 x}{2}\\ge 0\\Rightarrow \\frac{\\sin^2 x}{2}\\le \\ln(1+2\\sin^2 x)\\).\n\nנסמן ונקבל גם\n\\(\\frac{\\sin^2 x}{2}\\le \\ln(1+2\\sin^2 x)\\le 4x\\).\n\nמ.ש.ל.\nכי F(x) זוהי פונקציה כלשהי ב-(R), לפחות לכל x∈[0,∞)\n⇐ 1 ≤ F(x)    ⇐ F(0) ≤ F(x)\n1 ≤ x^2 + xSin x + Cos x\nע\"י F(x) לאו דווקא [illegible] x תחום [illegible] פונקציה [illegible] שורשים בקרן. אנו נראה עבור (-∞,0] כי הפרי [illegible].\nולכן למשוואה x^2 + xSin x + Cos x = 0 אין פתרון ב R.\nLaTeX:\n\\text{שאלה 1 (20 נק׳)}\\\\\n\\text{א. (10 נק׳) הראו כי } \\frac{\\sin^2(x)}{2} \\le \\ln(1+2\\sin^2(x)) \\le 4x \\text{ עבור } 0 \\le x \\le \\frac{\\pi}{2}.\\\\\nF(x)=\\ln(1+2\\sin^2(x))-4x\\\\\nF(0)=\\ln(1+0)-4\\cdot 0=0\\\\\nF'(x)=\\frac{2\\cdot 2\\sin x\\cos x}{1+2\\sin^2 x}-4=\\frac{2\\sin(2x)}{1+2\\sin^2(x)}-4\\\\\n\\frac{2\\sin 2x}{1+2\\sin^2 x}\\le 4\\\\\nF'(x)\\le 0\\\\\n\\ln(1+2\\sin^2 x)-4x\\le 0\\\\\n\\ln(1+2\\sin^2(x))\\le 4x\n\\frac{\\sin^2 x}{2} \\le \\ln(1+2\\sin^2 x)\n\nG(x)=\\ln(1+2\\sin^2 x)-\\frac{\\sin^2 x}{2}\n\nG(0)=\\ln(1+0)-\\frac{0}{2}=0\n\nG'(x)=\\frac{2\\sin 2x}{1+2\\sin^2 x}-\\frac{2\\sin x\\cos x}{2}\n=\\frac{2\\sin 2x}{1+2\\sin^2 x}-\\frac{2\\sin 2x}{2}\n\n=\\frac{4\\sin 2x-\\sin 2x(1+2\\sin^2 x)}{2+4\\sin^2 x}\n=\\frac{\\sin 2x(4-1-2\\sin^2 x)}{2+4\\sin^2 x}\n\n\\Rightarrow G'(x)=\\frac{\\sin 2x(3-2\\sin^2 x)}{2+4\\sin^2 x}\\ge 0\n\nG(x)\\ge G(0)=0\n\n\\ln(1+2\\sin^2 x)-\\frac{\\sin^2 x}{2}\\ge 0\n\\Rightarrow \\frac{\\sin^2 x}{2}\\le \\ln(1+2\\sin^2 x)\n\n\\frac{\\sin^2 x}{2}\\le \\ln(1+2\\sin^2 x)\\le 4x\n\\(F(x)\\) היא פונקציה כלשהי ב-\\(\\mathbb{R}\\), לפחות לכל \\(x\\in[0,\\infty)\\)\n\\[\n1\\le F(x) \\qquad \\Rightarrow \\qquad F(0)\\le F(x)\n\\]\n\\[\n1\\le x^2+x\\sin x+\\cos x\n\\]\nע\"י \\(F(x)\\) לאו דווקא [illegible] \\(x\\) תחום [illegible] פונקציה [illegible] שורשים בקרן. אנו נראה עבור \\((-\\infty,0]\\) כי הפרי [illegible].\nולכן למשוואה \\(x^2+x\\sin x+\\cos x=0\\) אין פתרון ב-\\(\\mathbb{R}\\).\n\nCritique the proposed grade and return only the JSON object."
         },
         "response": {
           "action": "APPROVE",
           "score": null,
-          "note": "Student correctly proves both inequalities with valid monotonicity arguments; minor illegible parts do not affect the mathematical correctness.",
-          "confidence": 0.93
+          "note": "Student proved both inequalities with valid monotonicity arguments; minor algebraic sloppiness does not affect correctness and the work matches the official solution in substance.",
+          "confidence": 0.92
         },
         "pattern": "Reflection"
       },
@@ -498,15 +498,15 @@
           "hits": [
             {
               "page": 101,
-              "score": 0.735681236
+              "score": 0.735028148
             },
             {
               "page": 86,
-              "score": 0.704936147
+              "score": 0.70484978
             },
             {
               "page": 67,
-              "score": 0.687651038
+              "score": 0.687675
             }
           ]
         },
@@ -523,9 +523,9 @@
           "score": 10,
           "max": 10,
           "status": "ok",
-          "feedback": "Correct proof: you multiplied the part (a) inequality by sin x \\u2265 0, integrated over [0, \\u03c0/2], and computed both bounds correctly. The lower bound becomes 1/3 and the upper bound becomes 4.",
-          "justification": "Matches the official solution exactly: preserve inequality after multiplying by nonnegative sin x, then evaluate \\u222b sin^3 x /2 = 1/3 and \\u222b 4x sin x = 4.",
-          "confidence": 0.99,
+          "feedback": "Correct argument: you multiplied the bound from part (a) by sin x 0 on [0,c0b0/2], integrated, and computed both boundary integrals correctly. Full credit.",
+          "justification": "Matches the official solution: the student preserves the inequality by multiplying by sin x 0, then evaluates \\int_0^{\\pi/2} \\sin^3 x\\,dx = 2/3 and \\int_0^{\\pi/2} 4x\\sin x\\,dx = 4.",
+          "confidence": 0.98,
           "question_id": "Q1b",
           "subscores": [
             {
@@ -537,8 +537,7 @@
           "read_attempts": 2,
           "flags": [],
           "sources": [
-            "official_solution_Q1b",
-            "lecture_notes_p101"
+            "official_solution_Q1b"
           ],
           "samples": [
             10,
@@ -555,13 +554,13 @@
         "module": "Reflector",
         "prompt": {
           "System_prompt": "You are the Reflector module of CheckMate, grading Technion Calculus 1 exams. You receive a PROPOSED grade for one question, the student's transcribed work, and the official solution. Critique the proposed grade against that evidence — do not re-grade from scratch, judge whether the grade is fair and grounded.\n\nCheck:\n- Is the score justified by the official solution and consistent partial-credit reasoning?\n- Is credit for the student's OWN valid method preserved (alternative correct methods deserve full credit)?\n- Is the student's work too ambiguous/illegible to grade fairly?\n\nChoose EXACTLY ONE action:\n- APPROVE — the grade is fair and grounded; keep it.\n- REVISE — the grade is wrong or unfair; give a corrected score and feedback.\n- ESCALATE — the work cannot be graded fairly (ambiguous handwriting or genuine uncertainty); send to a human teacher. Never guess.\n\nOutput ONLY a JSON object, no prose, no code fences:\n{\"action\":\"APPROVE|REVISE|ESCALATE\",\"score\":<number 0..max, or null>,\"feedback\":\"<corrected student-facing feedback if REVISE, else empty>\",\"note\":\"<one line: why>\",\"confidence\":<0..1>}\nWrite \"feedback\" and \"note\" in ENGLISH, always (student's Hebrew may be quoted verbatim).",
-          "User_prompt": "Question ב (max 10 points).\n\n=== PROPOSED GRADE ===\nscore: 10/10 (status ok, confidence 0.99)\nfeedback: Correct proof: you multiplied the part (a) inequality by sin x \\u2265 0, integrated over [0, \\u03c0/2], and computed both bounds correctly. The lower bound becomes 1/3 and the upper bound becomes 4.\njustification: Matches the official solution exactly: preserve inequality after multiplying by nonnegative sin x, then evaluate \\u222b sin^3 x /2 = 1/3 and \\u222b 4x sin x = 4.\n\n=== OFFICIAL SOLUTION (evidence) ===\nOfficial solution:\nOn [0, pi/2] sin x >= 0, so multiply the inequality of part (a) by sin x and integrate over [0, pi/2]:\n integral_0^{pi/2} (sin^3 x)/2 dx <= integral_0^{pi/2} sin x ln(1+2 sin^2 x) dx <= integral_0^{pi/2} 4x sin x dx.\nLower bound: integral_0^{pi/2} sin^3 x dx = 2/3, so the left side = (1/2)(2/3) = 1/3.\nUpper bound: integral_0^{pi/2} 4x sin x dx = 4[ -x cos x + sin x ]_0^{pi/2} = 4(0 + 1) = 4.\nTherefore 1/3 <= I <= 4.\n\nCorrect final answer: 1/3 <= integral_0^{pi/2} sin(x) ln(1+2 sin^2 x) dx <= 4.\nGrading note: Key step is multiplying part (a) by sin x >= 0 (preserves the inequality) then evaluating integral sin^3 x = 2/3 and integral 4x sin x = 4 by parts.\n\n=== STUDENT WORK (Parser confidence 0.74) ===\n(10 נק') הראו כי\n1/3 ≤ ∫_0^{π/2} sin(x)(ln(1+2sin^2(x)))dx ≤ 4.\nלפי סעיף א:\nsin^2(x)/2 ≤ ln(1+2sin^2(x)) ≤ 4x, ∀x∈[0,π/2]\nבפתרון [illegible] כי sinx ≥ 0, ולכן אפשר להכפול/להשוות [illegible] כל האגפים ב־sinx, ולכן נקבל את האי־שוויון:\nsin^3(x)/2 ≤ sinx·ln(1+2sin^2(x)) ≤ 4xsinx\nולכן נשלב את האי־שוויון והקטע של האינטגרל לפי משפט (*):\n∫_0^{π/2} (sin^3(x)/2) dx ≤ ∫_0^{π/2} sin(x)ln(1+2sin^2(x)) dx ≤ ∫_0^{π/2} 4xsinx dx\nתחל אינטגרציה ידנית:\n4∫_0^{π/2} xsinx dx = 4( -x cosx|_0^{π/2} + ∫_0^{π/2} cosx dx ) = -4x cosx|_0^{π/2} + 4sinx|_0^{π/2}\n(u=x, v'=sinx; u'=1, v=-cosx)\n= 4 - 2π cos(π/2) + 0 = 4\n(*) משפט: אם f < g אז ∫_a^b f < ∫_a^b g\nחלק א: \n\\[\n\\int_0^{\\pi/2} \\frac{\\sin^3 x}{2}\\,dx\n= \\int_0^{\\pi/2} \\frac{\\sin^2 x\\cdot \\sin x}{2}\\,dx\n= \\frac12 \\int_0^{\\pi/2} (1-\\cos^2 x)\\sin x\\,dx\n\\]\n\\[\n= \\frac12 \\int_1^0 (1-t^2)\\, \\frac{dt}{-\\sin x}\n\\]\n(רשום: \\(t=\\cos x\\), \\(\\frac{dt}{dx}=-\\sin x\\Rightarrow dx=\\frac{dt}{-\\sin x}\\), \\(\\cos\\frac{\\pi}{2}=0\\), \\(\\cos 0=1\\))\n\n\\[\n= \\frac12 \\int_1^0 (t^2-1)\\,dt\n= \\frac12 \\left(\\frac{t^3}{3}-t\\right)\\Big|_1^0\n= \\frac12\\left(\\frac03-0\\right)-\\frac12\\left(\\frac13-1\\right)\n= \\frac13\n\\]\n\n(נכתב גם: \\(\\sin^2 x = 1-(\\cos^2 x)\\)).\n\nלאחר מכן: \n\\[\n\\frac13 \\le \\int_0^{\\pi/2} \\sin(x)\\,\\ln(1+2\\sin^2 x)\\,dx \\le 4\n\\]\n\nמשמאל מופיע גם טקסט בעברית לא ברור/חלקי: \"... השאלה\" ו-\"כן הוא רק\" [illegible].\n\nבסוף העמוד נכתב: \"מ.ש.ל\".\n\nLaTeX:\n1/3\\le \\int_0^{\\pi/2} \\sin(x)\\ln\\left(1+2\\sin^2(x)\\right)\\,dx \\le 4\n\n\\frac{\\sin^2 x}{2}\\le \\ln\\left(1+2\\sin^2 x\\right)\\le 4x,\\quad x\\in[0,\\pi/2]\n\n\\frac{\\sin^3 x}{2}\\le \\sin x\\,\\ln\\left(1+2\\sin^2 x\\right)\\le 4x\\sin x\n\n\\int_0^{\\pi/2}\\frac{\\sin^3 x}{2}\\,dx\\le \\int_0^{\\pi/2}\\sin(x)\\ln\\left(1+2\\sin^2(x)\\right)\\,dx\\le \\int_0^{\\pi/2}4x\\sin x\\,dx\n\n4\\int_0^{\\pi/2}x\\sin x\\,dx\n=4\\left(-x\\cos x\\Big|_0^{\\pi/2}+\\int_0^{\\pi/2}\\cos x\\,dx\\right)\n=-4x\\cos x\\Big|_0^{\\pi/2}+4\\sin x\\Big|_0^{\\pi/2}\n=4\n\\int_0^{\\pi/2} \\frac{\\sin^3 x}{2}\\,dx = \\int_0^{\\pi/2} \\frac{\\sin^2 x\\sin x}{2}\\,dx = \\frac12\\int_0^{\\pi/2}(1-\\cos^2 x)\\sin x\\,dx\n\n\\text{with } t=\\cos x,\\ dt=-\\sin x\\,dx,\\ \\cos(\\pi/2)=0,\\ \\cos 0=1\n\n=\\frac12\\int_1^0(1-t^2)\\frac{dt}{-\\sin x}=\\frac12\\int_1^0(t^2-1)\\,dt=\\frac12\\left(\\frac{t^3}{3}-t\\right)\\Big|_1^0=\\frac13\n\n\\frac13\\le \\int_0^{\\pi/2}\\sin(x)\\ln(1+2\\sin^2 x)\\,dx\\le 4\n\n\\text{מ.ש.ל}\n\nCritique the proposed grade and return only the JSON object."
+          "User_prompt": "Question ב (max 10 points).\n\n=== PROPOSED GRADE ===\nscore: 10/10 (status ok, confidence 0.98)\nfeedback: Correct argument: you multiplied the bound from part (a) by sin x 0 on [0,c0b0/2], integrated, and computed both boundary integrals correctly. Full credit.\njustification: Matches the official solution: the student preserves the inequality by multiplying by sin x 0, then evaluates \\int_0^{\\pi/2} \\sin^3 x\\,dx = 2/3 and \\int_0^{\\pi/2} 4x\\sin x\\,dx = 4.\n\n=== OFFICIAL SOLUTION (evidence) ===\nOfficial solution:\nOn [0, pi/2] sin x >= 0, so multiply the inequality of part (a) by sin x and integrate over [0, pi/2]:\n integral_0^{pi/2} (sin^3 x)/2 dx <= integral_0^{pi/2} sin x ln(1+2 sin^2 x) dx <= integral_0^{pi/2} 4x sin x dx.\nLower bound: integral_0^{pi/2} sin^3 x dx = 2/3, so the left side = (1/2)(2/3) = 1/3.\nUpper bound: integral_0^{pi/2} 4x sin x dx = 4[ -x cos x + sin x ]_0^{pi/2} = 4(0 + 1) = 4.\nTherefore 1/3 <= I <= 4.\n\nCorrect final answer: 1/3 <= integral_0^{pi/2} sin(x) ln(1+2 sin^2 x) dx <= 4.\nGrading note: Key step is multiplying part (a) by sin x >= 0 (preserves the inequality) then evaluating integral sin^3 x = 2/3 and integral 4x sin x = 4 by parts.\n\n=== STUDENT WORK (Parser confidence 0.74) ===\n(10 נק') הראו כי\n1/3 ≤ ∫_0^{π/2} sin(x)(ln(1+2sin^2(x)))dx ≤ 4.\nלפי סעיף א:\nsin^2(x)/2 ≤ ln(1+2sin^2(x)) ≤ 4x, ∀x∈[0,π/2]\nבפתרון [illegible] כי sinx ≥ 0, ולכן אפשר להכפול/להשוות [illegible] כל האגפים ב־sinx, ולכן נקבל את האי־שוויון:\nsin^3(x)/2 ≤ sinx·ln(1+2sin^2(x)) ≤ 4xsinx\nולכן נשלב את האי־שוויון והקטע של האינטגרל לפי משפט (*):\n∫_0^{π/2} (sin^3(x)/2) dx ≤ ∫_0^{π/2} sin(x)ln(1+2sin^2(x)) dx ≤ ∫_0^{π/2} 4xsinx dx\nתחל אינטגרציה ידנית:\n4∫_0^{π/2} xsinx dx = 4( -x cosx|_0^{π/2} + ∫_0^{π/2} cosx dx ) = -4x cosx|_0^{π/2} + 4sinx|_0^{π/2}\n(u=x, v'=sinx; u'=1, v=-cosx)\n= 4 - 2π cos(π/2) + 0 = 4\n(*) משפט: אם f < g אז ∫_a^b f < ∫_a^b g\nחלק א: \n\\[\n\\int_0^{\\pi/2} \\frac{\\sin^3 x}{2}\\,dx\n= \\int_0^{\\pi/2} \\frac{\\sin^2 x\\cdot \\sin x}{2}\\,dx\n= \\frac12 \\int_0^{\\pi/2} (1-\\cos^2 x)\\sin x\\,dx\n\\]\n\\[\n= \\frac12 \\int_1^0 (1-t^2)\\, \\frac{dt}{-\\sin x}\n\\]\n(רשום: \\(t=\\cos x\\), \\(\\frac{dt}{dx}=-\\sin x\\Rightarrow dx=\\frac{dt}{-\\sin x}\\), \\(\\cos\\frac{\\pi}{2}=0\\), \\(\\cos 0=1\\))\n\n\\[\n= \\frac12 \\int_1^0 (t^2-1)\\,dt\n= \\frac12 \\left(\\frac{t^3}{3}-t\\right)\\Big|_1^0\n= \\frac12\\left(\\frac03-0\\right)-\\frac12\\left(\\frac13-1\\right)\n= \\frac13\n\\]\n\n(נכתב גם: \\(\\sin^2 x = 1-(\\cos^2 x)\\)).\n\nלאחר מכן: \n\\[\n\\frac13 \\le \\int_0^{\\pi/2} \\sin(x)\\,\\ln(1+2\\sin^2 x)\\,dx \\le 4\n\\]\n\nמשמאל מופיע גם טקסט בעברית לא ברור/חלקי: \"... השאלה\" ו-\"כן הוא רק\" [illegible].\n\nבסוף העמוד נכתב: \"מ.ש.ל\".\n\nLaTeX:\n1/3\\le \\int_0^{\\pi/2} \\sin(x)\\ln\\left(1+2\\sin^2(x)\\right)\\,dx \\le 4\n\n\\frac{\\sin^2 x}{2}\\le \\ln\\left(1+2\\sin^2 x\\right)\\le 4x,\\quad x\\in[0,\\pi/2]\n\n\\frac{\\sin^3 x}{2}\\le \\sin x\\,\\ln\\left(1+2\\sin^2 x\\right)\\le 4x\\sin x\n\n\\int_0^{\\pi/2}\\frac{\\sin^3 x}{2}\\,dx\\le \\int_0^{\\pi/2}\\sin(x)\\ln\\left(1+2\\sin^2(x)\\right)\\,dx\\le \\int_0^{\\pi/2}4x\\sin x\\,dx\n\n4\\int_0^{\\pi/2}x\\sin x\\,dx\n=4\\left(-x\\cos x\\Big|_0^{\\pi/2}+\\int_0^{\\pi/2}\\cos x\\,dx\\right)\n=-4x\\cos x\\Big|_0^{\\pi/2}+4\\sin x\\Big|_0^{\\pi/2}\n=4\n\\int_0^{\\pi/2} \\frac{\\sin^3 x}{2}\\,dx = \\int_0^{\\pi/2} \\frac{\\sin^2 x\\sin x}{2}\\,dx = \\frac12\\int_0^{\\pi/2}(1-\\cos^2 x)\\sin x\\,dx\n\n\\text{with } t=\\cos x,\\ dt=-\\sin x\\,dx,\\ \\cos(\\pi/2)=0,\\ \\cos 0=1\n\n=\\frac12\\int_1^0(1-t^2)\\frac{dt}{-\\sin x}=\\frac12\\int_1^0(t^2-1)\\,dt=\\frac12\\left(\\frac{t^3}{3}-t\\right)\\Big|_1^0=\\frac13\n\n\\frac13\\le \\int_0^{\\pi/2}\\sin(x)\\ln(1+2\\sin^2 x)\\,dx\\le 4\n\n\\text{מ.ש.ל}\n\nCritique the proposed grade and return only the JSON object."
         },
         "response": {
           "action": "APPROVE",
           "score": null,
-          "note": "Student reproduced the official argument correctly, including the nonnegative multiplication, both integrals, and the final bounds; any minor algebraic clutter does not affect correctness.",
-          "confidence": 0.98
+          "note": "Student correctly applies the inequality from part (a), uses sin x >= 0 to preserve it, integrates both bounds, and obtains the correct final interval.",
+          "confidence": 0.99
         },
         "pattern": "Reflection"
       },
@@ -576,15 +575,15 @@
           "hits": [
             {
               "page": 63,
-              "score": 0.652512968
+              "score": 0.652344167
             },
             {
               "page": 49,
-              "score": 0.641494215
+              "score": 0.641334116
             },
             {
               "page": 62,
-              "score": 0.626990199
+              "score": 0.626661777
             }
           ]
         },
@@ -601,9 +600,9 @@
           "score": 4.0,
           "max": 5,
           "status": "partial",
-          "feedback": "You stated the core idea of the Intermediate Value Theorem correctly: continuity on [a,b] and existence of c with f(c)=\\alpha. The loss is that you wrote it only for the special case f(a)<\\alpha<f(b); the theorem must be stated for EVERY t between f(a) and f(b) (also when the order is reversed).",
-          "justification": "Official solution requires the universal quantifier over all values between f(a) and f(b); the student gave only a one-sided special case, which is an imprecise statement of the theorem.",
-          "confidence": 0.98,
+          "feedback": "You stated the core conclusion of the Intermediate Value Theorem correctly, but you only wrote the special case f(a) < α < f(b). The theorem must be stated for every t between f(a) and f(b), not just for one ordered case.",
+          "justification": "Official solution requires continuity on [a,b] and a universal quantifier over every value between f(a) and f(b); the student gave the right theorem in a restricted special-case form, which merits minor but not full deduction.",
+          "confidence": 0.99,
           "question_id": "Q2a",
           "subscores": [
             {
@@ -616,7 +615,8 @@
           "flags": [],
           "sources": [
             "official_solution_Q2a",
-            "lecture_notes_p49"
+            "lecture_notes_p49_IVT",
+            "lecture_notes_p63_MVT"
           ],
           "samples": [
             4.0,
@@ -633,12 +633,12 @@
         "module": "Reflector",
         "prompt": {
           "System_prompt": "You are the Reflector module of CheckMate, grading Technion Calculus 1 exams. You receive a PROPOSED grade for one question, the student's transcribed work, and the official solution. Critique the proposed grade against that evidence — do not re-grade from scratch, judge whether the grade is fair and grounded.\n\nCheck:\n- Is the score justified by the official solution and consistent partial-credit reasoning?\n- Is credit for the student's OWN valid method preserved (alternative correct methods deserve full credit)?\n- Is the student's work too ambiguous/illegible to grade fairly?\n\nChoose EXACTLY ONE action:\n- APPROVE — the grade is fair and grounded; keep it.\n- REVISE — the grade is wrong or unfair; give a corrected score and feedback.\n- ESCALATE — the work cannot be graded fairly (ambiguous handwriting or genuine uncertainty); send to a human teacher. Never guess.\n\nOutput ONLY a JSON object, no prose, no code fences:\n{\"action\":\"APPROVE|REVISE|ESCALATE\",\"score\":<number 0..max, or null>,\"feedback\":\"<corrected student-facing feedback if REVISE, else empty>\",\"note\":\"<one line: why>\",\"confidence\":<0..1>}\nWrite \"feedback\" and \"note\" in ENGLISH, always (student's Hebrew may be quoted verbatim).",
-          "User_prompt": "Question 2א (max 5 points).\n\n=== PROPOSED GRADE ===\nscore: 4.0/5 (status partial, confidence 0.98)\nfeedback: You stated the core idea of the Intermediate Value Theorem correctly: continuity on [a,b] and existence of c with f(c)=\\alpha. The loss is that you wrote it only for the special case f(a)<\\alpha<f(b); the theorem must be stated for EVERY t between f(a) and f(b) (also when the order is reversed).\njustification: Official solution requires the universal quantifier over all values between f(a) and f(b); the student gave only a one-sided special case, which is an imprecise statement of the theorem.\n\n=== OFFICIAL SOLUTION (evidence) ===\nOfficial solution:\nIntermediate Value Theorem: if f is continuous on the closed interval [a,b], then for EVERY value t between f(a) and f(b) (i.e. every t with min(f(a),f(b)) <= t <= max(f(a),f(b))) there exists a point c in [a,b] such that f(c)=t.\n\nCorrect final answer: For every t between f(a) and f(b) there exists c in [a,b] with f(c)=t (f continuous on [a,b]).\nGrading note: The universal quantifier 'for EVERY t between f(a) and f(b)' is part of the statement. Stating it for a single unspecified t is imprecise and costs 1-2 pts of 5, not all of it.\n\n=== STUDENT WORK (Parser confidence 0.79) ===\n(5 נק') נסו את משפט ערך הביניים.\nתהי f כי רציפה בקטע [a,b] ונתון f(a) < α < f(b), אזי קיימת c∈(a,b) כך ש־ f(c)=α.\nLaTeX:\n\\text{(5 נק') נסו את משפט ערך הביניים.}\\n\\text{תהי } f \\text{ כי רציפה בקטע } [a,b] \\text{ ונתון } f(a) < \\alpha < f(b), \\text{ אזי קיימת } c\\in(a,b) \\text{ כך ש־ } f(c)=\\alpha.\n\nCritique the proposed grade and return only the JSON object."
+          "User_prompt": "Question 2א (max 5 points).\n\n=== PROPOSED GRADE ===\nscore: 4.0/5 (status partial, confidence 0.99)\nfeedback: You stated the core conclusion of the Intermediate Value Theorem correctly, but you only wrote the special case f(a) < α < f(b). The theorem must be stated for every t between f(a) and f(b), not just for one ordered case.\njustification: Official solution requires continuity on [a,b] and a universal quantifier over every value between f(a) and f(b); the student gave the right theorem in a restricted special-case form, which merits minor but not full deduction.\n\n=== OFFICIAL SOLUTION (evidence) ===\nOfficial solution:\nIntermediate Value Theorem: if f is continuous on the closed interval [a,b], then for EVERY value t between f(a) and f(b) (i.e. every t with min(f(a),f(b)) <= t <= max(f(a),f(b))) there exists a point c in [a,b] such that f(c)=t.\n\nCorrect final answer: For every t between f(a) and f(b) there exists c in [a,b] with f(c)=t (f continuous on [a,b]).\nGrading note: The universal quantifier 'for EVERY t between f(a) and f(b)' is part of the statement. Stating it for a single unspecified t is imprecise and costs 1-2 pts of 5, not all of it.\n\n=== STUDENT WORK (Parser confidence 0.79) ===\n(5 נק') נסו את משפט ערך הביניים.\nתהי f כי רציפה בקטע [a,b] ונתון f(a) < α < f(b), אזי קיימת c∈(a,b) כך ש־ f(c)=α.\nLaTeX:\n\\text{(5 נק') נסו את משפט ערך הביניים.}\\n\\text{תהי } f \\text{ כי רציפה בקטע } [a,b] \\text{ ונתון } f(a) < \\alpha < f(b), \\text{ אזי קיימת } c\\in(a,b) \\text{ כך ש־ } f(c)=\\alpha.\n\nCritique the proposed grade and return only the JSON object."
         },
         "response": {
           "action": "APPROVE",
           "score": null,
-          "note": "Student correctly states a special-case version of the Intermediate Value Theorem, but not the full universal statement; 1 point off is consistent with the official grading note.",
+          "note": "Student stated a correct special case of the Intermediate Value Theorem, missing the full universal quantifier/order-free form; 1 point deduction is consistent with the official grading note.",
           "confidence": 0.98
         },
         "pattern": "Reflection"
@@ -679,9 +679,9 @@
           "score": 10,
           "max": 10,
           "status": "ok",
-          "feedback": "Correct solution: you defined the function, checked evenness, computed F'(x)=x(2+\\cos x), and used that F is increasing on [0,\\infty) with F(0)=1>0. This implies F(x)>0 for all x, so the equation has no real solutions.",
-          "justification": "Matches the official argument and final answer 0 real solutions; the student's method is mathematically valid and complete.",
-          "confidence": 0.98,
+          "feedback": "Correct solution: you defined the function, found that it is even, computed F'(x)=x(2+Cos x), and concluded it is increasing on [0,infty). With F(0)=1, this implies F(x)\\ge 1>0, so there are no real solutions. Your final answer matches the official result.",
+          "justification": "Matches the official solution's strategy and conclusion that x=0 is the global minimum with value 1, hence 0 real roots.",
+          "confidence": 0.95,
           "question_id": "Q2b",
           "subscores": [
             {
@@ -690,17 +690,17 @@
               "max": 10
             }
           ],
-          "read_attempts": 2,
+          "read_attempts": 1,
           "flags": [
             "lone_outlier_ignored"
           ],
           "sources": [
-            "official_solution_Q2b",
-            "lecture_notes_p15"
+            "official_solution_Q2b_2024w_moedA",
+            "course_notes_p15"
           ],
           "samples": [
-            0,
             10,
+            7.0,
             10
           ],
           "n": 3,
@@ -713,13 +713,13 @@
         "module": "Reflector",
         "prompt": {
           "System_prompt": "You are the Reflector module of CheckMate, grading Technion Calculus 1 exams. You receive a PROPOSED grade for one question, the student's transcribed work, and the official solution. Critique the proposed grade against that evidence — do not re-grade from scratch, judge whether the grade is fair and grounded.\n\nCheck:\n- Is the score justified by the official solution and consistent partial-credit reasoning?\n- Is credit for the student's OWN valid method preserved (alternative correct methods deserve full credit)?\n- Is the student's work too ambiguous/illegible to grade fairly?\n\nChoose EXACTLY ONE action:\n- APPROVE — the grade is fair and grounded; keep it.\n- REVISE — the grade is wrong or unfair; give a corrected score and feedback.\n- ESCALATE — the work cannot be graded fairly (ambiguous handwriting or genuine uncertainty); send to a human teacher. Never guess.\n\nOutput ONLY a JSON object, no prose, no code fences:\n{\"action\":\"APPROVE|REVISE|ESCALATE\",\"score\":<number 0..max, or null>,\"feedback\":\"<corrected student-facing feedback if REVISE, else empty>\",\"note\":\"<one line: why>\",\"confidence\":<0..1>}\nWrite \"feedback\" and \"note\" in ENGLISH, always (student's Hebrew may be quoted verbatim).",
-          "User_prompt": "Question 2ב (max 10 points).\n\n=== PROPOSED GRADE ===\nscore: 10/10 (status ok, confidence 0.98)\nfeedback: Correct solution: you defined the function, checked evenness, computed F'(x)=x(2+\\cos x), and used that F is increasing on [0,\\infty) with F(0)=1>0. This implies F(x)>0 for all x, so the equation has no real solutions.\njustification: Matches the official argument and final answer 0 real solutions; the student's method is mathematically valid and complete.\n\n=== OFFICIAL SOLUTION (evidence) ===\nOfficial solution:\nLet f(x)=x^2 + x sin x + cos x. Then f'(x)=2x + (sin x + x cos x) - sin x = 2x + x cos x = x(2+cos x). Since 2+cos x > 0 for all x, f'(x) < 0 for x<0 and f'(x) > 0 for x>0, so x=0 is the global minimum. f(0)=cos 0 = 1 > 0, hence f(x) >= 1 > 0 for all x and the equation f(x)=0 has NO real solutions.\n\nCorrect final answer: 0 real solutions.\nGrading note: KEY VERIFIED (sympy): x^2 + x sin x + cos x = 0 has 0 real solutions (f>=1>0). The graded '90' booklet's human red pen gave 7/10 crediting '2 solutions' -- that is a HUMAN GRADING ERROR (2 solutions holds only for the -cos x variant). Eval ground truth for this question is therefore disputed; exclude it from MAE until the human key is corrected. Do NOT change this final_answer.\n\n=== STUDENT WORK (Parser confidence 0.71) ===\n(10 נק') מצא את מספר הפתרונות של המשוואה x^2 + xsin(x) + cos(x) = 0.\nנדבר פונקציה חדשה: F(x)=x^2 + xSin(x) + (Cosx)\nהפונקציה F(x) רציפה לכל x∈R כי היא סכום של פונקציות אלמנטריות רציפות. והיו צריכה להיות לכל x∈R להראות כי הפונקציה זוגית. יהיה F(x) הוא פונקציה זוגית.\nF(-x)=(-x)^2+(-x)·Sin(-x)+Cos(-x)=x^2+xSin(x)+(Cosx)=F(x)\nSin(-x)=-Sinx\nCos(-x)=Cosx\nF(0)=0+0+Cos(0)=1\nולכן מספיק להתמקד על הקטע [0,∞) ... ולאחר מכן להראות שהפונקציה שלילית לכל x>0.\nF'(x)=2x+Sinx+xCosx-Sinx=2x+xCosx=x(2+Cosx)\nלכן לכל x∈[0,∞) מתקיים F'(x)≥0 ולכן F(x) עולה.\nמכאן [illegible] [illegible] [illegible] [illegible] [illegible].\nLaTeX:\n\\text{(10 נק') מצא את מספר הפתרונות של המשוואה } x^2 + x\\sin(x) + \\cos(x)=0.\\n\\text{נגדיר } F(x)=x^2 + x\\Sin(x) + (\\Cos x).\\nF(-x)=(-x)^2+(-x)\\cdot\\Sin(-x)+\\Cos(-x)=x^2+x\\Sin(x)+(\\Cos x)=F(x)\\n\\Sin(-x)=-\\Sin x\\n\\Cos(-x)=\\Cos x\\nF(0)=0+0+\\Cos(0)=1\\nF'(x)=2x+\\Sin x+x\\Cos x-\\Sin x=2x+x\\Cos x=x(2+\\Cos x)\n\nCritique the proposed grade and return only the JSON object."
+          "User_prompt": "Question 2ב (max 10 points).\n\n=== PROPOSED GRADE ===\nscore: 10/10 (status ok, confidence 0.95)\nfeedback: Correct solution: you defined the function, found that it is even, computed F'(x)=x(2+Cos x), and concluded it is increasing on [0,infty). With F(0)=1, this implies F(x)\\ge 1>0, so there are no real solutions. Your final answer matches the official result.\njustification: Matches the official solution's strategy and conclusion that x=0 is the global minimum with value 1, hence 0 real roots.\n\n=== OFFICIAL SOLUTION (evidence) ===\nOfficial solution:\nLet f(x)=x^2 + x sin x + cos x. Then f'(x)=2x + (sin x + x cos x) - sin x = 2x + x cos x = x(2+cos x). Since 2+cos x > 0 for all x, f'(x) < 0 for x<0 and f'(x) > 0 for x>0, so x=0 is the global minimum. f(0)=cos 0 = 1 > 0, hence f(x) >= 1 > 0 for all x and the equation f(x)=0 has NO real solutions.\n\nCorrect final answer: 0 real solutions.\nGrading note: KEY VERIFIED (sympy): x^2 + x sin x + cos x = 0 has 0 real solutions (f>=1>0). The graded '90' booklet's human red pen gave 7/10 crediting '2 solutions' -- that is a HUMAN GRADING ERROR (2 solutions holds only for the -cos x variant). Eval ground truth for this question is therefore disputed; exclude it from MAE until the human key is corrected. Do NOT change this final_answer.\n\n=== STUDENT WORK (Parser confidence 0.71) ===\n(10 נק') מצא את מספר הפתרונות של המשוואה x^2 + xsin(x) + cos(x) = 0.\nנדבר פונקציה חדשה: F(x)=x^2 + xSin(x) + (Cosx)\nהפונקציה F(x) רציפה לכל x∈R כי היא סכום של פונקציות אלמנטריות רציפות. והיו צריכה להיות לכל x∈R להראות כי הפונקציה זוגית. יהיה F(x) הוא פונקציה זוגית.\nF(-x)=(-x)^2+(-x)·Sin(-x)+Cos(-x)=x^2+xSin(x)+(Cosx)=F(x)\nSin(-x)=-Sinx\nCos(-x)=Cosx\nF(0)=0+0+Cos(0)=1\nולכן מספיק להתמקד על הקטע [0,∞) ... ולאחר מכן להראות שהפונקציה שלילית לכל x>0.\nF'(x)=2x+Sinx+xCosx-Sinx=2x+xCosx=x(2+Cosx)\nלכן לכל x∈[0,∞) מתקיים F'(x)≥0 ולכן F(x) עולה.\nמכאן [illegible] [illegible] [illegible] [illegible] [illegible].\nLaTeX:\n\\text{(10 נק') מצא את מספר הפתרונות של המשוואה } x^2 + x\\sin(x) + \\cos(x)=0.\\n\\text{נגדיר } F(x)=x^2 + x\\Sin(x) + (\\Cos x).\\nF(-x)=(-x)^2+(-x)\\cdot\\Sin(-x)+\\Cos(-x)=x^2+x\\Sin(x)+(\\Cos x)=F(x)\\n\\Sin(-x)=-\\Sin x\\n\\Cos(-x)=\\Cos x\\nF(0)=0+0+\\Cos(0)=1\\nF'(x)=2x+\\Sin x+x\\Cos x-\\Sin x=2x+x\\Cos x=x(2+\\Cos x)\n\nCritique the proposed grade and return only the JSON object."
         },
         "response": {
           "action": "APPROVE",
           "score": null,
-          "note": "The student's work correctly defines the function, proves evenness, computes the derivative as x(2+cos x), and uses monotonicity on [0,∞) with F(0)=1 to conclude no real roots. Minor wording issues and one garbled sentence do not affect the valid complete method.",
-          "confidence": 0.97
+          "note": "Student correctly defined the function, showed evenness, computed the derivative, and concluded monotonicity on [0,\\infty) with F(0)=1, which is sufficient to deduce no real roots. The proposed full credit is fair.",
+          "confidence": 0.98
         },
         "pattern": "Reflection"
       },
@@ -756,17 +756,17 @@
         },
         "response": {
           "id": "Q3",
-          "score": 13.0,
+          "score": 15,
           "max": 15,
           "status": "escalate",
-          "feedback": "Automated grading was unstable across 5 samples (scores [0, 12.0, 13.0, 13.0, 14.0] out of 15); sent to a human for review. You used the correct Taylor-remainder approach and ended with the correct approximation 83/24. Credit is lost for two issues: you worked with f(x)=\\sqrt{x} around 9 instead of the required f(x)=\\sqrt{x+9} around 0, and in the final line you wrote an incorrect expression before the correct result (the approximation should come from T_2(3)=3+\\frac12-\\frac1{24}). The remainder estimate itself is essentially fine.",
-          "justification": "Official solution requires the second-order Taylor polynomial for f(x)=(x+9)^{1/2} at 0 and evaluation at x=3; the student’s method is equivalent in spirit but has a setup mismatch, while the final numeric answer and error-bound idea match the key.",
-          "confidence": 0.06666666666666665,
+          "feedback": "Automated grading was unstable across 5 samples (scores [0, 10.0, 15, 15, 15] out of 15); sent to a human for review. Correct method and correct final approximation. You computed the Taylor coefficients at 9, obtained the second-order polynomial, and bounded the Lagrange remainder below 1/100. The final value is 83/24 = 3.4583..., matching the official solution.",
+          "justification": "Official solution requires the second-order Taylor expansion of f(x)=(x+9)^{1/2} around 0 and evaluation at x=3; the student's work matches this and achieves the required error bound.",
+          "confidence": 0.0,
           "question_id": "Q3",
           "subscores": [
             {
               "part": "main",
-              "score": 13.0,
+              "score": 15,
               "max": 15
             }
           ],
@@ -778,15 +778,16 @@
           ],
           "sources": [
             "official_solution_Q3",
-            "lecture_notes_p77",
-            "lecture_notes_p79"
+            "lecture_notes_p79",
+            "lecture_notes_p80",
+            "lecture_notes_p77"
           ],
           "samples": [
-            0,
-            14.0,
-            13.0,
-            12.0,
-            13.0
+            15,
+            10.0,
+            15,
+            15,
+            0
           ],
           "n": 5,
           "max_tokens": 1800,
@@ -798,13 +799,13 @@
         "module": "Reflector",
         "prompt": {
           "System_prompt": "You are the Reflector module of CheckMate, grading Technion Calculus 1 exams. You receive a PROPOSED grade for one question, the student's transcribed work, and the official solution. Critique the proposed grade against that evidence — do not re-grade from scratch, judge whether the grade is fair and grounded.\n\nCheck:\n- Is the score justified by the official solution and consistent partial-credit reasoning?\n- Is credit for the student's OWN valid method preserved (alternative correct methods deserve full credit)?\n- Is the student's work too ambiguous/illegible to grade fairly?\n\nChoose EXACTLY ONE action:\n- APPROVE — the grade is fair and grounded; keep it.\n- REVISE — the grade is wrong or unfair; give a corrected score and feedback.\n- ESCALATE — the work cannot be graded fairly (ambiguous handwriting or genuine uncertainty); send to a human teacher. Never guess.\n\nOutput ONLY a JSON object, no prose, no code fences:\n{\"action\":\"APPROVE|REVISE|ESCALATE\",\"score\":<number 0..max, or null>,\"feedback\":\"<corrected student-facing feedback if REVISE, else empty>\",\"note\":\"<one line: why>\",\"confidence\":<0..1>}\nWrite \"feedback\" and \"note\" in ENGLISH, always (student's Hebrew may be quoted verbatim).",
-          "User_prompt": "Question Q3 (max 15 points).\n\n=== PROPOSED GRADE ===\nscore: 13.0/15 (status escalate, confidence 0.06666666666666665)\nfeedback: Automated grading was unstable across 5 samples (scores [0, 12.0, 13.0, 13.0, 14.0] out of 15); sent to a human for review. You used the correct Taylor-remainder approach and ended with the correct approximation 83/24. Credit is lost for two issues: you worked with f(x)=\\sqrt{x} around 9 instead of the required f(x)=\\sqrt{x+9} around 0, and in the final line you wrote an incorrect expression before the correct result (the approximation should come from T_2(3)=3+\\frac12-\\frac1{24}). The remainder estimate itself is essentially fine.\njustification: Official solution requires the second-order Taylor polynomial for f(x)=(x+9)^{1/2} at 0 and evaluation at x=3; the student’s method is equivalent in spirit but has a setup mismatch, while the final numeric answer and error-bound idea match the key.\n\n=== OFFICIAL SOLUTION (evidence) ===\nOfficial solution:\nf(x)=(x+9)^{1/2}: f(0)=3; f'(x)=(1/2)(x+9)^{-1/2}, f'(0)=1/6; f''(x)=-(1/4)(x+9)^{-3/2}, f''(0)=-1/108. Second-order Taylor around 0: T2(x)=3 + x/6 + (f''(0)/2) x^2 = 3 + x/6 - x^2/216.\nLagrange remainder with f'''(x)=(3/8)(x+9)^{-5/2}, 0<c<3: |R2(3)| = |f'''(c)/3! * 3^3| = 27/(16 (c+9)^{5/2}) <= 27/(16 * 9^{5/2}) = 27/3888 = 1/144 < 1/100.\nHence sqrt(12) ~ T2(3) = 3 + 1/2 - 9/216 = 3 + 1/2 - 1/24 = 83/24 ~ 3.4583, within 1/144 < 1/100 of the true value 3.4641...\n\nCorrect final answer: sqrt(12) ~ T2(3) = 3 + 1/2 - 1/24 = 83/24 ~ 3.4583, with |error| <= 1/144 < 1/100.\nGrading note: The x^2 coefficient must include the 1/2! factor: f''(0)/2 = -1/216 (a common error is writing -1/108). Second order is required and sufficient for accuracy 1/100; computing higher derivatives than needed is unnecessary.\n\n=== STUDENT WORK (Parser confidence 0.63) ===\nשאלה 3 (15 נק')\nחשב את √12 ברמת דיוק של 1/100.\nנניח כי f(x)=√x, לכן f היא גזירה בקטע, ובפרט f(9)=3. יש לבחור c כך ש- 9<c<12.\nנשתמש בנוסחת טיילור/שארית ל-\n|R_n(18)| = | f^(n+1)(c) / (n+1)! · 3^(n+1) |.\nמחשבים:\nf'(x)=1/2 x^(-1/2), f'(9)=1/(2√9)=1/6, f'(c)=1/(2√c).\nלכן\n|R_0(12)| = |f'(c)/1! · 3| = |1/2 · 1/√c · 3| < 1/100,\nכי 9<c<12 ולכן 1/√12 < 1/√c < 1/√9 = 1/3.\nעוד:\nf''(x) = -1/4 x^(-3/2), f''(9) = -1/4 · 1/27, f''(c) = -1/4 · 1/(c√c).\nולכן\n|R_1(12)| = |f''(c)/2! · 3^2| = |1/2 · 1/(c√c) · -1/4 · 9| = 9/8 · 1/(c√c) < 1/100,\nכי 1/(12√12) < 1/(c√c) < 1/(9√9) = 1/27.\nועוד:\nf'''(x) = 3/8 x^(-5/2), f'''(9) = 3/8 · 1/81 · 1/3 = 1/(8·81), f'''(c) = 3/8 · 1/(c^2√c).\nולכן\n|R_2(12)| = |f'''(c)/3! · 3^3| = |1/6 · 3/8 · 1/(c^2√c) · 27| = 27/16 · 1/(c^2√c) < 1/100,\nעם ההערה 1/(c^2√c) < 1/(81·3) וכו'.\n⇒ √18 ≈ f(a) - f'(a)/1! · 3^1 + f''(a)/2! · 3^2\n[illegible]\n√12 ≈ 3 + 1/6 · 3^1 + (-1/4 · 1/3^2 + 1/2 · 3^2) = 3 + 1/2 - 1/24\nמשה\nLaTeX:\n\\text{שאלה 3 (15 נק')}\\\\\n\\sqrt{12}\\ \\text{ברמת דיוק של }\\frac{1}{100}.\\\\\n f(x)=\\sqrt{x},\\ f(9)=3,\\ 9<c<12.\\\\\n|R_n(18)|=\\left|\\frac{f^{(n+1)}(c)}{(n+1)!}\\cdot 3^{n+1}\\right|.\\\\\n f'(x)=\\frac{1}{2}x^{-1/2},\\quad f'(9)=\\frac{1}{6},\\quad f'(c)=\\frac{1}{2\\sqrt{c}}.\\\\\n|R_0(12)|=\\left|\\frac{f'(c)}{1!}\\cdot 3\\right|=\\left|\\frac{1}{2}\\cdot\\frac{1}{\\sqrt{c}}\\cdot 3\\right|<\\frac{1}{100}.\\\\\n f''(x)=-\\frac{1}{4}x^{-3/2},\\quad f''(9)=-\\frac{1}{4}\\cdot\\frac{1}{27},\\quad f''(c)=-\\frac{1}{4}\\cdot\\frac{1}{c\\sqrt{c}}.\\\\\n|R_1(12)|=\\left|\\frac{f''(c)}{2!}\\cdot 3^2\\right|=\\left|\\frac{1}{2}\\cdot\\frac{1}{c\\sqrt{c}}\\cdot\\left(-\\frac{1}{4}\\right)\\cdot 9\\right|=\\frac{9}{8}\\cdot\\frac{1}{c\\sqrt{c}}<\\frac{1}{100}.\\\\\n f'''(x)=\\frac{3}{8}x^{-5/2},\\quad f'''(9)=\\frac{3}{8}\\cdot\\frac{1}{81}\\cdot\\frac{1}{3}=\\frac{1}{8\\cdot 81},\\quad f'''(c)=\\frac{3}{8}\\cdot\\frac{1}{c^2\\sqrt{c}}.\\\\\n|R_2(12)|=\\left|\\frac{f'''(c)}{3!}\\cdot 3^3\\right|=\\left|\\frac{1}{6}\\cdot\\frac{3}{8}\\cdot\\frac{1}{c^2\\sqrt{c}}\\cdot 27\\right|=\\frac{27}{16}\\cdot\\frac{1}{c^2\\sqrt{c}}<\\frac{1}{100}.\n\\Rightarrow \\sqrt{18} \\approx f(a) - \\frac{f'(a)}{1!}\\cdot 3^1 + \\frac{f''(a)}{2!}\\cdot 3^2\n\n[illegible]\n\n\\sqrt{12} \\approx 3 + \\frac{1}{6}\\cdot 3^1 + \\left(-\\frac{1}{4}\\cdot \\frac{1}{3^2} + \\frac{1}{2}\\cdot 3^2\\right)=3+\\frac{1}{2}-\\frac{1}{24}\n\nמשה\n\nCritique the proposed grade and return only the JSON object."
+          "User_prompt": "Question Q3 (max 15 points).\n\n=== PROPOSED GRADE ===\nscore: 15/15 (status escalate, confidence 0.0)\nfeedback: Automated grading was unstable across 5 samples (scores [0, 10.0, 15, 15, 15] out of 15); sent to a human for review. Correct method and correct final approximation. You computed the Taylor coefficients at 9, obtained the second-order polynomial, and bounded the Lagrange remainder below 1/100. The final value is 83/24 = 3.4583..., matching the official solution.\njustification: Official solution requires the second-order Taylor expansion of f(x)=(x+9)^{1/2} around 0 and evaluation at x=3; the student's work matches this and achieves the required error bound.\n\n=== OFFICIAL SOLUTION (evidence) ===\nOfficial solution:\nf(x)=(x+9)^{1/2}: f(0)=3; f'(x)=(1/2)(x+9)^{-1/2}, f'(0)=1/6; f''(x)=-(1/4)(x+9)^{-3/2}, f''(0)=-1/108. Second-order Taylor around 0: T2(x)=3 + x/6 + (f''(0)/2) x^2 = 3 + x/6 - x^2/216.\nLagrange remainder with f'''(x)=(3/8)(x+9)^{-5/2}, 0<c<3: |R2(3)| = |f'''(c)/3! * 3^3| = 27/(16 (c+9)^{5/2}) <= 27/(16 * 9^{5/2}) = 27/3888 = 1/144 < 1/100.\nHence sqrt(12) ~ T2(3) = 3 + 1/2 - 9/216 = 3 + 1/2 - 1/24 = 83/24 ~ 3.4583, within 1/144 < 1/100 of the true value 3.4641...\n\nCorrect final answer: sqrt(12) ~ T2(3) = 3 + 1/2 - 1/24 = 83/24 ~ 3.4583, with |error| <= 1/144 < 1/100.\nGrading note: The x^2 coefficient must include the 1/2! factor: f''(0)/2 = -1/216 (a common error is writing -1/108). Second order is required and sufficient for accuracy 1/100; computing higher derivatives than needed is unnecessary.\n\n=== STUDENT WORK (Parser confidence 0.63) ===\nשאלה 3 (15 נק')\nחשב את √12 ברמת דיוק של 1/100.\nנניח כי f(x)=√x, לכן f היא גזירה בקטע, ובפרט f(9)=3. יש לבחור c כך ש- 9<c<12.\nנשתמש בנוסחת טיילור/שארית ל-\n|R_n(18)| = | f^(n+1)(c) / (n+1)! · 3^(n+1) |.\nמחשבים:\nf'(x)=1/2 x^(-1/2), f'(9)=1/(2√9)=1/6, f'(c)=1/(2√c).\nלכן\n|R_0(12)| = |f'(c)/1! · 3| = |1/2 · 1/√c · 3| < 1/100,\nכי 9<c<12 ולכן 1/√12 < 1/√c < 1/√9 = 1/3.\nעוד:\nf''(x) = -1/4 x^(-3/2), f''(9) = -1/4 · 1/27, f''(c) = -1/4 · 1/(c√c).\nולכן\n|R_1(12)| = |f''(c)/2! · 3^2| = |1/2 · 1/(c√c) · -1/4 · 9| = 9/8 · 1/(c√c) < 1/100,\nכי 1/(12√12) < 1/(c√c) < 1/(9√9) = 1/27.\nועוד:\nf'''(x) = 3/8 x^(-5/2), f'''(9) = 3/8 · 1/81 · 1/3 = 1/(8·81), f'''(c) = 3/8 · 1/(c^2√c).\nולכן\n|R_2(12)| = |f'''(c)/3! · 3^3| = |1/6 · 3/8 · 1/(c^2√c) · 27| = 27/16 · 1/(c^2√c) < 1/100,\nעם ההערה 1/(c^2√c) < 1/(81·3) וכו'.\n⇒ √18 ≈ f(a) - f'(a)/1! · 3^1 + f''(a)/2! · 3^2\n[illegible]\n√12 ≈ 3 + 1/6 · 3^1 + (-1/4 · 1/3^2 + 1/2 · 3^2) = 3 + 1/2 - 1/24\nמשה\nLaTeX:\n\\text{שאלה 3 (15 נק')}\\\\\n\\sqrt{12}\\ \\text{ברמת דיוק של }\\frac{1}{100}.\\\\\n f(x)=\\sqrt{x},\\ f(9)=3,\\ 9<c<12.\\\\\n|R_n(18)|=\\left|\\frac{f^{(n+1)}(c)}{(n+1)!}\\cdot 3^{n+1}\\right|.\\\\\n f'(x)=\\frac{1}{2}x^{-1/2},\\quad f'(9)=\\frac{1}{6},\\quad f'(c)=\\frac{1}{2\\sqrt{c}}.\\\\\n|R_0(12)|=\\left|\\frac{f'(c)}{1!}\\cdot 3\\right|=\\left|\\frac{1}{2}\\cdot\\frac{1}{\\sqrt{c}}\\cdot 3\\right|<\\frac{1}{100}.\\\\\n f''(x)=-\\frac{1}{4}x^{-3/2},\\quad f''(9)=-\\frac{1}{4}\\cdot\\frac{1}{27},\\quad f''(c)=-\\frac{1}{4}\\cdot\\frac{1}{c\\sqrt{c}}.\\\\\n|R_1(12)|=\\left|\\frac{f''(c)}{2!}\\cdot 3^2\\right|=\\left|\\frac{1}{2}\\cdot\\frac{1}{c\\sqrt{c}}\\cdot\\left(-\\frac{1}{4}\\right)\\cdot 9\\right|=\\frac{9}{8}\\cdot\\frac{1}{c\\sqrt{c}}<\\frac{1}{100}.\\\\\n f'''(x)=\\frac{3}{8}x^{-5/2},\\quad f'''(9)=\\frac{3}{8}\\cdot\\frac{1}{81}\\cdot\\frac{1}{3}=\\frac{1}{8\\cdot 81},\\quad f'''(c)=\\frac{3}{8}\\cdot\\frac{1}{c^2\\sqrt{c}}.\\\\\n|R_2(12)|=\\left|\\frac{f'''(c)}{3!}\\cdot 3^3\\right|=\\left|\\frac{1}{6}\\cdot\\frac{3}{8}\\cdot\\frac{1}{c^2\\sqrt{c}}\\cdot 27\\right|=\\frac{27}{16}\\cdot\\frac{1}{c^2\\sqrt{c}}<\\frac{1}{100}.\n\\Rightarrow \\sqrt{18} \\approx f(a) - \\frac{f'(a)}{1!}\\cdot 3^1 + \\frac{f''(a)}{2!}\\cdot 3^2\n\n[illegible]\n\n\\sqrt{12} \\approx 3 + \\frac{1}{6}\\cdot 3^1 + \\left(-\\frac{1}{4}\\cdot \\frac{1}{3^2} + \\frac{1}{2}\\cdot 3^2\\right)=3+\\frac{1}{2}-\\frac{1}{24}\n\nמשה\n\nCritique the proposed grade and return only the JSON object."
         },
         "response": {
           "action": "REVISE",
-          "score": 11,
-          "note": "The proposed 13/15 is a bit too generous given the incorrect initial setup and flawed intermediate expressions, but the work still shows a mostly correct method and final answer.",
-          "confidence": 0.78
+          "score": 10,
+          "note": "Correct final value, but derivation and remainder justification contain inconsistencies and errors; full marks are too generous.",
+          "confidence": 0.84
         },
         "pattern": "Reflection"
       },
@@ -843,17 +844,24 @@
           "id": "Q1",
           "score": 0,
           "max": 7,
-          "status": "escalate",
-          "feedback": "Could not produce a reliable grade (unparseable model output or missing official solution). Sent to a human teacher.",
-          "justification": "Escalated — not graded automatically.",
-          "confidence": 0.0,
-          "question_id": "Q1",
-          "subscores": [],
-          "read_attempts": 1,
-          "flags": [
-            "output_truncated"
+          "status": "partial",
+          "feedback": "The final marked option is ג, whose content is 2. The correct value is 1, so the answer is wrong. The crossed-out previous answer ב is ignored; only the final clean mark counts.",
+          "justification": "Official solution gives limit value 1; student's final selected option content is 2, so no credit on this all-or-nothing multiple-choice item.",
+          "confidence": 0.99,
+          "question_id": "MC-1",
+          "subscores": [
+            {
+              "part": "MC",
+              "score": 0,
+              "max": 7
+            }
           ],
-          "sources": [],
+          "read_attempts": 2,
+          "flags": [],
+          "sources": [
+            "official_solution_MC-1",
+            "lecture_p33"
+          ],
           "samples": [
             0,
             0,
@@ -861,7 +869,7 @@
           ],
           "n": 3,
           "max_tokens": 250,
-          "truncated": true
+          "truncated": false
         },
         "pattern": "Few-shot · self-consistency x3"
       },
@@ -876,15 +884,15 @@
           "hits": [
             {
               "page": 101,
-              "score": 0.641876161
+              "score": 0.641721845
             },
             {
               "page": 86,
-              "score": 0.600404561
+              "score": 0.600238085
             },
             {
               "page": 83,
-              "score": 0.598272145
+              "score": 0.598092437
             }
           ]
         },
@@ -901,22 +909,21 @@
           "score": 7,
           "max": 7,
           "status": "ok",
-          "feedback": "Correct choice: option ג matches the content \"I converges and II diverges.\"",
-          "justification": "The marked option content agrees with the official solution for MC-2, which is all-or-nothing.",
+          "feedback": "Correct choice. The marked option ג matches the official result: I converges and II diverges.",
+          "justification": "The student’s selected content matches the official answer content exactly, so this all-or-nothing multiple-choice item earns full credit.",
           "confidence": 0.99,
           "question_id": "MC-2",
           "subscores": [
             {
-              "part": "MC",
+              "part": "main",
               "score": 7,
               "max": 7
             }
           ],
-          "read_attempts": 1,
+          "read_attempts": 2,
           "flags": [],
           "sources": [
-            "official_solution_MC-2",
-            "hedva1_p101"
+            "official_solution:MC-2"
           ],
           "samples": [
             7,
@@ -940,15 +947,15 @@
           "hits": [
             {
               "page": 109,
-              "score": 0.644476354
+              "score": 0.644532
             },
             {
               "page": 110,
-              "score": 0.641501963
+              "score": 0.64135617
             },
             {
               "page": 115,
-              "score": 0.639723361
+              "score": 0.639773548
             }
           ]
         },
@@ -965,8 +972,8 @@
           "score": 7,
           "max": 7,
           "status": "ok",
-          "feedback": "Correct choice: the series converges exactly on the open interval 0 < x < 2, so option ה matches the official answer content.",
-          "justification": "The student's marked option content equals the official solution's answer content for the power series convergence interval.",
+          "feedback": "Correct choice: the series converges exactly for the open interval 0<x<2, so option ה matches the official answer content.",
+          "justification": "The student marked option ה, whose content is 0<x<2, matching the official solution; multiple-choice grading is all-or-nothing by content.",
           "confidence": 0.99,
           "question_id": "Q3",
           "subscores": [
@@ -979,7 +986,7 @@
           "read_attempts": 2,
           "flags": [],
           "sources": [
-            "official_solution_Q3_MC-3",
+            "official_solution_MC-3",
             "course_notes_p115"
           ],
           "samples": [
@@ -1029,8 +1036,8 @@
           "score": 7,
           "max": 7,
           "status": "ok",
-          "feedback": "Correct choice: the statement \"there exists c in [0,1] such that f(sin c)=c\" is true, so marking א earns full credit.",
-          "justification": "The student’s marked option content matches the official true statement from MC-4.",
+          "feedback": "Correct choice. The marked option A matches the true statement: there exists c in [0,1] such that f(sin c)=c.",
+          "justification": "Official solution says the true statement is the one with f(sin c)=c; the student marked option A, which has that content.",
           "confidence": 0.99,
           "question_id": "Q4",
           "subscores": [
@@ -1044,7 +1051,7 @@
           "flags": [],
           "sources": [
             "official_solution_MC-4",
-            "lecture_notes_p49"
+            "Hedva1_p49_IVT"
           ],
           "samples": [
             7,
@@ -1093,13 +1100,13 @@
           "score": 7,
           "max": 7,
           "status": "ok",
-          "feedback": "Correct. The marked option content is 2, which matches the integral value.",
-          "justification": "Official solution gives value 2; the student marked option ג, whose content is 2 in the transcribed form.",
+          "feedback": "Correct choice: you marked ג, whose content is 2, matching the value of the integral. No deduction.",
+          "justification": "The official solution gives the integral value 2; the student’s marked option ג has content 2, so the answer is correct.",
           "confidence": 0.99,
           "question_id": "MC-5",
           "subscores": [
             {
-              "part": "all",
+              "part": "single",
               "score": 7,
               "max": 7
             }
@@ -1107,7 +1114,8 @@
           "read_attempts": 2,
           "flags": [],
           "sources": [
-            "official_solution_Q5"
+            "official_solution_MC-5",
+            "lecture_notes_p96"
           ],
           "samples": [
             7,
@@ -1156,9 +1164,9 @@
           "score": 3,
           "max": 3,
           "status": "ok",
-          "feedback": "Correct: the statement is false, and you marked ב (לא נכון).",
-          "justification": "Official solution says the alternating partial sum divided by n^2 tends to 0, so the claim \"= 2/3\" is false; the student's final mark matches.",
-          "confidence": 0.99,
+          "feedback": "Correct: the statement is false, and you marked ב (False).",
+          "justification": "Official solution says the partial sum divided by n^2 tends to 0, so the claim '= 2/3' is false; the student selected False.",
+          "confidence": 1,
           "question_id": "TF-1",
           "subscores": [
             {
@@ -1171,7 +1179,9 @@
           "flags": [],
           "sources": [
             "official_solution_TF-1",
-            "lecture_notes_p41"
+            "lecture_notes_p41",
+            "lecture_notes_p43",
+            "lecture_notes_p96"
           ],
           "samples": [
             3,
@@ -1195,15 +1205,15 @@
           "hits": [
             {
               "page": 39,
-              "score": 0.629626691
+              "score": 0.62993443
             },
             {
               "page": 43,
-              "score": 0.629595101
+              "score": 0.629815936
             },
             {
               "page": 25,
-              "score": 0.626496196
+              "score": 0.627403498
             }
           ]
         },
@@ -1220,13 +1230,13 @@
           "score": 3,
           "max": 3,
           "status": "ok",
-          "feedback": "Correct mark. The statement is true, and you selected א (True).",
-          "justification": "Official solution says the statement is true; student marked א, which corresponds to True.",
+          "feedback": "Correct answer: you marked א, which means True, matching the statement.",
+          "justification": "Official solution says the statement is true; the student's final mark is א (True).",
           "confidence": 0.99,
           "question_id": "TF-2",
           "subscores": [
             {
-              "part": "a",
+              "part": "item",
               "score": 3,
               "max": 3
             }
@@ -1234,9 +1244,7 @@
           "read_attempts": 1,
           "flags": [],
           "sources": [
-            "official_solution_TF-2",
-            "hedva1_p43",
-            "hedva1_p39"
+            "official_solution_TF-2"
           ],
           "samples": [
             3,
@@ -1285,13 +1293,13 @@
           "score": 3,
           "max": 3,
           "status": "ok",
-          "feedback": "Correct mark. The statement is false, and you marked \"ב\" (לא נכון).",
-          "justification": "Official solution says the claim is false because only two subsequences are controlled; the student's final circled answer matches False.",
+          "feedback": "Correctly marked ב, which means False. The statement is false because only two subsequences are controlled and the other terms may oscillate.",
+          "justification": "Official solution says the claim is false; the student's final mark ב corresponds to לא נכון.",
           "confidence": 0.99,
           "question_id": "TF-3",
           "subscores": [
             {
-              "part": "a",
+              "part": "full",
               "score": 3,
               "max": 3
             }
@@ -1299,7 +1307,8 @@
           "read_attempts": 1,
           "flags": [],
           "sources": [
-            "official_solution_TF-3"
+            "official_solution_TF-3",
+            "lecture_notes_p31"
           ],
           "samples": [
             3,
@@ -1348,13 +1357,13 @@
           "score": 3,
           "max": 3,
           "status": "ok",
-          "feedback": "Correct answer: you marked א, which means True/נכון, matching the official solution. All-or-nothing item, so full credit.",
-          "justification": "Official solution says the statement is True; student’s final clean mark is א (True).",
-          "confidence": 0.99,
+          "feedback": "Correct answer: you marked א, which means True, matching the statement.",
+          "justification": "Official solution says the statement is True; the student selected א (True).",
+          "confidence": 1,
           "question_id": "TF-4",
           "subscores": [
             {
-              "part": "main",
+              "part": "single",
               "score": 3,
               "max": 3
             }
@@ -1362,8 +1371,8 @@
           "read_attempts": 1,
           "flags": [],
           "sources": [
-            "OFFICIAL-SOLUTION-TF-4",
-            "COURSE-MATERIAL-p61"
+            "official_solution_TF-4",
+            "course_notes_p61"
           ],
           "samples": [
             3,
@@ -1387,15 +1396,15 @@
           "hits": [
             {
               "page": 59,
-              "score": 0.681371868
+              "score": 0.681441
             },
             {
               "page": 61,
-              "score": 0.680153489
+              "score": 0.680274904
             },
             {
               "page": 60,
-              "score": 0.665918
+              "score": 0.666053772
             }
           ]
         },
@@ -1412,13 +1421,13 @@
           "score": 3,
           "max": 3,
           "status": "ok",
-          "feedback": "Correct answer: the statement is true, and you marked א, which corresponds to נכון (True).",
-          "justification": "Official solution says the statement is true; the student's final mark א matches נכון.",
+          "feedback": "Correct answer: you marked א, which corresponds to True. The statement is true because existence of the right derivative implies right-continuity.",
+          "justification": "Official solution marks the statement True; student selected א (True).",
           "confidence": 0.99,
           "question_id": "TF-5",
           "subscores": [
             {
-              "part": "main",
+              "part": "answer",
               "score": 3,
               "max": 3
             }
@@ -1427,7 +1436,7 @@
           "flags": [],
           "sources": [
             "official_solution_TF-5",
-            "lecture_notes_p60"
+            "hedva1_p60"
           ],
           "samples": [
             3,
@@ -1442,7 +1451,7 @@
       }
     ],
     "meta": {
-      "total": 88.0,
+      "total": 87.0,
       "max": 100,
       "questions": [
         {
@@ -1452,7 +1461,7 @@
           "max": 10,
           "status": "ok",
           "mark": "✓",
-          "feedback": "Correct monotonicity method: you defined the two comparison functions, checked the endpoints at 0, computed the derivatives correctly, and established the needed sign on [0, \\pi/2]. Therefore both inequalities follow. Minor wording/legibility issues do not affect the proof."
+          "feedback": "Correct monotonicity proof for both bounds: you checked F(0)=0, computed the right derivative, showed F'≤0 for the upper bound, then defined G(x)=ln(1+2sin^2 x)-sin^2(x)/2, found G(0)=0, and showed G'≥0 for the lower bound. Full credit."
         },
         {
           "id": "Q1b",
@@ -1461,7 +1470,7 @@
           "max": 10,
           "status": "ok",
           "mark": "✓",
-          "feedback": "Correct proof: you multiplied the part (a) inequality by sin x \\u2265 0, integrated over [0, \\u03c0/2], and computed both bounds correctly. The lower bound becomes 1/3 and the upper bound becomes 4."
+          "feedback": "Correct argument: you multiplied the bound from part (a) by sin x 0 on [0,c0b0/2], integrated, and computed both boundary integrals correctly. Full credit."
         },
         {
           "id": "Q2a",
@@ -1470,7 +1479,7 @@
           "max": 5,
           "status": "partial",
           "mark": "4.0/5",
-          "feedback": "You stated the core idea of the Intermediate Value Theorem correctly: continuity on [a,b] and existence of c with f(c)=\\alpha. The loss is that you wrote it only for the special case f(a)<\\alpha<f(b); the theorem must be stated for EVERY t between f(a) and f(b) (also when the order is reversed)."
+          "feedback": "You stated the core conclusion of the Intermediate Value Theorem correctly, but you only wrote the special case f(a) < α < f(b). The theorem must be stated for every t between f(a) and f(b), not just for one ordered case."
         },
         {
           "id": "Q2b",
@@ -1479,25 +1488,25 @@
           "max": 10,
           "status": "ok",
           "mark": "✓",
-          "feedback": "Correct solution: you defined the function, checked evenness, computed F'(x)=x(2+\\cos x), and used that F is increasing on [0,\\infty) with F(0)=1>0. This implies F(x)>0 for all x, so the equation has no real solutions."
+          "feedback": "Correct solution: you defined the function, found that it is even, computed F'(x)=x(2+Cos x), and concluded it is increasing on [0,infty). With F(0)=1, this implies F(x)\\ge 1>0, so there are no real solutions. Your final answer matches the official result."
         },
         {
           "id": "Q3",
           "title": "Q3 · Taylor approximation with Lagrange remainder",
-          "score": 11,
+          "score": 10,
           "max": 15,
           "status": "escalate",
           "mark": "?",
-          "feedback": "You used a Taylor-remainder method correctly in spirit and reached the correct approximation 83/24, so you deserve substantial credit. However, the setup is inconsistent: you first treat the function as f(x)=\\sqrt{x} around 9, then later effectively switch to the correct problem for \\sqrt{12} via the expansion around 9. The remainder estimates shown are not cleanly justified, and the final line contains an incorrect/garbled expression before the correct result. Partial credit for the correct idea and final value, but not full credit for the earlier setup and notation errors."
+          "feedback": "Your solution uses the correct Taylor idea and reaches the right approximation, but the work has several serious issues in the setup and justification. You switched inconsistently between \\(f(x)=\\sqrt{x}\\) and the needed expansion around 9 for \\(\\sqrt{12}=\\sqrt{9+3}\\), and some remainder formulas are written incorrectly. In particular, the bounds for the error are not cleanly or correctly justified, and some lines are ambiguous/incorrect. Full credit is not justified. Partial credit is awarded for the correct final approximation \\(83/24\\) and the general Taylor-method approach."
         },
         {
           "id": "MC-1",
           "title": "MC-1 · limit of a 1^infty indeterminate form",
           "score": 0,
           "max": 7,
-          "status": "escalate",
-          "mark": "?",
-          "feedback": "Could not produce a reliable grade (unparseable model output or missing official solution). Sent to a human teacher."
+          "status": "partial",
+          "mark": "0/7",
+          "feedback": "The final marked option is ג, whose content is 2. The correct value is 1, so the answer is wrong. The crossed-out previous answer ב is ignored; only the final clean mark counts."
         },
         {
           "id": "MC-2",
@@ -1506,7 +1515,7 @@
           "max": 7,
           "status": "ok",
           "mark": "✓",
-          "feedback": "Correct choice: option ג matches the content \"I converges and II diverges.\""
+          "feedback": "Correct choice. The marked option ג matches the official result: I converges and II diverges."
         },
         {
           "id": "MC-3",
@@ -1515,7 +1524,7 @@
           "max": 7,
           "status": "ok",
           "mark": "✓",
-          "feedback": "Correct choice: the series converges exactly on the open interval 0 < x < 2, so option ה matches the official answer content."
+          "feedback": "Correct choice: the series converges exactly for the open interval 0<x<2, so option ה matches the official answer content."
         },
         {
           "id": "MC-4",
@@ -1524,7 +1533,7 @@
           "max": 7,
           "status": "ok",
           "mark": "✓",
-          "feedback": "Correct choice: the statement \"there exists c in [0,1] such that f(sin c)=c\" is true, so marking א earns full credit."
+          "feedback": "Correct choice. The marked option A matches the true statement: there exists c in [0,1] such that f(sin c)=c."
         },
         {
           "id": "MC-5",
@@ -1533,7 +1542,7 @@
           "max": 7,
           "status": "ok",
           "mark": "✓",
-          "feedback": "Correct. The marked option content is 2, which matches the integral value."
+          "feedback": "Correct choice: you marked ג, whose content is 2, matching the value of the integral. No deduction."
         },
         {
           "id": "TF-1",
@@ -1542,7 +1551,7 @@
           "max": 3,
           "status": "ok",
           "mark": "✓",
-          "feedback": "Correct: the statement is false, and you marked ב (לא נכון)."
+          "feedback": "Correct: the statement is false, and you marked ב (False)."
         },
         {
           "id": "TF-2",
@@ -1551,7 +1560,7 @@
           "max": 3,
           "status": "ok",
           "mark": "✓",
-          "feedback": "Correct mark. The statement is true, and you selected א (True)."
+          "feedback": "Correct answer: you marked א, which means True, matching the statement."
         },
         {
           "id": "TF-3",
@@ -1560,7 +1569,7 @@
           "max": 3,
           "status": "ok",
           "mark": "✓",
-          "feedback": "Correct mark. The statement is false, and you marked \"ב\" (לא נכון)."
+          "feedback": "Correctly marked ב, which means False. The statement is false because only two subsequences are controlled and the other terms may oscillate."
         },
         {
           "id": "TF-4",
@@ -1569,7 +1578,7 @@
           "max": 3,
           "status": "ok",
           "mark": "✓",
-          "feedback": "Correct answer: you marked א, which means True/נכון, matching the official solution. All-or-nothing item, so full credit."
+          "feedback": "Correct answer: you marked א, which means True, matching the statement."
         },
         {
           "id": "TF-5",
@@ -1578,7 +1587,7 @@
           "max": 3,
           "status": "ok",
           "mark": "✓",
-          "feedback": "Correct answer: the statement is true, and you marked א, which corresponds to נכון (True)."
+          "feedback": "Correct answer: you marked א, which corresponds to True. The statement is true because existence of the right derivative implies right-continuity."
         }
       ],
       "source": "Sample booklet 2 — 104041 2024 Winter Moed A, second student (18-page scan, human-graded 93/100)",
@@ -1588,21 +1597,20 @@
       "exam_source": "manual",
       "aborted": false,
       "cost": {
-        "Grader": 0.2633,
-        "Reflector": 0.008,
-        "total": 0.2713
+        "Grader": 0.2632,
+        "Reflector": 0.0079,
+        "total": 0.2711
       },
       "gradebook": {
         "status": "provisional",
-        "awarded": 88.0,
+        "awarded": 87.0,
         "possible": 100,
-        "percent": 88.0,
+        "percent": 87.0,
         "auto_subtotal": 77.0,
-        "total_including_unreviewed": 88.0,
+        "total_including_unreviewed": 87.0,
         "missing_questions": [],
         "escalated": [
-          "Q3",
-          "MC-1"
+          "Q3"
         ],
         "ta_review": [
           {
@@ -1614,18 +1622,13 @@
             "q": "Q2b",
             "max": 10,
             "reason": "lone_outlier_ignored"
-          },
-          {
-            "q": "MC-1",
-            "max": 7,
-            "reason": "escalate"
           }
         ],
         "manifest_mismatch": false,
         "cost": {
-          "Grader": 0.2633,
-          "Reflector": 0.008,
-          "total": 0.2713
+          "Grader": 0.2632,
+          "Reflector": 0.0079,
+          "total": 0.2711
         },
         "narrative": null
       },
