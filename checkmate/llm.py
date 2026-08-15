@@ -51,7 +51,19 @@ def chat(system: str, user: str, images: list[ImageInput] | None = None,
         "completion": getattr(u, "completion_tokens", 0) or 0,
         "total": getattr(u, "total_tokens", 0) or 0,
     }
-    return (resp.choices[0].message.content or ""), usage
+    text = resp.choices[0].message.content or ""
+    # The mini sometimes emits C0 control characters in place of LaTeX backslash commands
+    # (\x1asqrt{12} for \sqrt{12}, \x17_0^1 for \int_0^1); they render as tofu boxes and
+    # pollute stored grades. Recover the recognizable patterns, drop the rest (keep \n\t).
+    # The model also writes them as JSON escapes (""), which survive a raw-byte strip
+    # and get re-created by json.loads later -- normalize those to a raw byte first.
+    text = re.sub(r"\\u00(?:0[0-8bcBC]|0[eE]|1[0-9a-fA-F])", "\x1a", text)
+    _C0 = r"[\x00-\x08\x0b\x0c\x0e-\x1f]"
+    text = re.sub(_C0 + r"(?=sqrt|int|frac|sum|lim|pi\b)", "\\\\", text)
+    text = re.sub(_C0 + r"(?=_)", r"\\int", text)   # \x17_0^1 -> \int_0^1
+    text = re.sub(_C0 + r"(?=\d)", "√", text)        # \x1a12  -> √12
+    text = re.sub(_C0, "", text)
+    return text, usage
 
 
 def embed(inputs: str | list[str]) -> list[list[float]]:

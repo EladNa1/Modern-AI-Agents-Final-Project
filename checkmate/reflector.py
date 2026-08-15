@@ -22,7 +22,8 @@ Choose EXACTLY ONE action:
 - ESCALATE — the work cannot be graded fairly (ambiguous handwriting or genuine uncertainty); send to a human teacher. Never guess.
 
 Output ONLY a JSON object, no prose, no code fences:
-{"action":"APPROVE|REVISE|ESCALATE","score":<number 0..max, or null>,"feedback":"<corrected student-facing feedback if REVISE, else empty>","note":"<one line: why>","confidence":<0..1>}"""
+{"action":"APPROVE|REVISE|ESCALATE","score":<number 0..max, or null>,"feedback":"<corrected student-facing feedback if REVISE, else empty>","note":"<one line: why>","confidence":<0..1>}
+Write "feedback" and "note" in ENGLISH, always (student's Hebrew may be quoted verbatim)."""
 
 
 def run_reflector(q: ParsedFragment, grade: Grade, retrieved: Retrieved | None, log: StepLog) -> Reflection:

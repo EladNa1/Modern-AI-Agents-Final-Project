@@ -1,12 +1,12 @@
 # CheckMate — stated examples (captured transcripts)
 
-Captured against `http://127.0.0.1:8123` on 2026-08-15 14:51.
+Captured against `http://127.0.0.1:8123` on 2026-08-15 15:34.
 
 ## Grade a real scanned booklet (full agent, cached vision)
 
 - prompt: `Grade sample booklet 1`
 - expected: Real Router→Retriever→Grader→Reflector run; per-question grades + trace.
-- observed: status `ok`, 56 steps, 132s, est. cost $0.2485
+- observed: status `ok`, 57 steps, 139s, est. cost $0.2553
 - transcript: `01_grade_sample_booklet.json`
 
 ## Out-of-domain request — polite refusal, zero tokens
@@ -27,5 +27,5 @@ Captured against `http://127.0.0.1:8123` on 2026-08-15 14:51.
 
 - prompt: `Grade sample booklet 2`
 - expected: Real run on the second student's work; human cover total is 93/100.
-- observed: status `ok`, 58 steps, 139s, est. cost $0.2532
+- observed: status `ok`, 58 steps, 137s, est. cost $0.2599
 - transcript: `04_grade_sample_booklet_2.json`

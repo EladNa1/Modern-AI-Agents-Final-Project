@@ -252,9 +252,16 @@
     function beautifyMath(s) {
       if (!s) return s;
       return s
+        .replace(/[\u0000-\u0008\u000b\u000c\u000e-\u001f](?=_)/g, "∫").replace(/[\u0000-\u0008\u000b\u000c\u000e-\u001f](?=\d)/g, "√").replace(/[\u0000-\u0008\u000b\u000c\u000e-\u001f]/g, " ")   // stray control chars from the model
         .replace(/\\\(|\\\)|\\\[|\\\]/g, " ")
-        .replace(/\bint_/g, "∫_").replace(/\bsqrt/g, "√")
-        .replace(/\bpi\b/g, "π").replace(/\binfty\b/g, "∞").replace(/\balpha\b/g, "α")
+        .replace(/\\frac\{([^{}]+)\}\{([^{}]+)\}/g, "($1)/($2)")
+        .replace(/\\frac(\d)(\d)/g, "$1/$2")
+        .replace(/\\(sin|cos|tan|ln|log)\b/g, "$1")
+        .replace(/\\approx/g, " ≈ ").replace(/\\cdot/g, "·").replace(/\\times/g, "×")
+        .replace(/\\le\b/g, " ≤ ").replace(/\\ge\b/g, " ≥ ").replace(/\\ne(q)?\b/g, " ≠ ")
+        .replace(/\\int\b/g, "∫").replace(/\\sum\b/g, "Σ").replace(/\\(left|right)\b/g, "")
+        .replace(/\bint_/g, "∫_").replace(/\\?sqrt\{(\d+)\}/g, "√$1").replace(/\\?sqrt\{([^{}]+)\}/g, "√($1)").replace(/\\?\bsqrt/g, "√")
+        .replace(/\\?\bpi\b/g, "π").replace(/\\?\binfty\b/g, "∞").replace(/\\?\balpha\b/g, "α")
         .replace(/<=/g, " ≤ ").replace(/>=/g, " ≥ ").replace(/!=/g, " ≠ ")
         .replace(/->/g, " → ").replace(/\s{2,}/g, " ");
     }

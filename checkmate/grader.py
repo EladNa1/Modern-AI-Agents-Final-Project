@@ -217,7 +217,9 @@ Return ONLY a JSON object, no prose, no code fences:
   "sources": ["<ids of retrieved solution/lecture chunks actually used>"]
 }
 Rules: status "ok" only if score == max; "partial" if 0 < score < max; "escalate" only
-under E1-E3 above (then score/subscores may be null). Sub-part scores must sum to `score`."""
+under E1-E3 above (then score/subscores may be null). Sub-part scores must sum to `score`.
+Write "feedback" and "justification" in ENGLISH, always — you may quote the student's
+Hebrew verbatim when pointing at a specific line, but the surrounding sentences are English."""
 
 
 def build_grader_user(q: ParsedFragment, retrieved: Retrieved | None,
