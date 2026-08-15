@@ -105,31 +105,31 @@
     },
     {
       "id": "Q1",
-      "text": "שאלה 1 (7 נק׳)\nהגבול של הפונקציה: lim_{x→0} \\left((\\sin x / x)^{x/\\ln(1+x)}\\right) הוא\nא. 0\nב. 1\nג. 2\nד. ∞\nה. −∞\nמסומן: ב",
-      "confidence": 0.93,
+      "text": "הגבול של הפונקציה: \\(\\lim_{x\\to 0}\\left(\\frac{\\sin x}{x}\\right)^{\\frac{x}{\\ln(1+x)}}\\) הוא\nא. 0\nב. 1\nג. 2\nד. \\(\\infty\\)\nה. \\(-\\infty\\)\nמסומן: ג (תשובה קודמת ב נמחקה בשרבוט)",
+      "confidence": 0.86,
       "latex": "\\lim_{x\\to 0}\\left(\\frac{\\sin x}{x}\\right)^{\\frac{x}{\\ln(1+x)}}",
       "page": 13,
       "bbox": null
     },
     {
       "id": "Q2",
-      "text": "שאלה 2 (7 נק׳)\nנתונים שני הטורים הבאים\nI = \\sum_{n=2}^{\\infty} \\sin^2\\left(\\frac{\\pi}{2}-\\arctan(n)\\right)\nו-\nII = \\sum_{n=1}^{\\infty} \\frac{\\tan\\left(1+\\frac{1}{n}\\right)}{\\ln\\left(1+\\frac{1}{n}\\right)}\nא. שניהם מתכנסים\nב. שניהם מתבדרים\nג. I מתכנס II מתבדר\nד. II מתכנס I מתבדר\nמסומן: ג",
-      "confidence": 0.91,
+      "text": "נתונים שני הטורים הבאים: I = \\(\\sum_{n=2}^{\\infty} \\sin^2\\left(\\frac{\\pi}{2}-\\arctan(n)\\right)\\) ו- II = \\(\\sum_{n=1}^{\\infty} \\frac{\\tan(1+\\frac{1}{n})}{\\ln(1+\\frac{1}{n})}\\)\nא. שניהם מתכנסים\nב. שניהם מתבדרים\nג. I מתכנס II מתבדר\nד. II מתכנס I מתבדר\nמסומן: ג",
+      "confidence": 0.9,
       "latex": "I=\\sum_{n=2}^{\\infty}\\sin^2\\left(\\frac{\\pi}{2}-\\arctan(n)\\right),\\qquad II=\\sum_{n=1}^{\\infty}\\frac{\\tan\\left(1+\\frac{1}{n}\\right)}{\\ln\\left(1+\\frac{1}{n}\\right)}",
       "page": 13,
       "bbox": null
     },
     {
       "id": "Q3",
-      "text": "שאלה 3 (7 נק׳)\nהטור \\sum_{n=1}^{\\infty} \\ln(n)(x-1)^n מתכנס עבור ה-x-ים הבאים\nא. 0 ≤ x ≤ 2\nב. 0 ≤ x < 2\nג. 0 < x ≤ 2\nד. −∞ < x < ∞\nה. 0 < x < 2\nמסומן: א",
-      "confidence": 0.94,
+      "text": "הטור \\(\\sum_{n=1}^{\\infty} \\ln(n)(x-1)^n\\) מתכנס עבור ה-x-ים הבאים\nא. \\(0\\le x\\le 2\\)\nב. \\(0\\le x<2\\)\nג. \\(0<x\\le 2\\)\nד. \\(-\\infty<x<\\infty\\)\nה. \\(0<x<2\\)\nמסומן: ה",
+      "confidence": 0.87,
       "latex": "\\sum_{n=1}^{\\infty}\\ln(n)(x-1)^n",
       "page": 13,
       "bbox": null
     },
     {
       "id": "Q4",
-      "text": "שאלה 4 (7 נק׳)\nנתונה פונקציה רציפה f:[0,1]→[0,1] אזי\nא. קיימת נקודה c ∈ [0,1] כך ש- f(sin(c)) = c\nב. קיימת נקודה c ∈ [0,1] כך ש- f^2(c)\\,tan(c+1) = c\nג. קיימת נקודה c ∈ [0,1] כך ש- f(c)+1 = c\nד. קיימת נקודה c ∈ [0,1] כך ש- f(c)\\ln(c+3) = c\nה. קיימת נקודה c ∈ [0,1] כך ש- e^c f(c) = c\nמסומן: א",
+      "text": "נתונה פונקציה רציפה \\(f:[0,1]\\to[0,1]\\) אזי\nא. קיימת נקודה \\(c\\in[0,1]\\) כך ש- \\(f(\\sin(c))=c\\)\nב. קיימת נקודה \\(c\\in[0,1]\\) כך ש- \\(f^2(c)\\tan(c+1)=c\\)\nג. קיימת נקודה \\(c\\in[0,1]\\) כך ש- \\(f(c)+1=c\\)\nד. קיימת נקודה \\(c\\in[0,1]\\) כך ש- \\(f(c)\\ln(c+3)=c\\)\nה. קיימת נקודה \\(c\\in[0,1]\\) כך ש- \\(e^c f(c)=c\\)\nמסומן: א",
       "confidence": 0.89,
       "latex": "f:[0,1]\\to[0,1]",
       "page": 13,
@@ -137,9 +137,9 @@
     },
     {
       "id": "Q5",
-      "text": "שאלה 5 (7 נק׳)\nערך האינטגרל \\int_{1}^{e} \\frac{dx}{x(\\ln(0.5x))}\nא. 0\nב. 1\nג. 2\nד. 3\nה. 4\nמסומן: ג",
-      "confidence": 0.95,
-      "latex": "\\int_{1}^{e}\\frac{dx}{x\\ln(0.5x)}",
+      "text": "ערך האינטגרל \\(\\int_{1}^{e} \\frac{dx}{x(\\ln^{0.5}(x))}\\)\nא. 0\nב. 1\nג. 2\nד. 3\nה. 4\nמסומן: ג",
+      "confidence": 0.91,
+      "latex": "\\int_{1}^{e}\\frac{dx}{x(\\ln^{0.5}(x))}",
       "page": 13,
       "bbox": null
     },
@@ -191,5 +191,6 @@
       "page": 17,
       "bbox": null
     }
-  ]
+  ],
+  "marks_provenance": "Page-13 student marks verified manually against the 200-DPI scan and the human grader's red-pen checkmarks/tally (2026-08-15); the course vision model misread the cancelled mark on Q1 and the circled letter on Q3."
 }

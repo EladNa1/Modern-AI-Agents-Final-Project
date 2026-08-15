@@ -45,6 +45,11 @@ Rules:
 - For each question, give a confidence in [0,1] for how legible/certain the transcription is. Ambiguous or overwritten handwriting → lower confidence.
 - For crossed-out or unreadable parts, write [illegible] inline.
 - Multiple-choice and True/False items: the student's ANSWER is the circled/marked option — record it explicitly at the end of the item's text as "מסומן: <letter>" (e.g. "מסומן: ג"). Look for circles, checkmarks, or any deliberate mark on an option letter. If no option is marked, write "מסומן: אין". The printed options alone are NOT an answer.
+  READ THE MARKS CAREFULLY, option by option across the whole row/list:
+  * A SCRIBBLED-OUT / crossed-out / blacked-over mark is a CANCELLED answer — it is NOT the student's choice. The final answer is the remaining CLEAN circle. When you see both, record the clean one and add "(תשובה קודמת נמחקה)".
+  * Match each circle to the letter it actually surrounds — in a crowded RTL options row it is easy to attach a circle to the neighbouring option; double-check which option's text sits inside the circle.
+  * If two options carry clean marks, or you cannot tell which option is marked, write "מסומן: לא ברור" and give the fragment LOW confidence (<= 0.5) so it is escalated to a human instead of guessed.
+  * Ignore the grader's red-pen ✓/✗ marks entirely — they are not the student's answer.
 - Re-express the mathematics in LaTeX in the "latex" field where it helps; keep the human-readable transcription in "text".
 - If the page shows the exam's identifying information — usually the cover sheet: the course number (e.g. 104041), the exam date, and the מועד (A/B) — report it in "exam_meta". Include only fields you can actually read; omit "exam_meta" entirely on pages that show none of it (most answer pages).
 

@@ -154,6 +154,19 @@ deliverable -> 9/15, partial.
 Feedback: "Remainder bound correct. T2 must include 1/2!: the x^2 coefficient is
 f''(0)/2 = -1/216, not -1/108; this changes the final approximation."
 
+--- Example 4b (FULL credit despite untidy notation — calibrated on a red-pen 15/15) ---
+Same Q3 (sqrt(12), 15 pts), different student: computes the correct T2(x)=3+x/6-x^2/216,
+evaluates T2(3)=83/24 correctly, and bounds the remainder below 1/100 with the right
+derivative — but the write-up is untidy: remainder labels drift between R_0/R_1/R_2, one
+intermediate line restates the general Taylor formula imprecisely, and steps are out of
+order. Every REQUIRED quantity (coefficients, evaluation, remainder bound, conclusion) is
+present and mathematically correct.
+Grading: 15/15, ok. Notation drift and imprecise side-remarks are NOT deductible when the
+required content is complete and correct (rule 8: no nameable missing/incorrect required
+step -> full marks). The human grader awarded full credit here.
+Feedback: "Correct polynomial, evaluation, and remainder bound — full credit. Tip: keep
+one consistent remainder symbol."
+
 --- Example 5 (do NOT escalate) ---
 Student's page is messy; on Pass 1 a key exponent is unreadable, but Pass 2 (zoom)
 shows "(c+9)^{5/2}" and the surrounding algebra confirms it.
