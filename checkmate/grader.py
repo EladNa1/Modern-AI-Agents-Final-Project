@@ -320,7 +320,7 @@ def run_grader(q: ParsedFragment, retrieved: Retrieved | None, log: StepLog,
             truncated = True
         grades.append(_normalize_grade(q.id, max_points, q.confidence, text))
 
-    final = _aggregate_grades(grades, max_points)
+    final = _aggregate_grades(grades, max_points, is_tf_mc=_is_tf_mc(qid))
     if truncated and "output_truncated" not in final.flags:
         final.flags.append("output_truncated")
     log.add("Grader", GRADER_SYSTEM, user,
@@ -330,7 +330,7 @@ def run_grader(q: ParsedFragment, retrieved: Retrieved | None, log: StepLog,
     return final
 
 
-def _aggregate_grades(grades: list[Grade], max_points: int) -> Grade:
+def _aggregate_grades(grades: list[Grade], max_points: int, is_tf_mc: bool = False) -> Grade:
     """Reconcile N independent grades of one question. The median is the consensus; if the
     samples disagree by more than a tolerance band the mini was unstable, so escalate (flag
     `grader_disagreement`) rather than trust any single score. Confidence is capped by how
@@ -346,6 +346,23 @@ def _aggregate_grades(grades: list[Grade], max_points: int) -> Grade:
     # flags but rounding-level jitter does not.
     threshold = max(CONFIG.disagreement_floor, CONFIG.disagreement_frac * max_points)
     disagree = spread > threshold
+
+    # Lone-outlier tolerance, OPEN questions only: when every sample but ONE agrees on
+    # FULL marks, the outlier is sampling noise (a stochastic misread), not a real
+    # disagreement — a "10/10, please review" card helps no one. The range check is
+    # maximally sensitive to a single outlier, so trim it here. Safety is preserved:
+    # (a) the Reflector still reviews every open-question grade against the retrieved
+    # solution and can revise/escalate, and (b) T/F + MC keep the strict rule — this
+    # session produced a real [0,7,7] where the MAJORITY was wrong, so all-or-nothing
+    # items never get outlier forgiveness.
+    if disagree and not is_tf_mc and len(grades) >= 3:
+        at_max = [g for g in ordered if g.score == max_points]
+        if len(at_max) == len(ordered) - 1:
+            median = at_max[0]
+            spread = 0.0
+            disagree = False
+            if "lone_outlier_ignored" not in median.flags:
+                median.flags.append("lone_outlier_ignored")
 
     agreement = 1.0 - (spread / max_points) if max_points else 1.0
     confidence = max(0.0, min(median.confidence, agreement))
@@ -407,8 +424,8 @@ def _normalize_grade(qid: str, max_points: int, parser_confidence: float, text: 
     if not raw or max_points == 0:
         return Grade(
             id=qid, score=0, max=max_points, status="escalate",
-            feedback="Could not produce a reliable grade (unparseable model output or missing "
-                     "official solution). Sent to a human teacher.",
+            feedback="The automated grader could not reach a reliable score for this item, "
+                     "so it was sent to a human teacher for review rather than guessed.",
             justification="Escalated — not graded automatically.", confidence=0,
             question_id=qid, subscores=[], read_attempts=1,
             flags=(["retrieval_weak"] if max_points == 0 else []), sources=[],
