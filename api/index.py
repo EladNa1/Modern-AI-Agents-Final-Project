@@ -57,7 +57,7 @@ async def api_exams():
 async def team_info():
     return {
         "group_batch_order_number": "2_09",
-        "team_name": "CheckMate",
+        "team_name": "הסוכנים",
         "students": [
             {"name": "Elad Nahalieli", "email": "nelad@campus.technion.ac.il"},
             {"name": "Shiri Haboob", "email": "shiri.haboob@campus.technion.ac.il"},
