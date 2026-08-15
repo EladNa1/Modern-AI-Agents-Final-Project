@@ -99,45 +99,45 @@
       "points": 7,
       "topic": "limit of a 1^infty indeterminate form",
       "problem": "אמריקאי (7 נק'): הגבול של הפונקציה  lim_{x->0} ( sin(x)/x )^{ x / ln(1+x) }  הוא: א. -inf  ב. 2  ג. 1  ד. inf  ה. 0.",
-      "official_solution": "Base sin x / x -> 1, exponent x/ln(1+x) -> 1. With L the limit, ln L = lim (x/ln(1+x)) * ln(sin x / x) = 1 * 0 = 0, so L = 1.",
-      "final_answer": "ג (1).",
-      "notes": "All-or-nothing; based only on the circled option."
+      "official_solution": "Base sin x / x -> 1, exponent x/ln(1+x) -> 1. With L the limit, ln L = lim (x/ln(1+x)) * ln(sin x / x) = 1 * 0 = 0, so L = 1. The correct answer VALUE is 1.",
+      "final_answer": "The value 1.",
+      "notes": "All-or-nothing. Option LETTERS are shuffled between printed forms of this exam — grade by matching the CONTENT of the circled option to this answer, never by letter."
     },
     "mc2": {
       "id": "MC-2",
       "points": 7,
       "topic": "convergence of two series",
       "problem": "אמריקאי (7 נק'): נתונים I = sum_{n=2}^inf sin^2( pi/2 - arctan n )  ו-  II = sum_{n=1}^inf tan(1+1/n)/ln(1+1/n). אזי: א. I מתכנס II מתבדר  ב. II מתכנס I מתבדר  ג. שניהם מתכנסים  ד. שניהם מתבדרים.",
-      "official_solution": "sin(pi/2 - arctan n) = cos(arctan n) = 1/sqrt(1+n^2), so I = sum 1/(1+n^2) converges. In II the terms tend to tan(1)/ln(1+1/n); since ln(1+1/n) ~ 1/n -> 0 and tan 1 != 0, the terms ~ n tan 1 -> inf, so II diverges.",
-      "final_answer": "א (I converges, II diverges).",
-      "notes": "All-or-nothing; based only on the circled option."
+      "official_solution": "sin(pi/2 - arctan n) = cos(arctan n) = 1/sqrt(1+n^2), so I = sum 1/(1+n^2) converges. In II the terms tend to tan(1)/ln(1+1/n); since ln(1+1/n) ~ 1/n -> 0 and tan 1 != 0, the terms ~ n tan 1 -> inf, so II diverges. The correct answer CONTENT is: I converges and II diverges.",
+      "final_answer": "I converges, II diverges.",
+      "notes": "All-or-nothing. Option LETTERS are shuffled between printed forms of this exam — grade by matching the CONTENT of the circled option to this answer, never by letter."
     },
     "mc3": {
       "id": "MC-3",
       "points": 7,
       "topic": "interval of convergence of a power series",
       "problem": "אמריקאי (7 נק'): הטור  sum_{n=1}^inf ln(n) (x-1)^n  מתכנס עבור ה-x-ים הבאים: א. 0<=x<=2  ב. 0<=x<2  ג. 0<x<=2  ד. -inf<x<inf  ה. 0<x<2.",
-      "official_solution": "Radius: limsup ln(n)^{1/n} = 1, so R = 1 and |x-1| < 1, i.e. 0 < x < 2. At both endpoints the general term ln(n)(+-1)^n does not tend to 0, so the series diverges there; the interval is open.",
-      "final_answer": "ה (0 < x < 2).",
-      "notes": "All-or-nothing; based only on the circled option."
+      "official_solution": "Radius: limsup ln(n)^{1/n} = 1, so R = 1 and |x-1| < 1, i.e. 0 < x < 2. At both endpoints the general term ln(n)(+-1)^n does not tend to 0, so the series diverges there; the interval is open. The correct answer CONTENT is the OPEN interval 0 < x < 2 — an option including either endpoint (0 <= x or x <= 2) is WRONG.",
+      "final_answer": "The open interval 0 < x < 2 (both endpoints excluded).",
+      "notes": "All-or-nothing. Option LETTERS are shuffled between printed forms of this exam — grade by matching the CONTENT of the circled option to this answer, never by letter."
     },
     "mc4": {
       "id": "MC-4",
       "points": 7,
       "topic": "fixed-point existence via IVT",
       "problem": "אמריקאי (7 נק'): נתונה פונקציה רציפה f:[0,1]->[0,1]. אזי: א. קיימת c ב-[0,1] כך ש- f^2(c) tan(c+1) = c  ב. ... f(c)+1 = c  ג. ... f(sin c) = c  ד. ... f(c) ln(c+3) = c  ה. ... e^c f(c) = c.",
-      "official_solution": "Option ג: let g(c)=f(sin c) - c. g(0)=f(0) >= 0 and g(1)=f(sin 1) - 1 <= 0 (since f <= 1); by the IVT there is c in [0,1] with f(sin c) = c. The other options can fail (e.g. f == 1 breaks ב, ד and ה).",
-      "final_answer": "ג (there exists c in [0,1] with f(sin c) = c).",
-      "notes": "All-or-nothing; based only on the circled option."
+      "official_solution": "The TRUE statement is: there exists c in [0,1] with f(sin c) = c. Proof: let g(c)=f(sin c) - c. g(0)=f(0) >= 0 and g(1)=f(sin 1) - 1 <= 0 (since f <= 1); by the IVT there is c in [0,1] with f(sin c) = c. Every other offered statement can fail (e.g. the constant function f == 1 breaks the f(c)+1=c, f(c)ln(c+3)=c and e^c f(c)=c variants).",
+      "final_answer": "The statement: there exists c in [0,1] with f(sin c) = c.",
+      "notes": "All-or-nothing. Option LETTERS are shuffled between printed forms of this exam — grade by matching the CONTENT of the circled option to this answer, never by letter."
     },
     "mc5": {
       "id": "MC-5",
       "points": 7,
       "topic": "definite integral by substitution",
       "problem": "אמריקאי (7 נק'): ערך האינטגרל  integral_1^e dx / ( x * (ln x)^{0.5} ): א. 4  ב. 3  ג. 2  ד. 1  ה. 0.",
-      "official_solution": "Substitute u = ln x, du = dx/x: integral_0^1 u^{-1/2} du = [ 2 sqrt(u) ]_0^1 = 2.",
-      "final_answer": "ג (2).",
-      "notes": "All-or-nothing; based only on the circled option."
+      "official_solution": "Substitute u = ln x, du = dx/x: integral_0^1 u^{-1/2} du = [ 2 sqrt(u) ]_0^1 = 2. The correct answer VALUE is 2.",
+      "final_answer": "The value 2.",
+      "notes": "All-or-nothing. Option LETTERS are shuffled between printed forms of this exam — grade by matching the CONTENT of the circled option to this answer, never by letter."
     }
   }
 }

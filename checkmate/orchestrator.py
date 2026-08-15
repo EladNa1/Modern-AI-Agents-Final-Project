@@ -68,9 +68,47 @@ def run_agent(images: list[ImageInput], instructions: str = "", source_label: st
                 f"exam_meta={parsed.exam_meta}",
                 {"exam": exam, "source": exam_source}, "Scope")
 
+        # Drop booklet boilerplate (cover / instructions / blank pages) BEFORE retrieval --
+        # it is not student work, and grading it would only emit a confusing "Unmatched
+        # work" escalation. Deterministic, zero LLM; the decision is logged.
+        kept = [f for f in parsed.fragments if not _is_boilerplate(f)]
+        dropped = [f.id for f in parsed.fragments if _is_boilerplate(f)]
+        if dropped:
+            log.add("Router", "Deterministic pre-filter: exclude non-answer booklet "
+                    "boilerplate (cover, instructions, blank pages) from grading.",
+                    f"fragments={len(parsed.fragments)}",
+                    {"dropped": dropped, "kept": len(kept), "llm_calls": 0}, "Scope")
+
         # Group the transcribed fragments by the exam question they actually answer -- the
         # Retriever matches each fragment on CONTENT, and that match defines a question here.
-        groups = _group_by_retrieved_question(parsed.fragments, log, exam)
+        fragments = _split_tf_fragments(kept, log)
+        groups = _group_by_retrieved_question(fragments, log, exam)
+
+        # Domain guard: no exam identity on the scan AND nothing matched the knowledge base
+        # -> this is not a Calculus 1 exam we know. Refuse politely INSTEAD of grading --
+        # spending grader/reflector tokens on out-of-domain content would only fabricate
+        # scores (the steps so far show the decision trail: parse -> retrieve -> refuse).
+        if not exam and not any(g["retrieved"] for g in groups):
+            log.add("Router",
+                    "Final scope check: is there any evidence this scan is a Calculus 1 exam "
+                    "(exam identity on the cover, or content matching the knowledge base)?",
+                    f"fragments={len(parsed.fragments)}, kb_matches=0, exam_meta={parsed.exam_meta}",
+                    {"in_scope": False, "decision": "REFUSE",
+                     "reason": "No exam identity detected and no fragment matched any known "
+                               "exam question -- refusing to grade out-of-domain content."},
+                    "Scope")
+            return {
+                "status": "ok", "error": None,
+                "response": (
+                    "This upload doesn't look like a Technion Calculus 1 exam I can grade: no "
+                    "exam identity was found on the scan, and none of its content matched any "
+                    "question in the course knowledge base.\n\nCheckMate only grades Calculus 1 "
+                    "(Hedva 1) exam booklets. If this IS such an exam, try a clearer scan of the "
+                    "full booklet (including the cover), or pick the exam manually and re-run."),
+                "steps": _steps(log),
+                "meta": {"mode": "refused", "source": source_label, "total": 0, "max": 0,
+                         "questions": [], "cost": log.cost_by_stage()},
+            }
 
         # GradeBook accumulates per-question entries; completion is judged against the KB
         # manifest (arithmetic), never the model -- so a total is never built on missing slots.
@@ -124,6 +162,65 @@ def run_agent(images: list[ImageInput], instructions: str = "", source_label: st
         # Any gateway/parse failure -> a valid error payload (never raise to the route).
         return {"status": "error", "error": "The agent failed while grading: " + str(err),
                 "response": None, "steps": _steps(log)}
+
+
+# Booklet boilerplate the Parser faithfully transcribes but which is NOT student work:
+# the cover sheet, the instructions page, blank pages, the "good luck" tail. Grading it
+# would only produce a confusing "Unmatched work" escalation (and waste retrieval calls).
+_BOILERPLATE_RE = re.compile(
+    r"\[blank page\]|דף ריק|מחברת בחינה|תעודת הזהות|לתשומת לבך|ציונים לשימוש הבוחן|"
+    r"אין לעזוב|אין לתלוש|מכון טכנולוגי לישראל|משך הבחינה|בהצלחה\s*!*\s*$")
+
+
+def _is_boilerplate(f: ParsedFragment) -> bool:
+    text = (f.text or "").strip()
+    if not text:
+        return True
+    if not _BOILERPLATE_RE.search(text):
+        return False
+    # Boilerplate keyword present -- treat as boilerplate only if there is no real math
+    # content riding along (a student may write work under a printed header). Note: a bare
+    # backslash is NOT math -- the parser wraps plain Hebrew in \text{...}.
+    combined = text + " " + (f.latex or "")
+    mathy = re.search(r"\\(frac|int|sum|lim|sqrt|left|right)\b|[∫∑√≤≥]|\b(sin|cos|tan|ln|lim)\b",
+                      combined)
+    return not mathy
+
+
+# OCR renders the T/F header loosely ("סמנו נכון/לא נכון", "סמנו/לא נכון", ...) -- the
+# stable signal is "לא נכון" (or an explicit true/false) plus multiple numbered items.
+_TF_HEADER_RE = re.compile(r"לא\s*נכון|נכון\s*/|true\s*/?\s*false", re.IGNORECASE)
+_TF_ITEM_RE = re.compile(r"(?m)^\s*([1-9])\s*[.)]\s")
+
+
+def _split_tf_fragments(fragments: list[ParsedFragment], log: StepLog) -> list[ParsedFragment]:
+    """The parser sometimes transcribes the whole True/False page as ONE fragment (numbered
+    statements + the student's circled answers). One fragment can only content-match ONE KB
+    entry, so its siblings would go missing from the GradeBook. Split it deterministically
+    (zero LLM) into per-item fragments with canonical TF-n ids that match the KB exactly."""
+    out: list[ParsedFragment] = []
+    for f in fragments:
+        text = f.text or ""
+        marks = list(_TF_ITEM_RE.finditer(text))
+        if not (_TF_HEADER_RE.search(text) and len(marks) >= 2):
+            out.append(f)
+            continue
+        header = text[:marks[0].start()].strip()
+        pieces = []
+        for i, m in enumerate(marks):
+            end = marks[i + 1].start() if i + 1 < len(marks) else len(text)
+            item_no = m.group(1)
+            body = text[m.start():end].strip()
+            pieces.append(ParsedFragment(
+                id=f"TF-{item_no}",
+                text=(header + "\n" + body) if header else body,
+                latex=None, confidence=f.confidence, page=f.page))
+        out.extend(pieces)
+        log.add("Parser", "Deterministic post-pass: split a merged True/False page into "
+                "per-item fragments so each statement matches its own KB entry (no LLM call).",
+                f"fragment id={f.id!r} page={f.page}",
+                {"split_into": [p.id for p in pieces], "llm_calls": 0}, "Post-process")
+    return out
 
 
 def _group_by_retrieved_question(fragments: list[ParsedFragment], log: StepLog, exam: str | None) -> list[dict]:

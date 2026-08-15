@@ -1,0 +1,36 @@
+{
+  "title": "In-scope request with nothing to grade — agent asks for input",
+  "request": {
+    "prompt": "Please grade my calculus exam"
+  },
+  "elapsed_seconds": 0.0,
+  "response": {
+    "status": "ok",
+    "error": null,
+    "response": "That looks like a grading request, but no exam scan is attached and no sample booklet was named.\n\nEither upload a scanned exam (multipart `file` on /api/execute, or the upload box in the UI), or name one of the bundled sample booklets in your prompt:\n  - \"sample-1\" — Sample booklet 1 — 104041 2024 Winter Moed A (18-page scan, human-graded 90/100)\n  - \"sample-2\" — Sample booklet 2 — 104041 2024 Winter Moed A, second student (18-page scan, human-graded 93/100)\n\nExample: {\"prompt\": \"Grade sample booklet 1\"}",
+    "steps": [
+      {
+        "module": "Router",
+        "pattern": "Scope guard",
+        "prompt": {
+          "System_prompt": "Decide whether this grading request carries anything to grade: an attached scan or a named sample booklet.",
+          "User_prompt": "Please grade my calculus exam"
+        },
+        "response": {
+          "in_scope": true,
+          "decision": "NEED_INPUT",
+          "reason": "No scan attached and no sample booklet named.",
+          "llm_calls": 0,
+          "tokens_spent": 0
+        }
+      }
+    ],
+    "meta": {
+      "mode": "info",
+      "source": null,
+      "total": 0,
+      "max": 0,
+      "questions": []
+    }
+  }
+}

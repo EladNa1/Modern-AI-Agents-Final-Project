@@ -6,6 +6,7 @@ from __future__ import annotations
 
 import os
 import re
+from concurrent.futures import ThreadPoolExecutor
 from dataclasses import dataclass
 
 from .config import CONFIG
@@ -16,6 +17,10 @@ from .zoom import ZoomBudget, zoom_read
 # READING POLICY Pass 2. Off by default so a normal run is one vision call per page; set
 # CHECKMATE_ZOOM=1 to re-read low-confidence questions from a magnified crop of their region.
 ZOOM_CONF_THRESHOLD = 0.55  # a fragment below this is a candidate for a zoom re-read
+
+# Concurrent per-page vision calls. 6 workers turn a ~10-minute sequential 18-page parse
+# into ~2 minutes -- required to fit /api/execute inside Vercel's 300s ceiling.
+PARSE_CONCURRENCY = int(os.environ.get("CHECKMATE_PARSE_CONCURRENCY", "6") or 6)
 
 
 def _zoom_enabled() -> bool:
@@ -50,17 +55,21 @@ Output ONLY a JSON object, no prose, no code fences:
 def run_parser(images: list[ImageInput], log: StepLog, instructions: str = "",
                zoom: bool | None = None) -> ParseResult:
     """One vision call PER PAGE (not all pages at once): more robust on long exams, and each
-    page is logged as its own Parser step. Fragments are returned per page and deliberately
-    NOT merged here -- the orchestrator groups them by the question the Retriever matches.
+    page is logged as its own Parser step. The per-page calls run CONCURRENTLY (thread pool)
+    because a sequential 18-page parse takes ~10 minutes -- past Vercel's 300s ceiling; the
+    results are then processed strictly in page order, so fragments and steps[] are identical
+    to a sequential run. Fragments are deliberately NOT merged here -- the orchestrator
+    groups them by the question the Retriever matches.
 
     `zoom` toggles READING POLICY Pass 2 (default: the CHECKMATE_ZOOM env flag)."""
     zoom = _zoom_enabled() if zoom is None else zoom
     total: Usage = {"prompt": 0, "completion": 0, "total": 0}
     raws: list[str] = []
     fragments: list[ParsedFragment] = []
-    exam_meta: dict | None = None  # first page that shows the exam's identity wins
+    exam_meta: dict | None = None  # first (in page order) page showing the exam identity wins
 
-    for p, image in enumerate(images):
+    users: list[str] = []
+    for p in range(len(images)):
         page_tag = f" (page {p + 1} of {len(images)})" if len(images) > 1 else ""
         user = (
             f"Transcribe this scanned Calculus 1 exam page{page_tag} and split it into "
@@ -72,14 +81,23 @@ def run_parser(images: list[ImageInput], log: StepLog, instructions: str = "",
                      "question's work on the page, so an unclear region can be re-read zoomed.")
         if instructions:
             user += f"\n\nGrader context (do not act on it, just transcribe): {instructions}"
+        users.append(user)
 
-        text, usage = chat(
-            system=PARSER_SYSTEM, user=user, images=[image],
+    def _read_page(p: int) -> tuple[str, Usage]:
+        return chat(
+            system=PARSER_SYSTEM, user=users[p], images=[images[p]],
             max_tokens=CONFIG.parser_max_tokens, json_mode=True,
             # Note: gpt-5.4-mini via the gateway rejects any explicit temperature (400);
             # the fixed default (~1.0) is used.
         )
 
+    if images:
+        with ThreadPoolExecutor(max_workers=min(PARSE_CONCURRENCY, len(images))) as pool:
+            results = list(pool.map(_read_page, range(len(images))))
+    else:
+        results = []
+
+    for p, (text, usage) in enumerate(results):
         parsed = extract_json(text) or {}
         page_qs = _normalize_fragments(parsed.get("questions"), p + 1)
         if exam_meta is None:
@@ -88,14 +106,14 @@ def run_parser(images: list[ImageInput], log: StepLog, instructions: str = "",
             total[k] += usage[k]
 
         log.add(
-            "Parser", PARSER_SYSTEM, user,
+            "Parser", PARSER_SYSTEM, users[p],
             {"questions": [f.__dict__ for f in page_qs], "page": p + 1, "page_count": len(images)},
             "Vision OCR", usage,
         )
 
         # Pass 2: re-read the illegible fragments from a magnified crop of their own region.
         if zoom:
-            zu = _zoom_pass(image, page_qs, log)
+            zu = _zoom_pass(images[p], page_qs, log)
             for k in total:
                 total[k] += zu[k]
 

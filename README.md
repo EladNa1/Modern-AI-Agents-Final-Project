@@ -45,8 +45,8 @@ scan → Parser → Router → Retriever → Grader → Reflector → Orchestrat
 
 | Stage | File | Job |
 |-------|------|-----|
-| **Parser** | `checkmate/parser.py` | Vision OCR: transcribes each page faithfully, splits into questions, reads exam identity (course/date/מועד) off the cover, and re-reads faint regions (zoom, opt-in). Does **not** grade. |
-| **Router** | `checkmate/orchestrator.py` + `kb/exams.py` | Resolves which exam to scope retrieval to: manual override → auto-detected from the scan → unscoped fallback. |
+| **Parser** | `checkmate/parser.py` | Vision OCR: transcribes each page faithfully, splits into questions, reads exam identity (course/date/מועד) off the cover, and re-reads faint regions (zoom, opt-in). A deterministic post-pass splits a merged True/False page into per-item `TF-n` fragments (zero LLM). Does **not** grade. |
+| **Router** | `checkmate/orchestrator.py` + `checkmate/guard.py` + `kb/exams.py` | Two autonomous decisions. **Scope guard**: refuses out-of-domain requests (and non-exam scans that match nothing in the KB) politely, BEFORE spending grader tokens — the refusal is logged as a Router step. **Exam scoping**: manual override → auto-detected from the scan → unscoped fallback. |
 | **Retriever** | `checkmate/retriever.py` | RAG. Pinecone semantic search scoped to the exam (with an exact question-id fallback over bundled JSON) for the official solution + top-k course-notes chunks. |
 | **Grader** | `checkmate/grader.py` | Scores the student's actual method with partial credit + feedback. **Self-consistency**: grades N times, takes the median, escalates on disagreement. |
 | **Reflector** | `checkmate/reflector.py` | Critiques the proposed grade **against the retrieved evidence** (official solution + transcript in context); APPROVE / REVISE / ESCALATE. |
@@ -59,8 +59,12 @@ guard primitive), `zoom.py` (Pass-2 re-read), `eval.py` (offline eval harness), 
 solutions + Pinecone client + exam registry).
 
 **Interface:** `POST /api/execute` (multipart `file`, optional `exam`) → `{ status, error,
-response, steps, meta }`. Also `GET /api/exams`, `/api/team_info`, `/api/agent_info`,
-`/api/model_architecture`. Pure-Python **FastAPI on Vercel** (Fluid Compute, 300s).
+response, steps, meta }`. The JSON contract `{ "prompt": "…" }` is fully supported: a prompt
+naming a bundled sample booklet (e.g. `"Grade sample booklet 1"`) runs the REAL pipeline on
+its pre-cached vision transcription (`checkmate/samples.py` — only OCR is cached, everything
+downstream is live), and out-of-domain prompts get a polite zero-token refusal. Also
+`GET /api/exams`, `/api/team_info`, `/api/agent_info`, `/api/model_architecture`.
+Pure-Python **FastAPI on Vercel** (Fluid Compute, 300s).
 
 ## 4. Prompt-engineering methods
 
@@ -113,7 +117,7 @@ redeploy.
 |------|-------|---------|--------------|
 | `grader_samples` | **3** | N samples for open/proof questions | `CHECKMATE_GRADER_SAMPLES` |
 | `grader_samples_high` | **5** | N for high-point open questions (≥ threshold) | `CHECKMATE_GRADER_SAMPLES_HIGH` |
-| `grader_samples_tf_mc` | **1** | N for True/False + MC (all-or-nothing) | `CHECKMATE_GRADER_SAMPLES_TFMC` |
+| `grader_samples_tf_mc` | **3** | N for True/False + MC — median-of-3 (a single call proved unstable in eval) | `CHECKMATE_GRADER_SAMPLES_TFMC` |
 | `high_point_threshold` | **15** | ≥ this ⇒ use `grader_samples_high` | — |
 | `disagreement_frac` | **0.25** | escalate when sample spread > max(floor, frac·max) | — |
 | `disagreement_floor` | **1.5** | floor (pts) for the disagreement threshold | — |
@@ -217,9 +221,9 @@ KB-verification tool, never in the request path.
 - **Grader reasoning ceiling** — the mini makes systematic math errors even with correct
   grounding; self-consistency catches *stochastic* disagreement but not *consistent* wrongness.
   A stronger grader model is the real lever, and it is blocked by the restricted key (§5).
-- **Few-shot Example 3** in `GRADER_SYSTEM` still narrates "2 solutions" for the Q2b equation,
-  which the SymPy sweep disproves — a calibration defect to correct as few-shots move to
-  graded-booklet ingestion.
+- **Few-shot Example 3** in `GRADER_SYSTEM` now teaches the SymPy-verified key (0 solutions)
+  and explicitly flags the graded booklet's human 7/10 as a human error the model must not
+  learn from.
 - **Evaluation corpus is tiny** — two graded booklets of one paper, one disputed ground truth.
   Numbers are a regression tripwire, not a population estimate; further tuning waits on more
   graded booklets (ideally a second distinct exam paper).

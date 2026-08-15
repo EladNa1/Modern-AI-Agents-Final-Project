@@ -72,7 +72,9 @@
         </div>
 
         <div class="controls">
-          <button class="btn" id="gradeBtn" disabled>Grade exam</button>
+          <button class="btn" id="gradeBtn" disabled>Run Agent</button>
+          <button class="btn btnsmall" id="sampleBtn" style="margin-left:.6rem">Try sample booklet 1 (student scored 90)</button>
+          <button class="btn btnsmall" id="sample2Btn" style="margin-left:.4rem">Sample booklet 2 (student scored 93)</button>
           <span class="hint" id="gradeHint" style="margin-left:.6rem">CheckMate auto-detects the exam from the scan's cover/headers.</span>
         </div>
       </div>
@@ -94,7 +96,7 @@
         <figure class="archfig"><img src="/static/architecture.png" alt="CheckMate agent architecture — Parser, Router, Retriever, Grader, Reflector, Orchestrator" /></figure>
         <div class="pipeline">
           <div class="pnode"><span class="pnum">1</span><b>Parser</b><p>Vision OCR reads each page, transcribes the student's work faithfully — including which option is circled — and reads the exam's identity off the cover.</p></div>
-          <div class="pnode"><span class="pnum">2</span><b>Router</b><p>Scopes grading to the identified exam. Identical questions recur across exams ("state the IVT"), so the exam identity comes from the scan, not from the answer.</p></div>
+          <div class="pnode"><span class="pnum">2</span><b>Router</b><p>Two autonomous decisions: a scope guard that politely refuses anything that isn't a Calculus 1 grading task (zero tokens spent), and scoping grading to the identified exam — the exam identity comes from the scan, not from the answer.</p></div>
           <div class="pnode"><span class="pnum">3</span><b>Retriever</b><p>Pulls the matching official solution (exact metadata match, with a deterministic content-overlap fallback) plus supporting lecture-note chunks.</p></div>
           <div class="pnode"><span class="pnum">4</span><b>Grader</b><p>Scores the student's actual method with partial credit. Self-consistency: N samples, median score, escalate when the samples disagree.</p></div>
           <div class="pnode"><span class="pnum">5</span><b>Reflector</b><p>Critiques the proposed grade against the official solution and the transcript — approve, revise, or escalate. Skipped on all-or-nothing items.</p></div>
@@ -205,8 +207,8 @@
     }
     const STATUS_LABEL = { ok: "full credit", partial: "partial", escalate: "escalate" };
 
-    // Grading needs only a file -- CheckMate auto-detects the exam from the scan's
-    // cover/headers. A manual override appears in the results if detection was wrong/absent.
+    // Grading needs a file (exam auto-detected from the scan), or the one-click bundled
+    // sample. A manual exam override appears in the results if detection was wrong/absent.
     let EXAMS_LIST = [];
     const canGrade = () => !!file;
     function refreshGrade() {
@@ -244,14 +246,29 @@
 
     function el(tag, cls, text) { const e = document.createElement(tag); if (cls) e.className = cls; if (text != null) e.textContent = text; return e; }
 
+    // Display-side math beautifier for grader feedback: the model writes JSON-safe ASCII
+    // math (no backslashes), so swap the common tokens for their unicode forms. Purely
+    // cosmetic — the underlying data is untouched.
+    function beautifyMath(s) {
+      if (!s) return s;
+      return s
+        .replace(/\\\(|\\\)|\\\[|\\\]/g, " ")
+        .replace(/\bint_/g, "∫_").replace(/\bsqrt/g, "√")
+        .replace(/\bpi\b/g, "π").replace(/\binfty\b/g, "∞").replace(/\balpha\b/g, "α")
+        .replace(/<=/g, " ≤ ").replace(/>=/g, " ≥ ").replace(/!=/g, " ≠ ")
+        .replace(/->/g, " → ").replace(/\s{2,}/g, " ");
+    }
+
     // Scope banner (results-side): shows the detected/used exam and a manual override that
     // re-grades scoped to a chosen exam.
     function renderScopeBanner(meta, wrap) {
       const banner = el("div", "scopebar");
+      const isSample = !!(meta.sample_pages && meta.sample_pages.length);
       let txt;
-      if (meta.exam) txt = "Graded as " + meta.exam + (meta.exam_source === "auto" ? " (auto-detected)" : meta.exam_source === "manual" ? " (you set this)" : "");
+      if (meta.exam) txt = "Graded as " + meta.exam + (isSample ? " (bundled sample booklet)" : meta.exam_source === "auto" ? " (auto-detected)" : meta.exam_source === "manual" ? " (you set this)" : "");
       else txt = "Exam not identified from the scan — graded unscoped (generic questions may mismatch a look-alike in another exam).";
       banner.appendChild(el("span", "scopetxt", (meta.exam ? "✔ " : "⚠ ") + txt));
+      if (isSample) { wrap.appendChild(banner); return; }  // no manual re-grade control for samples
 
       const sel = document.createElement("select"); sel.className = "instr scopesel";
       const none = el("option", null, "— set exam —"); none.value = ""; sel.appendChild(none);
@@ -269,9 +286,14 @@
       const meta = data.meta; const wrap = $("results"); wrap.innerHTML = "";
       if (!meta) return;
       const kind = file ? kindOf(file.name) : "other";
-      if (meta.mode !== "general") renderScopeBanner(meta, wrap);
+      if (!["general", "refused", "info"].includes(meta.mode)) renderScopeBanner(meta, wrap);
 
-      if (meta.mode === "general") {
+      if (meta.mode === "refused" || meta.mode === "info") {
+        const card = el("section", "card");
+        card.appendChild(el("p", "kicker", meta.mode === "refused" ? "Out of scope — request refused" : "Agent needs input"));
+        const a = el("div", "annot " + (meta.mode === "refused" ? "escalate" : "partial")); const p = el("p", "annotfb", data.response); p.style.whiteSpace = "pre-wrap"; a.appendChild(p); card.appendChild(a);
+        wrap.appendChild(card);
+      } else if (meta.mode === "general") {
         const card = el("section", "card");
         card.appendChild(el("p", "kicker", "Result — general assessment"));
         const a = el("div", "annot partial"); const p = el("p", "annotfb", data.response); p.style.whiteSpace = "pre-wrap"; a.appendChild(p); card.appendChild(a);
@@ -290,7 +312,18 @@
 
         const review = el("div", "review");
         const scanwrap = el("div", "scanwrap"); const scanview = el("div", "scanview");
-        if ((kind === "image") && previewUrl) { const img = el("img", "scanimg"); img.src = previewUrl; img.alt = "Uploaded exam scan"; scanview.appendChild(img); }
+        if (meta.sample_pages && meta.sample_pages.length) {
+          // Bundled sample run: show the actual booklet pages that were graded, inside a
+          // fixed-height scrollable viewer so the results page stays compact.
+          scanview.style.maxHeight = "72vh"; scanview.style.overflowY = "auto";
+          scanwrap.appendChild(el("div", "hint", "The graded booklet — scroll through all " + meta.sample_pages.length + " pages:"));
+          for (const src of meta.sample_pages) {
+            const img = el("img", "scanimg"); img.src = src; img.loading = "lazy";
+            img.alt = "Sample booklet page"; img.style.marginBottom = ".5rem";
+            scanview.appendChild(img);
+          }
+        }
+        else if ((kind === "image") && previewUrl) { const img = el("img", "scanimg"); img.src = previewUrl; img.alt = "Uploaded exam scan"; scanview.appendChild(img); }
         else if (kind === "pdf" && previewUrl) { const fr = document.createElement("iframe"); fr.className = "scanframe"; fr.src = previewUrl; scanview.appendChild(fr); }
         else { const ph = el("div", "docph"); ph.appendChild(el("div", "docic", "📝")); ph.appendChild(el("div", null, file ? file.name : "")); scanview.appendChild(ph); }
         scanview.appendChild(el("span", "gradedstamp", "GRADED · " + meta.total + "/" + meta.max));
@@ -298,13 +331,16 @@
         review.appendChild(scanwrap);
 
         const annots = el("div", "annots"); annots.appendChild(el("div", "annotshead", "Annotations"));
+        // Keep the annotation column the same height as the booklet viewer — both scroll
+        // internally instead of stretching the page.
+        annots.style.maxHeight = "76vh"; annots.style.overflowY = "auto";
         for (const q of meta.questions) {
           const a = el("div", "annot " + q.status);
           const h = el("div", "annothead"); h.appendChild(el("span", "annotq", q.title));
           const right = el("span", "annotright");
           const tag = el("span", "tag " + (q.status === "ok" ? "ok" : q.status === "partial" ? "partial" : "escalate"), STATUS_LABEL[q.status]);
           right.appendChild(tag); right.appendChild(el("span", "qscore", q.score + "/" + q.max));
-          h.appendChild(right); a.appendChild(h); a.appendChild(el("p", "annotfb", q.feedback));
+          h.appendChild(right); a.appendChild(h); a.appendChild(el("p", "annotfb", beautifyMath(q.feedback)));
           annots.appendChild(a);
         }
         review.appendChild(annots); card.appendChild(review); wrap.appendChild(card);
@@ -314,7 +350,9 @@
       const trace = el("section", "card");
       trace.appendChild(el("p", "kicker", "Execution trace"));
       trace.appendChild(el("h2", null, "steps[] — every call the agent made"));
-      trace.appendChild(el("p", "hint", data.steps.length + " steps, in order — module, prompt, and response."));
+      trace.appendChild(el("p", "hint", data.steps.length + " steps, in order — module, prompt, and response. Scroll inside the list; click a step to expand it."));
+      const traceList = el("div", "tracelist");
+      traceList.style.maxHeight = "65vh"; traceList.style.overflowY = "auto";
       data.steps.forEach((s, i) => {
         const d = document.createElement("details"); d.className = "step";
         const sum = document.createElement("summary");
@@ -326,29 +364,68 @@
         const f1 = el("div", "field"); f1.appendChild(el("div", "label", "System prompt")); f1.appendChild(el("pre", "code", s.prompt.System_prompt)); body.appendChild(f1);
         const f2 = el("div", "field"); f2.appendChild(el("div", "label", "User prompt")); f2.appendChild(el("pre", "code", s.prompt.User_prompt)); body.appendChild(f2);
         const f3 = el("div", "field"); f3.appendChild(el("div", "label", "Response")); f3.appendChild(el("pre", "code", JSON.stringify(s.response, null, 2))); body.appendChild(f3);
-        d.appendChild(body); trace.appendChild(d);
+        d.appendChild(body); traceList.appendChild(d);
       });
+      trace.appendChild(traceList);
       wrap.appendChild(trace);
     }
 
-    async function doGrade(examOverride) {
-      if (!file) return;
-      const btn = $("gradeBtn"); btn.disabled = true; btn.textContent = "Grading…";
+    async function runExecute(makeRequest, btn, busyLabel, idleLabel) {
+      btn.disabled = true; btn.textContent = busyLabel;
       $("error").style.display = "none"; $("results").innerHTML = "";
+      // Live elapsed-time feedback: grading runs take ~2-3 minutes (real LLM calls per
+      // question), so show progress instead of a frozen button.
+      const t0 = Date.now();
+      const status = el("div", "scopebar");
+      status.appendChild(el("span", "scopetxt", "⏳ The agent is grading — Retriever → Grader → Reflector run per question. Typical time: 2–3 minutes."));
+      const timeEl = el("span", "scopetxt", ""); timeEl.style.marginLeft = ".6rem"; timeEl.style.fontVariantNumeric = "tabular-nums";
+      status.appendChild(timeEl);
+      $("results").appendChild(status);
+      const ticker = setInterval(() => {
+        const s = Math.floor((Date.now() - t0) / 1000);
+        timeEl.textContent = Math.floor(s / 60) + ":" + String(s % 60).padStart(2, "0");
+        btn.textContent = busyLabel + " " + s + "s";
+      }, 1000);
       try {
-        const fd = new FormData();
-        fd.append("file", file);
-        if (examOverride) fd.append("exam", examOverride);
-        const res = await fetch("/api/execute", { method: "POST", body: fd });
+        const res = await makeRequest();
         const data = await res.json();
         if (data.status === "error") { $("error").textContent = "⚠ " + (data.error || "The agent returned an error."); $("error").style.display = ""; }
         else renderResult(data);
       } catch (e) {
         $("error").textContent = "⚠ Could not reach /api/execute. Check the server and try again."; $("error").style.display = "";
-      } finally { btn.disabled = false; btn.textContent = "Grade exam"; }
+      } finally {
+        clearInterval(ticker); status.remove();
+        btn.disabled = false; btn.textContent = idleLabel; refreshGrade();
+      }
+    }
+
+    async function doGrade(examOverride) {
+      if (!file) return;
+      const fd = new FormData();
+      fd.append("file", file);
+      if (examOverride) fd.append("exam", examOverride);
+      await runExecute(() => fetch("/api/execute", { method: "POST", body: fd }),
+                       $("gradeBtn"), "Grading…", "Run Agent");
+    }
+
+    // One-click demos: run the REAL agent on a bundled sample booklet's cached
+    // transcription via the JSON contract — no upload required.
+    async function doSample(n, btnId, idleLabel) {
+      await runExecute(() => fetch("/api/execute", {
+        method: "POST", headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ prompt: "Grade sample booklet " + n }),
+      }), $(btnId), "Grading sample…", idleLabel);
     }
 
     $("gradeBtn").addEventListener("click", () => doGrade(null));
+    $("sampleBtn").addEventListener("click", () => doSample(1, "sampleBtn", "Try sample booklet 1 (student scored 90)"));
+    $("sample2Btn").addEventListener("click", () => doSample(2, "sample2Btn", "Sample booklet 2 (student scored 93)"));
+
+    // Dev aid: /?replay=1 renders the bundled captured run through the normal result view —
+    // zero LLM calls — so the GUI can be reviewed without spending a grading run.
+    if (new URLSearchParams(location.search).get("replay")) {
+      fetch("/api/example_result").then((r) => r.json()).then((d) => { if (d && d.status === "ok") renderResult(d); }).catch(() => {});
+    }
   </script>
 </body>
 </html>

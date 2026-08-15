@@ -8,7 +8,8 @@
   ],
   "functions": {
     "api/index.py": {
-      "includeFiles": "{checkmate,templates,static}/**"
+      "includeFiles": "{checkmate,templates,static}/**",
+      "maxDuration": 300
     }
   }
 }

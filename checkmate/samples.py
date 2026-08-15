@@ -1,0 +1,83 @@
+"""Bundled sample booklets for the JSON /api/execute contract.
+
+The course spec's required entry point is a TEXT prompt -- but the agent's real input is a
+scanned booklet. Bridge: we bundle the cached vision transcription of real graded booklets
+(parsed once, offline -- per the course guidance that vision OCR need not re-run per demo),
+and a prompt that names one of them runs the REAL pipeline -- Router -> Retriever -> Grader
+-> Reflector -> GradeBook -- with live LLM calls and real autonomous decisions. Only the
+vision stage is cached; nothing else is canned.
+
+Registry ids double as the names users/graders type, e.g.
+  {"prompt": "Grade sample booklet 1"}  or  {"prompt": "Grade the 2024 winter moed A exam"}.
+"""
+from __future__ import annotations
+
+import json
+import os
+import re
+
+_DIR = os.path.join(os.path.dirname(__file__), "kb", "samples")
+
+# id -> bundled cached-parse file + the exam that scopes retrieval + alias patterns.
+SAMPLES: list[dict] = [
+    {
+        "id": "sample-1",
+        "label": "Sample booklet 1 — 104041 2024 Winter Moed A (18-page scan, human-graded 90/100)",
+        "file": "104041-2024W-A.json",
+        "exam": "2024w moed A",
+        "aliases": r"sample\s*(?:booklet\s*)?1|2024\s*w(?:inter)?|winter\s*2024|moed\s*a|104041|מועד\s*א",
+        # Rendered page previews bundled under static/ so the GUI can SHOW what was graded.
+        "pages": 18,
+        "pages_prefix": "/static/samples/sample1",
+    },
+    {
+        "id": "sample-2",
+        "label": "Sample booklet 2 — 104041 2024 Winter Moed A, second student (18-page scan, human-graded 93/100)",
+        "file": "104041-2024W-A-93.json",
+        "exam": "2024w moed A",
+        "aliases": r"sample\s*(?:booklet\s*)?2",
+        "pages": 18,
+        "pages_prefix": "/static/samples/sample2",
+    },
+]
+
+
+def list_samples() -> list[dict]:
+    return [{"id": s["id"], "label": s["label"], "exam": s["exam"]} for s in SAMPLES]
+
+
+def resolve_sample(prompt: str) -> dict | None:
+    """Match a prompt to a bundled sample booklet (first match wins)."""
+    p = prompt or ""
+    for s in SAMPLES:
+        if re.search(s["aliases"], p, re.IGNORECASE) and os.path.exists(os.path.join(_DIR, s["file"])):
+            return s
+    return None
+
+
+def load_sample_parse(sample: dict):
+    """Rebuild a ParseResult from the bundled cached transcription (same format as
+    eval/ocr_cache). No parser-version check -- the bundle is pinned deliberately."""
+    from .models import ParsedFragment
+    from .parser import ParseResult
+
+    d = json.load(open(os.path.join(_DIR, sample["file"]), encoding="utf-8"))
+    frags = [ParsedFragment(**f) for f in d["fragments"]]
+    return ParseResult(fragments=frags, raw=d.get("raw", ""),
+                       usage={"prompt": 0, "completion": 0, "total": 0},
+                       exam_meta=d.get("exam_meta"))
+
+
+def available_samples_text() -> str:
+    """Helpful in-scope response when no sample was named and no file was attached."""
+    lines = [
+        "That looks like a grading request, but no exam scan is attached and no sample "
+        "booklet was named.",
+        "",
+        "Either upload a scanned exam (multipart `file` on /api/execute, or the upload box in "
+        "the UI), or name one of the bundled sample booklets in your prompt:",
+        *[f'  - "{s["id"]}" — {s["label"]}' for s in SAMPLES],
+        "",
+        'Example: {"prompt": "Grade sample booklet 1"}',
+    ]
+    return "\n".join(lines)

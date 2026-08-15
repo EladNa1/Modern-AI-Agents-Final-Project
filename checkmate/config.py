@@ -31,7 +31,9 @@ class AgentConfig:
     # --- Grader self-consistency (grader stage), adaptive N by question type (6.2) ---
     grader_samples: int = 3            # open/proof questions
     grader_samples_high: int = 5       # high-point open questions (>= high_point_threshold)
-    grader_samples_tf_mc: int = 1      # T/F + MC: circled letter, all-or-nothing -> one call
+    grader_samples_tf_mc: int = 3      # T/F + MC: median-of-3 -- a single call proved unstable
+                                       # (eval: MC-1 flipped 7->0 between identical runs); the
+                                       # items are ~250-token calls, so the safety is ~free
     high_point_threshold: int = 15     # a question worth >= this uses grader_samples_high
     disagreement_frac: float = 0.25    # escalate when spread > max(floor, frac * max_points)
     disagreement_floor: float = 1.5
@@ -70,7 +72,7 @@ def load_config() -> AgentConfig:
     """Build the active config, honouring the few shell-tunable env overrides."""
     return AgentConfig(
         grader_samples=_int("CHECKMATE_GRADER_SAMPLES", 3, 1, 5),
-        grader_samples_tf_mc=_int("CHECKMATE_GRADER_SAMPLES_TFMC", 1, 1, 5),
+        grader_samples_tf_mc=_int("CHECKMATE_GRADER_SAMPLES_TFMC", 3, 1, 5),
         grader_samples_high=_int("CHECKMATE_GRADER_SAMPLES_HIGH", 5, 1, 7),
         max_revise_passes=_int("CHECKMATE_MAX_REVISE_PASSES", 2, 0, 3),
         render_max_pages=_int("CHECKMATE_MAX_PAGES", 12, 1, 60),

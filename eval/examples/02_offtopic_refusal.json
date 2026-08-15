@@ -1,0 +1,36 @@
+{
+  "title": "Out-of-domain request — polite refusal, zero tokens",
+  "request": {
+    "prompt": "How do I bake sourdough bread?"
+  },
+  "elapsed_seconds": 0.0,
+  "response": {
+    "status": "ok",
+    "error": null,
+    "response": "I can't help with that — CheckMate only grades scanned Technion Calculus 1 (Hedva 1) exams.\n\nWhat I CAN do: read a scanned exam booklet (PDF or images), grade every question on the student's own method with partial credit and written feedback, ground each grade in the official solution, and escalate anything ambiguous to a human teacher.\n\nTo use me: upload an exam scan (or POST it to /api/execute as multipart form-data under `file`), or name a bundled sample booklet in your prompt. Your request didn't look like a Calculus 1 grading task, so no grading model was invoked and no tokens were spent.",
+    "steps": [
+      {
+        "module": "Router",
+        "pattern": "Scope guard",
+        "prompt": {
+          "System_prompt": "Decide whether the incoming request is a Calculus 1 exam-grading task. If it is not (off-domain, or a solve/tutor request), refuse politely and stop -- do not invoke the Parser, Retriever, Grader, or Reflector, and do not spend model tokens on an out-of-domain request.",
+          "User_prompt": "How do I bake sourdough bread?"
+        },
+        "response": {
+          "in_scope": false,
+          "decision": "REFUSE",
+          "reason": "The request does not mention grading, an exam, or Calculus 1 material.",
+          "llm_calls": 0,
+          "tokens_spent": 0
+        }
+      }
+    ],
+    "meta": {
+      "mode": "refused",
+      "source": null,
+      "total": 0,
+      "max": 0,
+      "questions": []
+    }
+  }
+}

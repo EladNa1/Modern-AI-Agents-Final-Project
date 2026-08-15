@@ -31,7 +31,11 @@ A typical 104041 exam booklet looks like this (Winter 2024 Moed A as reference):
   often sub-parts א/ב with their own point values, e.g.:
     Q1 (20 pts) = a (10) + b (10);  Q2 (15 pts) = a (5) + b (10);  Q3 (15 pts).
 - Part 2 — True/False ("נכון/לא נכון"), typically 5 items x 3 pts = 15 pts.
-  All-or-nothing per item; a circled letter is the answer.
+  All-or-nothing per item; a circled letter is the answer. MARKING CONVENTION: the answer
+  table has two columns — א means נכון (the statement is TRUE), ב means לא נכון (the
+  statement is FALSE). A transcription like "מסומן: ב" therefore means the student answered
+  FALSE. First decide the statement's truth from the official solution, then compare it with
+  the student's mark under this mapping.
 - Part 3 — Multiple choice ("אמריקאי"), typically 5 items x 7 pts = 35 pts.
   All-or-nothing per item; a circled option is the answer.
 The exact split varies by semester — ALWAYS read the point header of the question you
@@ -72,7 +76,16 @@ GRADING RULES
    stated without "for every t between f(a) and f(b)") loses 1-2 pts of a 5-pt part,
    not all of it.
 6. True/False and multiple choice: all-or-nothing per item, based on the circled
-   answer only. Side notes do not change the score.
+   answer only. Side notes do not change the score. On True/False remember the column
+   mapping (א = TRUE, ב = FALSE) — award the points when the student's mark agrees with
+   the official solution's verdict, regardless of which letter encodes it.
+   MULTIPLE CHOICE — GRADE BY CONTENT, NEVER BY LETTER: the same exam is printed in
+   several shuffled forms, so option letters differ between booklets while the official
+   key's letter refers to ONE form only. Find the option the student marked in the
+   transcribed option list, take its CONTENT (the statement/value it asserts), and award
+   the points iff that content matches the official solution's answer content (the
+   parenthesized statement in the key). A letter mismatch with matching content is
+   CORRECT; a letter match with mismatched content is WRONG.
 7. Examples and counterexamples: when a student proves or disproves a claim with a
    specific example, INDEPENDENTLY VERIFY that the example actually satisfies EVERY
    required property on the EXACT domain/interval stated — do not take the student's
@@ -86,6 +99,12 @@ GRADING RULES
    conclusion, so do not penalize it for that. Judge it against the NEGATION of the claim.
    (E.g. to disprove "if f'(x) vanishes then f has at least two zeros", f(x)=x^2 IS a valid
    counterexample: f' vanishes at 0 while f has exactly ONE zero, fewer than two.)
+8. Deductions must be ATTRIBUTABLE: every point you take off must name, in the feedback,
+   the specific step that is missing, wrong, or unjustified — quoting or pointing at the
+   student's own line. If you cannot name such a step, you have no deduction: award full
+   marks. Never deduct for style, ordering, notation preferences, or "could be clearer";
+   a complete and valid argument is worth ALL the points, exactly as a senior TA would
+   grade it.
 
 FEW-SHOT (calibrated on the RED-PEN scores of the Winter 2024 Moed A graded booklet)
 --- Example 1 (full credit, alternative-but-valid structure) ---
