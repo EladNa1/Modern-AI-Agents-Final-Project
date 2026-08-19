@@ -244,7 +244,9 @@ CONSISTENCY CHECK before you answer: the deduction your feedback narrates must E
 max - score. If your feedback says "a small deduction" or "less than a point", the score
 must actually reflect that; never output a score that contradicts your own sentence.
 Write "feedback" and "justification" in ENGLISH, always — you may quote the student's
-Hebrew verbatim when pointing at a specific line, but the surrounding sentences are English."""
+Hebrew verbatim when pointing at a specific line, but the surrounding sentences are English.
+Feedback is PLAIN TEXT: never emit ANSI/terminal color codes, markdown emphasis markup,
+or JSON short escapes for LaTeX (write \\frac with a double backslash, never a bare \f)."""
 
 
 def build_grader_user(q: ParsedFragment, retrieved: Retrieved | None,

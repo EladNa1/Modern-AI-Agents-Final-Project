@@ -126,6 +126,30 @@ def run_agent(images: list[ImageInput], instructions: str = "", source_label: st
                 confidence=merged.confidence, page=merged.page)
             retrieved = group["retrieved"]
             qid = retrieved.entry.id if retrieved else q.id
+
+            # Unmatched bucket: writing that no KB question claimed with confidence (e.g. a
+            # continuation page without a printed header, demoted by the retrieval
+            # corroboration check). Grading it would spend tokens to fabricate a 0/0 --
+            # route it straight to the human with an honest note instead.
+            if retrieved is None and q.id == UNMATCHED:
+                grade = Grade(
+                    id=UNMATCHED, score=0, max=0, status="escalate",
+                    feedback="Writing that could not be confidently matched to any exam "
+                             "question (typically a continuation page without a printed "
+                             "header). Forwarded to the teacher for manual placement — it "
+                             "carries no points and does not affect the total.",
+                    justification="No knowledge-base question claimed these fragments with "
+                                  "sufficient confidence; not graded automatically.",
+                    confidence=0.0)
+                log.add("Router",
+                        "Route unmatched writing to the human reviewer instead of grading "
+                        "it against a guessed question. No LLM call.",
+                        f"unmatched fragments={len(group['fragments'])}",
+                        {"decision": "ESCALATE_UNMATCHED", "llm_calls": 0}, "Scope")
+                results.append(_to_question_result(q.id, grade, None))
+                gb.add(qid, entry_from_grade(grade, None))
+                continue
+
             query = f"{q.text} {q.latex or ''}"
             notes = retrieve_notes(query, log)
             grade = run_grader(q, retrieved, log, notes)

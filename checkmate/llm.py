@@ -58,6 +58,13 @@ def chat(system: str, user: str, images: list[ImageInput] | None = None,
     # The model also writes them as JSON escapes (""), which survive a raw-byte strip
     # and get re-created by json.loads later -- normalize those to a raw byte first.
     text = re.sub(r"\\u00(?:0[0-8bcBC]|0[eE]|1[0-9a-fA-F])", "\x1a", text)
+    # LaTeX casualties of legal JSON escapes: the model writes \frac / \beta inside a JSON
+    # string; json parsing yields \f (form feed) / \b (backspace) -- restore the command.
+    text = re.sub(r"\x0c(?=rac\b|rac\{)", r"\\f", text)        # \x0c + rac -> \frac
+    text = re.sub(r"\x08(?=eta\b|inom\b|ig\b)", r"\\b", text)  # \x08 + eta -> \beta etc.
+    # ANSI terminal color codes (with or without the ESC byte, which C0-strips below).
+    text = re.sub(r"\x1b\[[0-9;]{0,8}m", "", text)
+    text = re.sub(r"\[[0-9]{1,2}(?:;[0-9]{1,2})+m|\[0m", "", text)
     _C0 = r"[\x00-\x08\x0b\x0c\x0e-\x1f]"
     text = re.sub(_C0 + r"(?=sqrt|int|frac|sum|lim|pi\b)", "\\\\", text)
     text = re.sub(_C0 + r"(?=_)", r"\\int", text)   # \x17_0^1 -> \int_0^1
