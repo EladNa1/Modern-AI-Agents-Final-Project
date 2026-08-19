@@ -50,10 +50,12 @@ class AgentConfig:
     # Back-fill real gateway rates when known; token counts in the report are exact either way.
     price_input_per_1k: float = 0.00075    # $ per 1k input tokens (incl. vision image tokens)
     price_output_per_1k: float = 0.00300   # $ per 1k output tokens
+    price_embed_per_1k: float = 0.00002    # $ per 1k embedding tokens (text-embedding-3-small)
     max_run_cost_usd: float = 0.75         # abort a run that would exceed this
 
     # --- Parser input (render) ---
-    render_max_pages: int = 12         # pages rendered per upload; 18-page booklets need >12
+    render_max_pages: int = 24         # pages rendered per upload; real booklets run 18-20
+                                       # pages, and the parallel parser makes 24 as fast as 12
 
     # --- Token budgets (per stage), by question type (6.4) ---
     parser_max_tokens: int = 2500
@@ -75,7 +77,7 @@ def load_config() -> AgentConfig:
         grader_samples_tf_mc=_int("CHECKMATE_GRADER_SAMPLES_TFMC", 3, 1, 5),
         grader_samples_high=_int("CHECKMATE_GRADER_SAMPLES_HIGH", 5, 1, 7),
         max_revise_passes=_int("CHECKMATE_MAX_REVISE_PASSES", 2, 0, 3),
-        render_max_pages=_int("CHECKMATE_MAX_PAGES", 12, 1, 60),
+        render_max_pages=_int("CHECKMATE_MAX_PAGES", 24, 1, 60),
     )
 
 

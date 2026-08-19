@@ -41,13 +41,6 @@ def _norm_id(s: str) -> str:
     return out[1:] if out.startswith("q") else out  # "q3c" and "3c" both -> "3c"
 
 
-def _looks_like_sin_sqrt_limit(text: str) -> bool:
-    """Signature for the Q3c demo limit -- offline safety net when the parsed id is
-    unreliable AND Pinecone is unavailable."""
-    t = (text or "").lower()
-    return ("sin" in t) and ("√" in t or "sqrt" in t) and ("x^9" in t or "x9" in t or "x⁹" in t)
-
-
 def _find_exact(want: str, exam: str | None) -> Retrieved | None:
     for kb in EXAMS:
         # When the teacher named the exam, only its own questions may ground the grade.
@@ -71,11 +64,11 @@ def _entry_from_metadata(m: dict) -> Retrieved:
     )
 
 
-def _find_semantic(text: str, exam: str | None):
+def _find_semantic(text: str, exam: str | None, log: StepLog | None = None):
     """Pinecone semantic query over SOLUTION records only. Returns {"found","score"} or None.
     Never raises -- a Pinecone outage must not break grading."""
     try:
-        vector = embed(text[:4000])[0]
+        vector = embed(text[:4000], log=log)[0]
         # Pin to the current indexing generation (superseded vectors stay physically in the
         # index); scope to the exam when known, since ids/topics repeat across exams.
         flt: dict = {"kind": {"$eq": "solution"}, "gen": {"$eq": _GEN["gen"]}}
@@ -100,7 +93,7 @@ def retrieve_notes(question_text: str, log: StepLog, k: int = 3) -> list[NotesCh
         return []
     chunks: list[NotesChunk] = []
     try:
-        vector = embed(question_text[:4000])[0]
+        vector = embed(question_text[:4000], log=log)[0]
         res = kb_index().query(top_k=k, vector=vector, include_metadata=True,
                                filter={"kind": {"$eq": "notes"}})
         matches = res.get("matches") if isinstance(res, dict) else res.matches
@@ -177,7 +170,7 @@ def retrieve(question_id: str, question_text: str, log: StepLog, exam: str | Non
     # "שאלה 2" part as Q1); scoping to the exam already prevents drift onto another exam's
     # look-alike question, and the exact-id match below is only a fallback.
     if not found and HAS_PINECONE and question_text.strip():
-        sem = _find_semantic(question_text, exam)
+        sem = _find_semantic(question_text, exam, log)
         if sem and sem["found"]:
             found, method, score = sem["found"], "semantic", sem["score"]
         elif sem:
@@ -199,13 +192,6 @@ def retrieve(question_id: str, question_text: str, log: StepLog, exam: str | Non
         found = _find_exact(want, exam)
         if found:
             method = "exact-id"
-
-    # Last resort (offline): the hard-coded signature for the demo limit.
-    if not found and _looks_like_sin_sqrt_limit(question_text):
-        entry = EXAMS[0].questions.get("Q3c")
-        if entry:
-            found = Retrieved(entry=entry, exam=EXAMS[0].exam, course=EXAMS[0].course)
-            method = "signature"
 
     if found:
         response = {"matched": found.entry.id, "method": method, "score": score,

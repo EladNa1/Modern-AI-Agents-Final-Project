@@ -35,12 +35,31 @@ app = FastAPI(title="CheckMate")
 app.mount("/static", StaticFiles(directory=os.path.join(_ROOT, "static")), name="static")
 templates = Jinja2Templates(directory=os.path.join(_ROOT, "templates"))
 
-ALLOWED = {".pdf", ".doc", ".docx", ".png", ".jpg", ".jpeg", ".webp"}
+# PDF and images only. Word was once listed but had no renderer — uploads silently fell
+# through to the mock, i.e. simulated grades presented as real. Rejecting honestly is the
+# only defensible behavior.
+ALLOWED = {".pdf", ".png", ".jpg", ".jpeg", ".webp"}
 IMAGE_MIME = {".png": "image/png", ".jpg": "image/jpeg", ".jpeg": "image/jpeg", ".webp": "image/webp"}
 
 
 def _bad(error: str) -> dict:
     return {"status": "error", "error": error, "response": None, "steps": []}
+
+
+def _spec_shape(result: dict, ui: bool) -> dict:
+    """The course contract for /api/execute is EXACTLY {status, error, response, steps}
+    with steps entries of EXACTLY {module, prompt, response}. Our own GUI wants more
+    (meta for rendering, pattern labels on steps) — it opts in with ?ui=1; every other
+    caller gets the mandated shape, nothing extra."""
+    if ui:
+        return result
+    return {
+        "status": result.get("status"),
+        "error": result.get("error"),
+        "response": result.get("response"),
+        "steps": [{"module": s.get("module"), "prompt": s.get("prompt"),
+                   "response": s.get("response")} for s in result.get("steps") or []],
+    }
 
 
 @app.get("/", response_class=HTMLResponse)
@@ -91,7 +110,7 @@ async def agent_info():
     return {
         "description": (
             "CheckMate is an autonomous agent that grades Calculus 1 (Hedva 1) exams. You upload "
-            "a scanned exam (PDF, Word, or images); it reads every page with OCR, splits the exam "
+            "a scanned exam (PDF or images); it reads every page with OCR, splits the exam "
             "into questions, and grades each on the student's ACTUAL method — awarding partial "
             "credit and writing per-question feedback. Grades are grounded in the retrieved "
             "official solution and rubric, not invented. Ambiguous handwriting or low-confidence "
@@ -117,7 +136,7 @@ async def agent_info():
         ),
         "prompt_template": {
             "template": (
-                "Upload a scanned Calculus 1 exam file (PDF / Word / image) to POST /api/execute as "
+                "Upload a scanned Calculus 1 exam file (PDF / image) to POST /api/execute as "
                 "multipart form-data under the field `file` — or send a JSON body "
                 '{ "prompt": "<request>" } naming a bundled sample booklet, e.g. '
                 '"Grade sample booklet 1". The sample\'s vision transcription is pre-cached; '
@@ -163,6 +182,7 @@ async def architecture_png():
 @app.post("/api/execute")
 async def execute(request: Request):
     ct = request.headers.get("content-type", "")
+    ui = request.query_params.get("ui") == "1"  # our GUI opts into extra fields; see _spec_shape
 
     if "multipart/form-data" in ct:
         form = await request.form()
@@ -179,15 +199,14 @@ async def execute(request: Request):
         ext = os.path.splitext(name)[1].lower()
         if ext not in ALLOWED:
             return JSONResponse(_bad(
-                f'Unsupported file type "{ext}". Accepted: PDF, Word (.doc/.docx), or image '
-                f'(.png/.jpg/.webp).'), status_code=400)
+                f'Unsupported file type "{ext}". Accepted: PDF or image (.png/.jpg/.webp).'),
+                status_code=400)
 
         data = await upload.read()
         kb = round(len(data) / 1024)
         source_label = f"{name} ({kb} KB)"
 
-        # Images go straight to the vision Parser. PDFs render to per-page PNGs. Word has no
-        # renderer yet, so it takes the mock fallback inside run_agent (images=[]).
+        # Images go straight to the vision Parser. PDFs render to per-page PNGs.
         images: list[ImageInput] = []
         if ext in IMAGE_MIME:
             b64 = base64.b64encode(data).decode("ascii")
@@ -208,7 +227,8 @@ async def execute(request: Request):
                 else f"{name} ({kb} KB, {render.page_count} page{plural})")
 
         result = run_agent(images, instructions, source_label, exam)
-        return JSONResponse(result, status_code=400 if result["status"] == "error" else 200)
+        return JSONResponse(_spec_shape(result, ui),
+                            status_code=400 if result["status"] == "error" else 200)
 
     # JSON path — { "prompt": "…", "instructions"?: "…" } — required-contract shape. No scan
     # image here, so the deterministic mock keeps the contract working.
@@ -221,7 +241,7 @@ async def execute(request: Request):
 
     # Router scope guard: an off-domain request gets a polite refusal BEFORE any model work.
     if prompt.strip() and not in_scope(prompt) and not in_scope(instructions):
-        return JSONResponse(refusal_payload(prompt))
+        return JSONResponse(_spec_shape(refusal_payload(prompt), ui))
 
     # In-scope prompt naming a bundled sample booklet -> run the REAL agent on its cached
     # transcription (vision ran once, offline; everything downstream is live).
@@ -233,13 +253,14 @@ async def execute(request: Request):
         if result.get("meta") is not None and sample.get("pages"):
             result["meta"]["sample_pages"] = [
                 f"{sample['pages_prefix']}/page-{i:02d}.jpg" for i in range(1, sample["pages"] + 1)]
-        return JSONResponse(result, status_code=400 if result["status"] == "error" else 200)
+        return JSONResponse(_spec_shape(result, ui),
+                            status_code=400 if result["status"] == "error" else 200)
 
     # In-scope but nothing to grade: explain how to attach a scan / name a sample. (The
     # deterministic mock still answers when no LLM key is configured, keeping the contract
     # alive in keyless environments.)
     if prompt.strip() and HAS_LLM:
-        return JSONResponse({
+        return JSONResponse(_spec_shape({
             "status": "ok", "error": None, "response": available_samples_text(),
             "steps": [{
                 "module": "Router", "pattern": "Scope guard",
@@ -253,7 +274,8 @@ async def execute(request: Request):
                              "llm_calls": 0, "tokens_spent": 0},
             }],
             "meta": {"mode": "info", "source": None, "total": 0, "max": 0, "questions": []},
-        })
+        }, ui))
 
     result = run_mock_agent(prompt, instructions)
-    return JSONResponse(result, status_code=400 if result["status"] == "error" else 200)
+    return JSONResponse(_spec_shape(result, ui),
+                        status_code=400 if result["status"] == "error" else 200)

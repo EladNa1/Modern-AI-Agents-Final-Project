@@ -66,11 +66,14 @@ def chat(system: str, user: str, images: list[ImageInput] | None = None,
     return text, usage
 
 
-def embed(inputs: str | list[str]) -> list[list[float]]:
+def embed(inputs: str | list[str], log: "StepLog | None" = None) -> list[list[float]]:
     """Text embeddings via the same gateway. Accepts one string or a batch; returns one
-    vector per input, in order."""
+    vector per input, in order. Pass `log` to have the embedding tokens counted into the
+    run's cost accounting (they are cheap but not free)."""
     batch = inputs if isinstance(inputs, list) else [inputs]
     resp = _client_singleton().embeddings.create(model=LLMOD_EMBED_MODEL, input=batch)
+    if log is not None:
+        log.embed_tokens += getattr(getattr(resp, "usage", None), "total_tokens", 0) or 0
     # The API may return items out of order -- sort by index to be safe.
     ordered = sorted(resp.data, key=lambda d: d.index)
     return [d.embedding for d in ordered]
@@ -106,6 +109,7 @@ class StepLog:
         self.steps: list[Step] = []
         self.usage: Usage = {"prompt": 0, "completion": 0, "total": 0}
         self.by_module: dict[str, Usage] = {}  # per-stage usage, for cost-by-stage (6.2)
+        self.embed_tokens: int = 0             # embedding tokens (Retriever queries)
 
     def add(self, module: str, system: str, user: str, response,
             pattern: str | None = None, usage: Usage | None = None) -> None:
@@ -122,8 +126,12 @@ class StepLog:
                 m[k] += usage.get(k, 0)
 
     def cost_by_stage(self) -> dict:
-        """Estimated $ per stage + total, from the configured token prices (6.2)."""
+        """Estimated $ per stage + total, from the configured token prices (6.2).
+        Embedding tokens (Retriever queries) are counted too -- cheap, but not free."""
+        from .config import CONFIG
         stages = {mod: round(cost_usd(u), 4) for mod, u in self.by_module.items()}
+        if self.embed_tokens:
+            stages["Embeddings"] = round(self.embed_tokens / 1000 * CONFIG.price_embed_per_1k, 6)
         stages["total"] = round(sum(stages.values()), 4)
         return stages
 

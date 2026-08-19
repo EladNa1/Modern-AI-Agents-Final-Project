@@ -95,7 +95,7 @@ def _requested_questions(instr: str) -> list[str]:
 def run_mock_agent(source: str, instructions: str = "") -> dict:
     if not source or not source.strip():
         return {"status": "error",
-                "error": "No exam provided. Upload a scanned exam (PDF, Word, or image).",
+                "error": "No exam provided. Upload a scanned exam (PDF or image).",
                 "response": None, "steps": []}
 
     instr = (instructions or "").strip()

@@ -58,11 +58,11 @@
         </p>
 
         <div class="dropzone" id="dropzone" role="button" tabindex="0">
-          <input type="file" id="fileInput" accept=".pdf,.doc,.docx,.png,.jpg,.jpeg,.webp" hidden />
+          <input type="file" id="fileInput" accept=".pdf,.png,.jpg,.jpeg,.webp" hidden />
           <div id="dzEmpty">
             <div class="dzicon">⇪</div>
             <div class="dztitle">Drop the exam scan here</div>
-            <div class="dzsub">or click to browse — PDF · Word · images</div>
+            <div class="dzsub">or click to browse — PDF · images</div>
           </div>
           <div class="filechip" id="dzFile" style="display:none">
             <span class="fileic" id="fileIcon">📄</span>
@@ -411,14 +411,14 @@
       const fd = new FormData();
       fd.append("file", file);
       if (examOverride) fd.append("exam", examOverride);
-      await runExecute(() => fetch("/api/execute", { method: "POST", body: fd }),
+      await runExecute(() => fetch("/api/execute?ui=1", { method: "POST", body: fd }),
                        $("gradeBtn"), "Grading…", "Run Agent");
     }
 
     // One-click demos: run the REAL agent on a bundled sample booklet's cached
     // transcription via the JSON contract — no upload required.
     async function doSample(n, btnId, idleLabel) {
-      await runExecute(() => fetch("/api/execute", {
+      await runExecute(() => fetch("/api/execute?ui=1", {
         method: "POST", headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ prompt: "Grade sample booklet " + n }),
       }), $(btnId), "Grading sample…", idleLabel);

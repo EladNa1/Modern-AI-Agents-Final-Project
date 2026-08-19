@@ -15,17 +15,23 @@ from __future__ import annotations
 
 import re
 
-# Grading intent: verbs and exam artifacts (English + Hebrew). Any of these means the user
-# is asking for grading work, so the request proceeds into the agent.
-_GRADING_RE = re.compile(
-    r"grade|grading|score|scoring|mark(?:ing)?|check|feedback|partial credit|"
-    r"exam|test|quiz|booklet|scan|moed|final|midterm|sample|"
+# Exam ARTIFACTS (nouns, word-bounded in English): a prompt naming one of these is about
+# an exam, so grading intent is established on its own.
+_EXAM_NOUN_RE = re.compile(
+    r"\b(exam|test|quiz|booklet|scan|moed|final|midterm|sample)s?\b|"
     r"104041|104042|104195|"
-    r"בדיקה|בדוק|בדקי|תבדוק|לבדוק|ציון|ציונים|נקודות|ניקוד|משוב|"
-    r"מבחן|בוחן|מועד|טופס|מחברת|סריקה|סרוק",
+    r"מבחן|בוחן|מועד|טופס|מחברת|סריקה",
     re.IGNORECASE)
 
-# Course-domain content words alone (no grading intent) signal a solve/tutor/explain
+# Grading VERBS (word-bounded in English). A bare verb is NOT enough -- "please CHECK why
+# my car makes a grinding noise" is not a grading request. A verb counts only alongside
+# course-domain content (see classify below).
+_GRADING_VERB_RE = re.compile(
+    r"\b(grade|grading|regrade|score|scoring|mark|marking|check|assess|evaluate|review)\b|"
+    r"בדיקה|בדוק|בדקי|תבדוק|לבדוק|ציון|ציונים|נקודות|ניקוד|משוב|סרוק",
+    re.IGNORECASE)
+
+# Course-domain content words. Alone (no grading intent) they signal a solve/tutor/explain
 # request -- polite refusal with a scope explanation, not a grading attempt.
 _MATH_RE = re.compile(
     r"calculus|hedva|limit|derivative|integral|theorem|proof|converge|series|"
@@ -34,11 +40,20 @@ _MATH_RE = re.compile(
 
 
 def classify(prompt: str) -> str:
-    """'grading' | 'math_no_grading' | 'offtopic'."""
+    """'grading' | 'math_no_grading' | 'offtopic'.
+
+    grading  = an exam artifact is named, OR a grading verb appears together with
+               course-domain content ("check my solution to this integral").
+    math     = course-domain content without grading intent (solve/tutor request).
+    offtopic = everything else -- including grading verbs about non-exam things
+               ("check why my car is making a noise")."""
     p = prompt or ""
-    if _GRADING_RE.search(p):
+    if _EXAM_NOUN_RE.search(p):
         return "grading"
-    if _MATH_RE.search(p):
+    has_math = bool(_MATH_RE.search(p))
+    if _GRADING_VERB_RE.search(p) and has_math:
+        return "grading"
+    if has_math:
         return "math_no_grading"
     return "offtopic"
 

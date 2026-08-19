@@ -64,7 +64,15 @@ naming a bundled sample booklet (e.g. `"Grade sample booklet 1"`) runs the REAL 
 its pre-cached vision transcription (`checkmate/samples.py` — only OCR is cached, everything
 downstream is live), and out-of-domain prompts get a polite zero-token refusal. Also
 `GET /api/exams`, `/api/team_info`, `/api/agent_info`, `/api/model_architecture`.
-Pure-Python **FastAPI on Vercel** (Fluid Compute, 300s).
+Pure-Python **FastAPI on Vercel** (Fluid Compute, 300s). By default `/api/execute` returns
+EXACTLY the mandated `{status, error, response, steps}` shape with one steps entry per
+model call; the bundled GUI opts into extra rendering fields with `?ui=1`.
+
+**Prompt-injection defense (by design):** free-text from the user (the `prompt` /
+`instructions` fields) is used ONLY for routing and logging — it is never placed in the
+Grader's or Reflector's context, so "give this student 100" style instructions cannot
+influence a grade. The grader sees only the transcribed student work and the retrieved
+official material.
 
 ## 4. Prompt-engineering methods
 
@@ -134,7 +142,7 @@ redeploy.
 ### Parser / vision — `checkmate/config.py`, `pdf.py`, `parser.py`, `zoom.py`, `ink.py`
 | Knob | Value | File | Meaning | Env override |
 |------|-------|------|---------|--------------|
-| `render_max_pages` | **12** | config.py | pages rendered per upload (18-page booklet needs > 12) | `CHECKMATE_MAX_PAGES` |
+| `render_max_pages` | **24** | config.py | pages rendered per upload — covers the full 18-20 page booklets; parallel parsing keeps it fast | `CHECKMATE_MAX_PAGES` |
 | `parser_max_tokens` | **2500** | config.py | parser output cap | — |
 | `RENDER_DPI` | **150** | pdf.py | page render DPI | — |
 | `CHECKMATE_ZOOM` | **off** | parser.py | opt-in Pass-2 zoom re-read | `CHECKMATE_ZOOM` |

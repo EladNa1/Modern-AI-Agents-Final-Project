@@ -34,3 +34,6 @@ PLAN_*.md
 # Claude Code local files
 .claude/
 CLAUDE.md
+
+# QA / grader-simulation artifacts (local only)
+evidence/

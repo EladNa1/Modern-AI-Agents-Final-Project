@@ -309,24 +309,35 @@ def run_grader(q: ParsedFragment, retrieved: Retrieved | None, log: StepLog,
     cap = CONFIG.grader_max_tokens_tf_mc if _is_tf_mc(qid) else CONFIG.grader_max_tokens
 
     grades: list[Grade] = []
-    total_usage: Usage = {"prompt": 0, "completion": 0, "total": 0}
     truncated = False
-    for _ in range(n):
+    for i in range(n):
         text, usage = chat(GRADER_SYSTEM, user, max_tokens=cap,
                            json_mode=True, model=LLMOD_GRADER_MODEL)
-        for k in total_usage:
-            total_usage[k] += usage.get(k, 0)
         if usage.get("completion", 0) >= cap:  # output hit the token cap -> likely cut off
             truncated = True
         grades.append(_normalize_grade(q.id, max_points, q.confidence, text))
+        # Spec: steps[] must describe EVERY LLM call -- each self-consistency sample is its
+        # own entry carrying the model's actual response for that call.
+        raw = extract_json(text)
+        raw = raw if isinstance(raw, dict) else {"unparseable_output": (text or "")[:400]}
+        log.add("Grader", GRADER_SYSTEM, user,
+                {"sample": f"{i + 1}/{n}", **raw},
+                f"Few-shot · sample {i + 1}/{n}", usage)
 
     final = _aggregate_grades(grades, max_points, is_tf_mc=_is_tf_mc(qid))
     if truncated and "output_truncated" not in final.flags:
         final.flags.append("output_truncated")
-    log.add("Grader", GRADER_SYSTEM, user,
-            {**final.__dict__, "samples": [g.score for g in grades], "n": n, "max_tokens": cap,
-             "truncated": truncated},
-            f"Few-shot · self-consistency x{n}", total_usage)
+    # Deterministic reconciliation of the N samples -- no LLM call; logged so the trace
+    # shows the decision (median, disagreement escalation, lone-outlier handling).
+    log.add("Grader",
+            "Deterministic self-consistency aggregation (no LLM call): take the median of "
+            "the N sample scores; escalate when the samples disagree beyond the tolerance "
+            "band; on open questions a lone outlier against unanimous full marks is treated "
+            "as sampling noise and left to the Reflector.",
+            f"samples={[g.score for g in grades]} (max {max_points}, n={n})",
+            {**final.__dict__, "n": n, "max_tokens": cap, "truncated": truncated,
+             "llm_calls": 0},
+            "Self-consistency median")
     return final
 
 
