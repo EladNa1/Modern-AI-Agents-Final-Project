@@ -148,7 +148,19 @@ def run_agent(images: list[ImageInput], instructions: str = "", source_label: st
                 if refl.action == "ESCALATE":
                     grade = Grade(**{**grade.__dict__, "status": "escalate"})
                     break
-                grade = _apply_revision(grade, refl.score, refl.feedback)  # REVISE
+                # REVISE -- canonical Reflection loop (Self-Refine/Reflexion, as taught):
+                # the critique goes BACK TO THE GENERATOR, which regrades conditioned on
+                # it (and may keep its grade if the critique is unjustified). The revised
+                # grade is re-critiqued on the next pass. An escalation is still never
+                # cleared: a revision regrade cannot downgrade an escalate (guarded below).
+                was_escalated = grade.status == "escalate"
+                crit_text = (refl.feedback or refl.note or "").strip() or "(no critique text)"
+                before_rev = log.usage["total"]
+                regrade = run_grader(q, retrieved, log, notes, critique=(grade, crit_text))
+                refl_tokens += log.usage["total"] - before_rev
+                if was_escalated and regrade.status != "escalate":
+                    regrade = Grade(**{**regrade.__dict__, "status": "escalate"})
+                grade = regrade
 
             results.append(_to_question_result(q.id, grade, retrieved))
             gb.add(qid, entry_from_grade(grade, retrieved))
@@ -293,20 +305,6 @@ def _reflection_passes(qid: str, max_points: int) -> int:
         return 0
     return CONFIG.max_revise_passes if max_points >= CONFIG.reflection_high_threshold \
         else CONFIG.reflection_passes_open
-
-
-def _apply_revision(grade: Grade, new_score: float | None, new_feedback: str) -> Grade:
-    score = max(0.0, min(grade.max, new_score)) if new_score is not None else grade.score
-    # A REVISE may correct the score/feedback, but it must NEVER downgrade an escalation:
-    # once the grade is escalated (self-consistency `grader_disagreement`, or a missing/E3
-    # key), the reflector -- the same weak model -- cannot silently mark it graded. Keeping
-    # the escalate preserves the safety net (and the flags that ride with it).
-    if grade.status == "escalate":
-        status = "escalate"
-    else:
-        status = "ok" if score >= grade.max else "partial"
-    return Grade(**{**grade.__dict__, "score": score, "status": status,
-                    "feedback": new_feedback.strip() or grade.feedback})
 
 
 def _to_question_result(qid: str, grade: Grade, retrieved: Retrieved | None) -> QuestionResult:

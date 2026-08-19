@@ -312,13 +312,29 @@ def _samples_for(qid: str, max_points: int) -> int:
 
 
 def run_grader(q: ParsedFragment, retrieved: Retrieved | None, log: StepLog,
-               notes: list[NotesChunk] | None = None) -> Grade:
+               notes: list[NotesChunk] | None = None,
+               critique: "tuple[Grade, str] | None" = None) -> Grade:
+    """Grade the question. `critique` = (previous_grade, reflector_critique_text) puts the
+    Grader into a REVISION pass -- the canonical Reflection loop: the critique returns to
+    the GENERATOR, which regrades conditioned on it (single sample; the Reflector re-checks
+    the result on the next pass anyway)."""
     notes = notes or []
     user, max_points = build_grader_user(q, retrieved, notes)
     # Classify by the KB's canonical id when we have it (the parser label is unreliable).
     qid = retrieved.entry.id if retrieved else q.id
     n = _samples_for(qid, max_points)
     cap = CONFIG.grader_max_tokens_tf_mc if _is_tf_mc(qid) else CONFIG.grader_max_tokens
+    if critique is not None:
+        prev, crit_text = critique
+        user += (
+            "\n\n=== REVISION PASS ===\n"
+            f"You previously graded this question {prev.score}/{prev.max} with feedback: "
+            f"\"{(prev.feedback or '')[:400]}\"\n"
+            f"A reviewer critiqued that grade against the official solution: \"{crit_text[:400]}\"\n"
+            "Re-grade from scratch, taking the critique into account where it is justified by "
+            "the evidence — you may also keep your original grade if the critique is wrong. "
+            "Return the same JSON object.")
+        n = 1  # one regeneration per revision pass; the Reflector reviews it again
 
     grades: list[Grade] = []
     truncated = False
@@ -334,7 +350,8 @@ def run_grader(q: ParsedFragment, retrieved: Retrieved | None, log: StepLog,
         raw = raw if isinstance(raw, dict) else {"unparseable_output": (text or "")[:400]}
         log.add("Grader", GRADER_SYSTEM, user,
                 {"sample": f"{i + 1}/{n}", **raw},
-                f"Few-shot · sample {i + 1}/{n}", usage)
+                "Few-shot · revision pass" if critique is not None else f"Few-shot · sample {i + 1}/{n}",
+                usage)
 
     final = _aggregate_grades(grades, max_points, is_tf_mc=_is_tf_mc(qid))
     if truncated and "output_truncated" not in final.flags:

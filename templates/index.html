@@ -99,7 +99,7 @@
           <div class="pnode"><span class="pnum">2</span><b>Router</b><p>Two autonomous decisions: a scope guard that politely refuses anything that isn't a Calculus 1 grading task (zero tokens spent), and scoping grading to the identified exam — the exam identity comes from the scan, not from the answer.</p></div>
           <div class="pnode"><span class="pnum">3</span><b>Retriever</b><p>Pulls the matching official solution (exact metadata match, with a deterministic content-overlap fallback) plus supporting lecture-note chunks.</p></div>
           <div class="pnode"><span class="pnum">4</span><b>Grader</b><p>Scores the student's actual method with partial credit. Self-consistency: N samples, median score, escalate when the samples disagree.</p></div>
-          <div class="pnode"><span class="pnum">5</span><b>Reflector</b><p>Critiques the proposed grade against the official solution and the transcript — approve, revise, or escalate. Skipped on all-or-nothing items.</p></div>
+          <div class="pnode"><span class="pnum">5</span><b>Reflector</b><p>Critiques the proposed grade against the official solution and the transcript — approve, escalate, or send the critique back to the Grader for a regrade (the classic Reflection loop, max N passes). Skipped on all-or-nothing items.</p></div>
           <div class="pnode"><span class="pnum">6</span><b>GradeBook</b><p>Accumulates per-question entries and decides completion arithmetically from the exam manifest — a total is never reported on missing questions.</p></div>
         </div>
       </div>

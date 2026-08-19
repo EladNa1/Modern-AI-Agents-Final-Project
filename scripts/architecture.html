@@ -28,7 +28,7 @@
               background: #f2f3f7; border: 1.5px solid #e2e4ec; padding: 18px 22px; text-align: center; }
   .critique h3 { font-size: 18px; font-weight: 700; color: #3c3f4c; margin-bottom: 5px; }
   .critique p { font-size: 12.8px; color: #6b6e7d; }
-  .revisecap { position: absolute; left: 545px; top: 404px; width: 420px; text-align: center;
+  .revisecap { position: absolute; left: 645px; top: 404px; width: 420px; text-align: center;
                color: #4f46e5; font-weight: 700; font-size: 14.5px; }
 
   .kb { position: absolute; left: 440px; bottom: 56px; width: 720px; border-radius: 16px;
@@ -86,6 +86,7 @@
 
   <div class="lbl" style="left:180px; top:645px; color:#b45309; border-color:#f5cc94;">REFUSE</div>
   <div class="lbl" style="left:470px; top:452px; color:#0f766e; border-color:#99d6cf;">RAG evidence</div>
+  <div class="lbl" style="left:800px; top:604px; color:#0f766e; border-color:#99d6cf;">RAG evidence</div>
   <div class="lbl" style="left:1348px; top:552px; color:#b91c1c; border-color:#f3b4b4;">ESCALATE</div>
 
   <svg class="overlay" viewBox="0 0 1600 900">
@@ -109,14 +110,16 @@
     <line x1="1294" y1="311" x2="1330" y2="311" stroke="#9a9dab" stroke-width="3" marker-end="url(#a)"/>
     <!-- reflection loop: Reflector -> critique -> Grader -->
     <path d="M 1150 388 C 1120 440, 1080 470, 1035 496" fill="none" stroke="#9a9dab" stroke-width="2.5" marker-end="url(#a)"/>
-    <path d="M 940 472 C 955 445, 970 415, 980 392" fill="none" stroke="#9a9dab" stroke-width="2.5" marker-end="url(#a)"/>
+    <path d="M 585 472 C 595 445, 605 418, 618 392" fill="none" stroke="#9a9dab" stroke-width="2.5" marker-end="url(#a)"/>
     <!-- REFUSE: Router down to refusal pill (stays left of the Retriever box) -->
     <path d="M 370 388 C 240 420, 130 540, 168 728" fill="none" stroke="#d97706" stroke-width="3" marker-end="url(#amber)"/>
     <!-- KB -> Retriever -->
     <path d="M 520 756 C 440 720, 385 690, 348 634" fill="none" stroke="#0f766e" stroke-width="3" marker-end="url(#green)"/>
     <!-- Retriever evidence -> Grader and -> critique -->
     <path d="M 438 545 C 505 490, 555 432, 600 392" fill="none" stroke="#0f766e" stroke-width="2.8" marker-end="url(#green)"/>
-    <path d="M 440 550 C 490 545, 530 540, 556 535" fill="none" stroke="#0f766e" stroke-width="2.8" marker-end="url(#green)"/>
+    
+    <!-- RAG evidence: Retriever -> Reflector (runs under the critique card) -->
+    <path d="M 438 585 C 850 660, 1180 620, 1200 396" fill="none" stroke="#0f766e" stroke-width="2.8" marker-end="url(#green)"/>
     <!-- ESCALATE: Reflector down-right to human pill -->
     <path d="M 1245 388 C 1300 500, 1355 630, 1375 748" fill="none" stroke="#dc2626" stroke-width="3" marker-end="url(#red)"/>
   </svg>
