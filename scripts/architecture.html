@@ -1,0 +1,124 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<link href="https://fonts.googleapis.com/css2?family=DM+Serif+Display&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  body { width: 1600px; height: 900px; background: #fbfbfd; font-family: Inter, sans-serif; position: relative; overflow: hidden; }
+  .title { position: absolute; left: 64px; top: 42px; font-family: "DM Serif Display", serif; font-size: 44px; color: #16161d; }
+  .subtitle { position: absolute; left: 66px; top: 108px; font-size: 17px; color: #7c7f8e; font-style: italic; }
+  .aux { position: absolute; right: 64px; top: 56px; font-size: 12.5px; color: #9a9dab; text-align: right; }
+  .aux b { color: #6b6e7d; font-weight: 600; }
+
+  .box { position: absolute; width: 212px; height: 150px; border-radius: 16px; padding: 22px 16px 0; text-align: center; }
+  .llm { background: #4f46e5; color: #fff; box-shadow: 0 10px 24px rgba(79,70,229,.20); }
+  .det { background: #0d9488; color: #fff; box-shadow: 0 10px 24px rgba(13,148,136,.20); }
+  .soft { background: #f2f3f7; border: 1.5px solid #e2e4ec; color: #3c3f4c; }
+  .dark { background: #23252f; color: #fff; box-shadow: 0 10px 24px rgba(35,37,47,.25); }
+  .box h2 { font-size: 22px; font-weight: 700; margin-bottom: 7px; }
+  .soft h2 { font-size: 20px; }
+  .box p { font-size: 12.3px; line-height: 1.45; opacity: .9; }
+  .chip { position: absolute; top: -13px; left: 50%; transform: translateX(-50%);
+          background: #312e81; color: #fff; font-size: 11px; font-weight: 700; letter-spacing: .4px;
+          padding: 4px 11px; border-radius: 7px; }
+  .det .chip { background: #115e59; }
+
+  .critique { position: absolute; left: 560px; top: 476px; width: 470px; border-radius: 16px;
+              background: #f2f3f7; border: 1.5px solid #e2e4ec; padding: 18px 22px; text-align: center; }
+  .critique h3 { font-size: 18px; font-weight: 700; color: #3c3f4c; margin-bottom: 5px; }
+  .critique p { font-size: 12.8px; color: #6b6e7d; }
+  .revisecap { position: absolute; left: 585px; top: 432px; width: 420px; text-align: center;
+               color: #4f46e5; font-weight: 700; font-size: 14.5px; }
+
+  .kb { position: absolute; left: 440px; bottom: 56px; width: 720px; border-radius: 16px;
+        background: #0f766e; color: #fff; padding: 16px 24px; text-align: center;
+        box-shadow: 0 10px 24px rgba(15,118,110,.2); }
+  .kb h3 { font-size: 18.5px; font-weight: 700; margin-bottom: 4px; }
+  .kb p { font-size: 12.5px; color: rgba(255,255,255,.86); }
+
+  .refuse { position: absolute; left: 96px; bottom: 66px; width: 250px; border-radius: 14px;
+            background: #fff7ed; border: 1.5px solid #f5cc94; color: #b45309; padding: 14px 16px; text-align: center; }
+  .refuse h3 { font-size: 15.5px; font-weight: 700; margin-bottom: 4px; }
+  .refuse p { font-size: 12px; line-height: 1.4; }
+  .human { position: absolute; right: 64px; bottom: 66px; width: 262px; border-radius: 14px;
+           background: #fef2f2; border: 1.5px solid #f3b4b4; color: #b91c1c; padding: 14px 16px; text-align: center; }
+  .human h3 { font-size: 15.5px; font-weight: 700; margin-bottom: 4px; }
+  .human p { font-size: 12px; line-height: 1.4; }
+
+  .note { position: absolute; font-size: 12.5px; color: #9a9dab; text-align: center; }
+  .lbl { position: absolute; font-size: 12px; font-weight: 700; letter-spacing: .4px; padding: 3px 9px;
+         border-radius: 6px; background: #fbfbfd; border: 1.5px solid; }
+  svg.overlay { position: absolute; inset: 0; width: 1600px; height: 900px; pointer-events: none; }
+</style>
+</head>
+<body>
+  <div class="title">CheckMate as a Reflection Agent</div>
+  <div class="subtitle">The agent grades first, then critiques its own grade against retrieved course evidence.</div>
+  <div class="aux">input: scanned booklet (PDF / images) or a bundled sample scan<br>
+       also logged in steps[]: <b>Config</b> — run setup · <b>Zoom</b> — magnified re-read</div>
+
+  <!-- main row -->
+  <div class="box llm"  style="left:64px;  top:236px;"><div class="chip">LLM · VISION</div><h2>Parser</h2><p>reads the booklet, transcribes the student's work, splits it into questions</p></div>
+  <div class="box det"  style="left:318px; top:236px;"><div class="chip">0 TOKENS</div><h2>Router</h2><p>scope guard — refuses non-grading requests; resolves the exam</p></div>
+  <div class="box llm"  style="left:572px; top:236px;"><div class="chip">LLM</div><h2>Grader</h2><p>initial score + feedback on the student's own method; self-consistency ×N</p></div>
+  <div class="box soft" style="left:826px; top:236px;"><h2>Initial grade</h2><p>score + partial credit + written feedback, per question</p></div>
+  <div class="box llm"  style="left:1080px;top:236px;"><div class="chip">LLM</div><h2>Reflector</h2><p>self-critique against the evidence — APPROVE · REVISE · ESCALATE</p></div>
+  <div class="box dark" style="left:1334px;top:236px;"><h2>Final result</h2><p>grade + feedback + full steps[] trace — assembled by GradeBook · Orchestrator</p></div>
+
+  <div class="revisecap">Revise until confident · max N passes</div>
+  <div class="critique">
+    <h3>Reflection critique</h3>
+    <p>does the grade match the official solution? is partial credit fair? is the answer legible? — grounded in retrieved evidence</p>
+  </div>
+
+  <div class="box llm" style="left:236px; top:496px; width:200px; height:130px;"><div class="chip">EMBEDDINGS</div><h2 style="font-size:20px;">Retriever</h2><p>verified RAG — thresholded, exam-scoped</p></div>
+
+  <div class="kb">
+    <h3>Knowledge base</h3>
+    <p>official solutions per exam question · course lecture notes · Pinecone + bundled JSON · SymPy-verified keys</p>
+  </div>
+
+  <div class="refuse"><h3>Polite refusal</h3><p>out-of-domain request or non-exam scan — zero grader tokens</p></div>
+  <div class="human"><h3>Human TA review</h3><p>disagreeing samples · illegible work · missing solution — never a silent guess</p></div>
+
+  <div class="note" style="left:990px; top:648px; width:190px;">Approve → final result.<br>Still unsure after N passes → escalate.</div>
+
+  <div class="lbl" style="left:248px; top:668px; color:#b45309; border-color:#f5cc94;">REFUSE</div>
+  <div class="lbl" style="left:470px; top:452px; color:#0f766e; border-color:#99d6cf;">RAG evidence</div>
+  <div class="lbl" style="left:1398px; top:560px; color:#b91c1c; border-color:#f3b4b4;">ESCALATE</div>
+
+  <svg class="overlay" viewBox="0 0 1600 900">
+    <defs>
+      <marker id="a" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse">
+        <path d="M0 0 L10 5 L0 10 z" fill="#9a9dab"/></marker>
+      <marker id="amber" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse">
+        <path d="M0 0 L10 5 L0 10 z" fill="#d97706"/></marker>
+      <marker id="red" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse">
+        <path d="M0 0 L10 5 L0 10 z" fill="#dc2626"/></marker>
+      <marker id="green" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse">
+        <path d="M0 0 L10 5 L0 10 z" fill="#0f766e"/></marker>
+      <marker id="purple" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse">
+        <path d="M0 0 L10 5 L0 10 z" fill="#4f46e5"/></marker>
+    </defs>
+    <!-- main flow -->
+    <line x1="278" y1="311" x2="314" y2="311" stroke="#9a9dab" stroke-width="3" marker-end="url(#a)"/>
+    <line x1="532" y1="311" x2="568" y2="311" stroke="#9a9dab" stroke-width="3" marker-end="url(#a)"/>
+    <line x1="786" y1="311" x2="822" y2="311" stroke="#9a9dab" stroke-width="3" marker-end="url(#a)"/>
+    <line x1="1040" y1="311" x2="1076" y2="311" stroke="#9a9dab" stroke-width="3" marker-end="url(#a)"/>
+    <line x1="1294" y1="311" x2="1330" y2="311" stroke="#9a9dab" stroke-width="3" marker-end="url(#a)"/>
+    <!-- reflection loop: Reflector -> critique -> Grader -->
+    <path d="M 1150 388 C 1120 440, 1080 470, 1035 496" fill="none" stroke="#9a9dab" stroke-width="2.5" marker-end="url(#a)"/>
+    <path d="M 605 472 C 625 440, 645 415, 668 392" fill="none" stroke="#9a9dab" stroke-width="2.5" marker-end="url(#a)"/>
+    <!-- REFUSE: Router down to refusal pill (stays left of the Retriever box) -->
+    <path d="M 390 388 C 295 435, 172 555, 182 742" fill="none" stroke="#d97706" stroke-width="3" marker-end="url(#amber)"/>
+    <!-- KB -> Retriever -->
+    <path d="M 520 756 C 440 720, 385 690, 348 634" fill="none" stroke="#0f766e" stroke-width="3" marker-end="url(#green)"/>
+    <!-- Retriever evidence -> Grader and -> critique -->
+    <path d="M 350 500 C 420 440, 520 400, 600 390" fill="none" stroke="#0f766e" stroke-width="2" stroke-dasharray="6 5" marker-end="url(#green)"/>
+    <path d="M 440 550 C 490 545, 530 540, 556 535" fill="none" stroke="#0f766e" stroke-width="2" stroke-dasharray="6 5" marker-end="url(#green)"/>
+    <!-- ESCALATE: Reflector down-right to human pill -->
+    <path d="M 1245 388 C 1300 500, 1355 630, 1375 748" fill="none" stroke="#dc2626" stroke-width="3" marker-end="url(#red)"/>
+  </svg>
+</body>
+</html>
