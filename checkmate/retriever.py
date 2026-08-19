@@ -197,6 +197,11 @@ def retrieve(question_id: str, question_text: str, log: StepLog, exam: str | Non
         response = {"matched": found.entry.id, "method": method, "score": score,
                     "exam": found.exam, "course": found.course, "points": found.entry.points,
                     "final_answer": found.entry.final_answer}
+        # Honesty marker: an exact-id match reached AFTER semantic search scored below the
+        # trust floor is id-based grounding that content could not confirm -- downstream
+        # review (Reflector / human) should know retrieval is weaker here.
+        if method == "exact-id" and score is not None:
+            response["caution"] = "semantic similarity below threshold — grounded by question id only"
     else:
         response = {"matched": None, "method": "searched" if HAS_PINECONE else "no-vector-db",
                     "score": score, "reason": "no knowledge-base entry above the match threshold"}

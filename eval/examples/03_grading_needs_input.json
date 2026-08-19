@@ -11,7 +11,6 @@
     "steps": [
       {
         "module": "Router",
-        "pattern": "Scope guard",
         "prompt": {
           "System_prompt": "Decide whether this grading request carries anything to grade: an attached scan or a named sample booklet.",
           "User_prompt": "Please grade my calculus exam"
@@ -24,13 +23,6 @@
           "tokens_spent": 0
         }
       }
-    ],
-    "meta": {
-      "mode": "info",
-      "source": null,
-      "total": 0,
-      "max": 0,
-      "questions": []
-    }
+    ]
   }
 }

@@ -71,6 +71,7 @@ def _normalize_reflection(text: str, max_points: int, usage: Usage, log: StepLog
 
     log.add("Reflector", REFLECTOR_SYSTEM, user,
             {"action": reflection.action, "score": reflection.score,
+             "feedback": reflection.feedback,  # the revised feedback IS the result of a REVISE
              "note": reflection.note, "confidence": reflection.confidence},
             "Reflection", usage)
     return reflection

@@ -28,7 +28,7 @@
               background: #f2f3f7; border: 1.5px solid #e2e4ec; padding: 18px 22px; text-align: center; }
   .critique h3 { font-size: 18px; font-weight: 700; color: #3c3f4c; margin-bottom: 5px; }
   .critique p { font-size: 12.8px; color: #6b6e7d; }
-  .revisecap { position: absolute; left: 585px; top: 432px; width: 420px; text-align: center;
+  .revisecap { position: absolute; left: 585px; top: 404px; width: 420px; text-align: center;
                color: #4f46e5; font-weight: 700; font-size: 14.5px; }
 
   .kb { position: absolute; left: 440px; bottom: 56px; width: 720px; border-radius: 16px;
@@ -56,7 +56,7 @@
   <div class="title">CheckMate as a Reflection Agent</div>
   <div class="subtitle">The agent grades first, then critiques its own grade against retrieved course evidence.</div>
   <div class="aux">input: scanned booklet (PDF / images) or a bundled sample scan<br>
-       also logged in steps[]: <b>Config</b> — run setup · <b>Zoom</b> — magnified re-read</div>
+       also logged in steps[]: <b>Config</b> — run setup · <b>Zoom</b> — magnified re-read (opt-in)</div>
 
   <!-- main row -->
   <div class="box llm"  style="left:64px;  top:236px;"><div class="chip">LLM · VISION</div><h2>Parser</h2><p>reads the booklet, transcribes the student's work, splits it into questions</p></div>
@@ -109,7 +109,7 @@
     <line x1="1294" y1="311" x2="1330" y2="311" stroke="#9a9dab" stroke-width="3" marker-end="url(#a)"/>
     <!-- reflection loop: Reflector -> critique -> Grader -->
     <path d="M 1150 388 C 1120 440, 1080 470, 1035 496" fill="none" stroke="#9a9dab" stroke-width="2.5" marker-end="url(#a)"/>
-    <path d="M 605 472 C 625 440, 645 415, 668 392" fill="none" stroke="#9a9dab" stroke-width="2.5" marker-end="url(#a)"/>
+    <path d="M 700 472 C 760 440, 830 415, 900 392" fill="none" stroke="#9a9dab" stroke-width="2.5" marker-end="url(#a)"/>
     <!-- REFUSE: Router down to refusal pill (stays left of the Retriever box) -->
     <path d="M 370 388 C 240 420, 130 540, 168 728" fill="none" stroke="#d97706" stroke-width="3" marker-end="url(#amber)"/>
     <!-- KB -> Retriever -->

@@ -88,10 +88,12 @@ async def team_info():
 def _real_examples() -> list[dict]:
     """Captured REAL runs (scripts/capture_examples.py output, bundled under kb/samples/)
     — served as the spec-required prompt_examples so the grader reads genuine traces:
-    a full grading run and an out-of-domain refusal."""
+    a full grading run and an out-of-domain refusal. These are BARE spec-shape captures
+    (one steps entry per model call, no extra fields); the ?replay view uses the separate
+    ui-enriched captures instead."""
     import json
     out: list[dict] = []
-    for fname in ("example_run.json", "example_refusal.json"):
+    for fname in ("example_agent_info_run.json", "example_agent_info_refusal.json"):
         path = os.path.join(_ROOT, "checkmate", "kb", "samples", fname)
         try:
             rec = json.load(open(path, encoding="utf-8"))
@@ -115,11 +117,14 @@ async def agent_info():
             "credit and writing per-question feedback. Grades are grounded in the retrieved "
             "official solution and rubric, not invented. Ambiguous handwriting or low-confidence "
             "grades are escalated to a human teacher, never silently guessed. It returns the "
-            "graded exam with annotations plus the total. Internally it is a Reflection Agent with "
-            "four logged modules — Parser (vision OCR, splits the exam), Retriever (Pinecone vector "
+            "graded exam with annotations plus the total. Internally it is a Reflection Agent; "
+            "every stage logs its calls in steps[] under its own module name, matching the "
+            "model_architecture diagram: Config (run-setup snapshot), Parser (vision OCR, splits "
+            "the exam), Router (zero-token scope guard + exam scoping), Retriever (Pinecone vector "
             "RAG that grounds each grade in the matching official solution AND in relevant course "
-            "lecture notes), Grader (few-shot, partial credit), and Reflector (self-critique that "
-            "approves, revises, or escalates) — matching the model_architecture diagram. Retrieval "
+            "lecture notes), Grader (few-shot, partial credit, self-consistency), Reflector "
+            "(self-critique that approves, revises, or escalates), and Zoom (opt-in magnified "
+            "re-read of faint regions); the GradeBook/Orchestrator assembles the final result. Retrieval "
             "is VERIFIED, not trusted: matches below a similarity floor are discarded (the agent "
             "grounds on nothing and escalates rather than on the wrong solution), retrieval is "
             "scoped to the exam identified from the scan, the Grader must reject a retrieved "

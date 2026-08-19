@@ -38,6 +38,20 @@ _MATH_RE = re.compile(
     r"חדו\"?א|חשבון (?:אינפי|דיפרנציאלי)|אינפי|גבול|נגזרת|אינטגרל|משפט|הוכחה|טור|התכנס",
     re.IGNORECASE)
 
+# Tutoring intent beats everything except an actual exam artifact: "teach me", "explain",
+# "step by step" describe a lesson, not a grading job -- even when grading verbs appear.
+_TUTOR_RE = re.compile(
+    r"\b(teach|explain|tutor|walk me through|show me how|step[- ]by[- ]step|how (?:do|to))\b|"
+    r"תלמד|למד אותי|תסביר|הסבר|צעד אחר צעד",
+    re.IGNORECASE)
+
+# Explicit negation of grading ("do not grade", "without grading") -- the user is telling
+# us the one thing we do is NOT wanted.
+_NO_GRADING_RE = re.compile(
+    r"\b(?:do\s*n[o']t|don't|without|no)\s+(?:grade|grading|scoring|marking)\b|"
+    r"בלי (?:לבדוק|ציון|בדיקה)|לא לבדוק|אל תבדוק|ללא ציון",
+    re.IGNORECASE)
+
 
 def classify(prompt: str) -> str:
     """'grading' | 'math_no_grading' | 'offtopic'.
@@ -48,9 +62,15 @@ def classify(prompt: str) -> str:
     offtopic = everything else -- including grading verbs about non-exam things
                ("check why my car is making a noise")."""
     p = prompt or ""
+    has_math = bool(_MATH_RE.search(p))
+    # An exam artifact makes it our domain regardless of phrasing -- "general feedback on
+    # my exam, no grading" is the legitimate feedback-only mode, not a refusal case.
     if _EXAM_NOUN_RE.search(p):
         return "grading"
-    has_math = bool(_MATH_RE.search(p))
+    # Without an exam artifact, explicit "do not grade" or a tutoring frame means a lesson
+    # is being requested -- the one thing we do is not wanted.
+    if _NO_GRADING_RE.search(p) or _TUTOR_RE.search(p):
+        return "math_no_grading" if has_math else "offtopic"
     if _GRADING_VERB_RE.search(p) and has_math:
         return "grading"
     if has_math:

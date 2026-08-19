@@ -110,6 +110,9 @@ GRADING RULES
    marks. Never deduct for style, ordering, notation preferences, or "could be clearer";
    a complete and valid argument is worth ALL the points, exactly as a senior TA would
    grade it.
+9. When your feedback quotes mathematics (an integral, an equation, a bound), COPY it
+   character-for-character from the student's transcript or the official solution — never
+   re-derive or retype it from memory; a mistyped formula in feedback is worse than none.
 
 FEW-SHOT (calibrated on the RED-PEN scores of the Winter 2024 Moed A graded booklet)
 --- Example 1 (full credit, alternative-but-valid structure) ---
