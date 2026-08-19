@@ -18,7 +18,10 @@ import re
 # Exam ARTIFACTS (nouns, word-bounded in English): a prompt naming one of these is about
 # an exam, so grading intent is established on its own.
 _EXAM_NOUN_RE = re.compile(
-    r"\b(exam|test|quiz|booklet|scan|moed|final|midterm|sample)s?\b|"
+    r"\b(exam|quiz|booklet|scan|moed|final|midterm|sample)s?\b|"
+    # bare "test" is too generic ("driving test", "test my patience") -- require course or
+    # grading context around it
+    r"\b(?:calculus|math|scanned|graded|this)\s+test\b|\btest\s+booklet\b|"
     r"104041|104042|104195|"
     r"מבחן|בוחן|מועד|טופס|מחברת|סריקה",
     re.IGNORECASE)

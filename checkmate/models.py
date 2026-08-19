@@ -45,6 +45,10 @@ class Retrieved:
     entry: SolutionEntry
     exam: str
     course: str
+    # How this match was made -- surfaced to the Grader/Reflector so weak grounding is
+    # visible downstream, not only in the trace.
+    method: str = ""
+    score: float | None = None
 
 
 @dataclass

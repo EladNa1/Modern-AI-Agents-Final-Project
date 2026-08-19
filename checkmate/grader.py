@@ -255,9 +255,18 @@ def build_grader_user(q: ParsedFragment, retrieved: Retrieved | None,
 
     if retrieved:
         e = retrieved.entry
+        match_line = ""
+        if retrieved.method:
+            match_line = f"Retrieval match: {retrieved.method}" + \
+                (f", similarity {retrieved.score}" if retrieved.score is not None else "")
+            if retrieved.method == "exact-id" and retrieved.score is not None:
+                match_line += (" — CAUTION: content could not confirm this match; if the "
+                               "student's work does not fit this problem, escalate instead "
+                               "of grading against it.")
         grounding = "\n\n".join(part for part in [
             f"Exam: {retrieved.exam} (course {retrieved.course})",
             f"Question {e.id} — worth {e.points} points.",
+            match_line,
             f"Official problem:\n{e.problem}",
             f"Official solution:\n{e.official_solution}",
             f"Correct final answer: {e.final_answer}" if e.final_answer else "",

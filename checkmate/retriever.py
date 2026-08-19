@@ -25,6 +25,12 @@ _GEN = json.load(open(os.path.join(os.path.dirname(__file__), "kb", "generation.
 # Minimum cosine similarity to trust a semantic match -- below this we'd rather ground on
 # nothing (and let the Grader escalate) than on the wrong problem.
 MIN_SCORE = 0.5
+# Semantic hits below this band must be CORROBORATED by printed-text overlap with the
+# matched problem; an uncorroborated borderline hit (e.g. a continuation page of one
+# question drifting onto its sibling at 0.53) is demoted to no-match and lands in the
+# escalated "unmatched work" bucket instead of contaminating another question's grade.
+SEMANTIC_CONFIRM_BAND = 0.6
+CONFIRM_MIN_F1 = 0.2
 # Notes chunks score lower than curated solutions -- a gentler bar for supporting context.
 NOTES_MIN_SCORE = 0.3
 
@@ -173,6 +179,17 @@ def retrieve(question_id: str, question_text: str, log: StepLog, exam: str | Non
         sem = _find_semantic(question_text, exam, log)
         if sem and sem["found"]:
             found, method, score = sem["found"], "semantic", sem["score"]
+            # Borderline semantic hits need printed-text corroboration: the booklet prints
+            # the question above the student's work, so a REAL match shares tokens with the
+            # KB problem. A continuation page (handwriting only) that drifts onto a sibling
+            # question at ~0.5 shares none -- demote it to no-match; it will land in the
+            # escalated unmatched bucket rather than contaminate another question's grade.
+            if score is not None and score < SEMANTIC_CONFIRM_BAND:
+                frag, prob = _tokens(question_text), _tokens(found.entry.problem)
+                f1 = (2 * len(frag & prob) / (len(frag) + len(prob))) if frag and prob else 0.0
+                if f1 < CONFIRM_MIN_F1:
+                    found, method = None, ""
+                    score = round(score, 3)
         elif sem:
             score = sem["score"]  # queried, but below threshold -- record why
 
@@ -194,6 +211,7 @@ def retrieve(question_id: str, question_text: str, log: StepLog, exam: str | Non
             method = "exact-id"
 
     if found:
+        found.method, found.score = method, score  # surface match provenance downstream
         response = {"matched": found.entry.id, "method": method, "score": score,
                     "exam": found.exam, "course": found.course, "points": found.entry.points,
                     "final_answer": found.entry.final_answer}

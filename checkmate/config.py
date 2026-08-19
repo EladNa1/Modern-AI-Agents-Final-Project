@@ -57,6 +57,10 @@ class AgentConfig:
     render_max_pages: int = 24         # pages rendered per upload; real booklets run 18-20
                                        # pages, and the parallel parser makes 24 as fast as 12
 
+    # --- Run ceilings (6.3) ---
+    max_run_seconds: int = 240         # wall-clock guard under Vercel's 300s hard limit:
+                                       # stop before the next question past this point
+
     # --- Token budgets (per stage), by question type (6.4) ---
     parser_max_tokens: int = 2500
     grader_max_tokens: int = 1800      # open: generous, so it can walk the argument step by step
@@ -78,6 +82,7 @@ def load_config() -> AgentConfig:
         grader_samples_high=_int("CHECKMATE_GRADER_SAMPLES_HIGH", 5, 1, 7),
         max_revise_passes=_int("CHECKMATE_MAX_REVISE_PASSES", 2, 0, 3),
         render_max_pages=_int("CHECKMATE_MAX_PAGES", 24, 1, 60),
+        max_run_seconds=_int("CHECKMATE_MAX_RUN_SECONDS", 240, 30, 290),
     )
 
 

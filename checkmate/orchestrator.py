@@ -7,6 +7,7 @@ approve|escalate. Falls back to the mock when there is no API key or no image to
 from __future__ import annotations
 
 import re
+import time
 from collections import Counter
 from dataclasses import asdict
 
@@ -33,6 +34,7 @@ def run_agent(images: list[ImageInput], instructions: str = "", source_label: st
         return run_mock_agent(source_label, instructions or "")
 
     instructions = (instructions or "").strip()
+    t0 = time.time()
     log = StepLog()
     # Log the active tuning config first, so every trace/eval number is attributable to it.
     log.add("Config", "Active tuning config for this run (section 6).", "",
@@ -151,12 +153,27 @@ def run_agent(images: list[ImageInput], instructions: str = "", source_label: st
             results.append(_to_question_result(q.id, grade, retrieved))
             gb.add(qid, entry_from_grade(grade, retrieved))
 
-            # Budget guardrail (6.3): stop before the next question if we've hit the ceiling.
-            if log.cost_by_stage()["total"] > CONFIG.max_run_cost_usd:
+            # Run ceilings (6.3): stop before the next question past the budget ceiling OR
+            # the wall-clock guard (Vercel kills the whole request at 300s -- better to
+            # return a provisional result than nothing).
+            if (log.cost_by_stage()["total"] > CONFIG.max_run_cost_usd
+                    or time.time() - t0 > CONFIG.max_run_seconds):
                 aborted = True
                 break
 
         gb.cost = log.cost_by_stage()
+        # Deterministic assembly step -- no LLM call; logged so the trace shows how the
+        # final result is built (completion judged arithmetically from the manifest).
+        report = gb.final_report()
+        log.add("GradeBook",
+                "Deterministic assembly (no LLM call): accumulate per-question entries and "
+                "decide completion arithmetically from the exam manifest -- a total is never "
+                "reported over missing questions without saying so.",
+                f"questions={len(results)}, exam={exam}",
+                {"booklet_status": gb.status(), "llm_calls": 0,
+                 "missing_questions": (report or {}).get("report", {}).get("missing_questions")
+                 if isinstance(report, dict) else None},
+                "Assembly")
         return _assemble(results, source_label, instructions, log, exam, exam_source, aborted, gb)
     except Exception as err:
         # Any gateway/parse failure -> a valid error payload (never raise to the route).
@@ -324,9 +341,11 @@ def _assemble(questions: list[QuestionResult], source: str, instructions: str, l
         scope_line, "",
         *[f"{q.id} — {q.score}/{q.max}: {q.feedback}" for q in questions], "",
         (f"⚠ {len(escalated)} question(s) escalated to the teacher: "
-         f"{', '.join(q.id for q in escalated)}.") if escalated else "No questions required human review.",
-        (f"⚠ Run stopped early at the ${CONFIG.max_run_cost_usd:.2f} budget ceiling — "
-         "remaining questions were not graded.") if aborted else "",
+         f"{', '.join(q.id for q in escalated)} — their {sum(q.score for q in escalated):g} "
+         "auto-scored point(s) are PROVISIONAL pending human review; the total may change."
+         ) if escalated else "No questions required human review.",
+        (f"⚠ Run stopped early at a ceiling (${CONFIG.max_run_cost_usd:.2f} budget / "
+         f"{CONFIG.max_run_seconds}s wall-clock) — remaining questions were not graded.") if aborted else "",
         f"Estimated cost: ${cost['total']:.4f}.",
     ]
 
