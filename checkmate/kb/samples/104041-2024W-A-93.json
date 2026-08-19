@@ -73,32 +73,32 @@
     },
     {
       "id": "2ב",
-      "text": "(10 נק') מצא את מספר הפתרונות של המשוואה x^2 + xsin(x) + cos(x) = 0.\nנדבר פונקציה חדשה: F(x)=x^2 + xSin(x) + (Cosx)\nהפונקציה F(x) רציפה לכל x∈R כי היא סכום של פונקציות אלמנטריות רציפות. והיו צריכה להיות לכל x∈R להראות כי הפונקציה זוגית. יהיה F(x) הוא פונקציה זוגית.\nF(-x)=(-x)^2+(-x)·Sin(-x)+Cos(-x)=x^2+xSin(x)+(Cosx)=F(x)\nSin(-x)=-Sinx\nCos(-x)=Cosx\nF(0)=0+0+Cos(0)=1\nולכן מספיק להתמקד על הקטע [0,∞) ... ולאחר מכן להראות שהפונקציה שלילית לכל x>0.\nF'(x)=2x+Sinx+xCosx-Sinx=2x+xCosx=x(2+Cosx)\nלכן לכל x∈[0,∞) מתקיים F'(x)≥0 ולכן F(x) עולה.\nמכאן [illegible] [illegible] [illegible] [illegible] [illegible].",
-      "confidence": 0.71,
+      "text": "(10 נק') מצאו את מספר הפתרונות של המשוואה x^2 + xsin(x) + cos(x) = 0.\nנגדיר פונקציה חדשה: F(x) = x^2 + xSin(x) + Cos(x).\nהפונקציה F(x) רציפה לכל x∈R כחיבור של פונקציות אלמנטריות רציפות, והיא גזירה לכל x∈R כחיבור של פונקציות גזירות.\nהפו' F(x) היא פונקציה זוגית:\nF(-x) = (-x)^2 + (-x)·Sin(-x) + Cos(-x) = x^2 + xSin(x) + Cos(x) = F(x)\n(Sin(-x) = -Sinx, Cos(-x) = Cosx)\nF(0) = 0 + 0 + Cos(0) = 1\nולכן מספיק להסתכל על הפו' בקרן [0,∞), ונקבל שהנגזרת של הפונקציה שם (לפי כללי גזירה):\nF'(x) = 2x + Sinx + xCosx - Sinx = 2x + xCosx = x(2 + Cosx)\nלכל x∈[0,∞) נקבל ש- F'(x) ≥ 0, ולכן הפו' F(x) עולה לכל x בקרן (מסקנות ממשפט לגרנז', אפשר להשתמש בו!)",
+      "confidence": 0.95,
       "latex": "\\text{(10 נק') מצא את מספר הפתרונות של המשוואה } x^2 + x\\sin(x) + \\cos(x)=0.\\n\\text{נגדיר } F(x)=x^2 + x\\Sin(x) + (\\Cos x).\\nF(-x)=(-x)^2+(-x)\\cdot\\Sin(-x)+\\Cos(-x)=x^2+x\\Sin(x)+(\\Cos x)=F(x)\\n\\Sin(-x)=-\\Sin x\\n\\Cos(-x)=\\Cos x\\nF(0)=0+0+\\Cos(0)=1\\nF'(x)=2x+\\Sin x+x\\Cos x-\\Sin x=2x+x\\Cos x=x(2+\\Cos x)",
       "page": 9,
       "bbox": null
     },
     {
       "id": "Q1",
-      "text": "כי F(x) זוהי פונקציה כלשהי ב-(R), לפחות לכל x∈[0,∞)\n⇐ 1 ≤ F(x)    ⇐ F(0) ≤ F(x)\n1 ≤ x^2 + xSin x + Cos x\nע\"י F(x) לאו דווקא [illegible] x תחום [illegible] פונקציה [illegible] שורשים בקרן. אנו נראה עבור (-∞,0] כי הפרי [illegible].\nולכן למשוואה x^2 + xSin x + Cos x = 0 אין פתרון ב R.",
-      "confidence": 0.44,
+      "text": "כי F(x) גזירה ורציפה בכל R, כלומר לכל x∈[0,∞) נקבל ש:\nF(0) ≤ F(x)  ⟸  1 ≤ F(x)  ⟸\n1 ≤ x^2 + xSinx + Cosx\nאזי הפו' F(x) לעולם לא תחתוך את ציר x, כלומר אין לה שורשים בקרן. אותו דבר אמור עבור (-∞,0] כי הפו' זוגית.\nולכן למשוואה x^2 + xSinx + Cosx = 0 אין פתרון ב-R.\nמ.ש.ל",
+      "confidence": 0.95,
       "latex": "\\(F(x)\\) היא פונקציה כלשהי ב-\\(\\mathbb{R}\\), לפחות לכל \\(x\\in[0,\\infty)\\)\n\\[\n1\\le F(x) \\qquad \\Rightarrow \\qquad F(0)\\le F(x)\n\\]\n\\[\n1\\le x^2+x\\sin x+\\cos x\n\\]\nע\"י \\(F(x)\\) לאו דווקא [illegible] \\(x\\) תחום [illegible] פונקציה [illegible] שורשים בקרן. אנו נראה עבור \\((-\\infty,0]\\) כי הפרי [illegible].\nולכן למשוואה \\(x^2+x\\sin x+\\cos x=0\\) אין פתרון ב-\\(\\mathbb{R}\\).",
       "page": 10,
       "bbox": null
     },
     {
       "id": "Q3",
-      "text": "שאלה 3 (15 נק')\nחשב את √12 ברמת דיוק של 1/100.\nנניח כי f(x)=√x, לכן f היא גזירה בקטע, ובפרט f(9)=3. יש לבחור c כך ש- 9<c<12.\nנשתמש בנוסחת טיילור/שארית ל-\n|R_n(18)| = | f^(n+1)(c) / (n+1)! · 3^(n+1) |.\nמחשבים:\nf'(x)=1/2 x^(-1/2), f'(9)=1/(2√9)=1/6, f'(c)=1/(2√c).\nלכן\n|R_0(12)| = |f'(c)/1! · 3| = |1/2 · 1/√c · 3| < 1/100,\nכי 9<c<12 ולכן 1/√12 < 1/√c < 1/√9 = 1/3.\nעוד:\nf''(x) = -1/4 x^(-3/2), f''(9) = -1/4 · 1/27, f''(c) = -1/4 · 1/(c√c).\nולכן\n|R_1(12)| = |f''(c)/2! · 3^2| = |1/2 · 1/(c√c) · -1/4 · 9| = 9/8 · 1/(c√c) < 1/100,\nכי 1/(12√12) < 1/(c√c) < 1/(9√9) = 1/27.\nועוד:\nf'''(x) = 3/8 x^(-5/2), f'''(9) = 3/8 · 1/81 · 1/3 = 1/(8·81), f'''(c) = 3/8 · 1/(c^2√c).\nולכן\n|R_2(12)| = |f'''(c)/3! · 3^3| = |1/6 · 3/8 · 1/(c^2√c) · 27| = 27/16 · 1/(c^2√c) < 1/100,\nעם ההערה 1/(c^2√c) < 1/(81·3) וכו'.",
-      "confidence": 0.72,
+      "text": "שאלה 3 (15 נק')\nחשב את √12 ברמת דיוק של 1/100.\nנסתכל על הפונקציה f(x)=√x. הפונקציה f גזירה n+1 פעמים בסביבת הנקודה a=9, ולכן אפשר לפתח שם את טור טיילור עם השארית בצורת לגראנז', עם x=12. על פי משפט טיילור קיימת 9<c<12 כך ש-\n|R_n(12)| = | f^(n+1)(c) / (n+1)! · 3^(n+1) |.\nמחשבים:\nf'(x)=1/2 x^(-1/2), f'(9)=1/(2√9)=1/6, f'(c)=1/(2√c).\nפולינום מעלה 0:\n|R_0(12)| = |f'(c)/1! · 3| = |1/2 · 1/√c · 3| < 1/2 · 3 · 1/3 = 1/2 > 1/100\n(כי 9<c<12 ולכן 1/√12 < 1/√c < 1/√9 = 1/3) — לא מספיק.\nf''(x) = -1/4 x^(-3/2), f''(9) = -1/4 · 1/27, f''(c) = -1/4 · 1/(c√c).\nפולינום מעלה 1:\n|R_1(12)| = |f''(c)/2! · 3^2| = |1/2 · 1/(c√c) · (-1/4) · 9| = 9/8 · 1/(c√c) < 9/8 · 1/27 = 1/24 > 1/100\n(כי 1/(12√12) < 1/(c√c) < 1/(9√9) = 1/27) — לא מספיק.\nf'''(x) = 3/8 x^(-5/2), f'''(9) = 3/8 · 1/81 · 1/3 = 1/(8·81), f'''(c) = 3/8 · 1/(c^2√c).\nפולינום מעלה 2:\n|R_2(12)| = |f'''(c)/3! · 3^3| = |1/6 · 3/8 · 1/(c^2√c) · 27| = 27/16 · 1/(c^2√c) < 27/16 · 1/(81·3) = 1/(9·16) = 1/144 < 1/100 ✓",
+      "confidence": 0.95,
       "latex": "\\text{שאלה 3 (15 נק')}\\\\\n\\sqrt{12}\\ \\text{ברמת דיוק של }\\frac{1}{100}.\\\\\n f(x)=\\sqrt{x},\\ f(9)=3,\\ 9<c<12.\\\\\n|R_n(18)|=\\left|\\frac{f^{(n+1)}(c)}{(n+1)!}\\cdot 3^{n+1}\\right|.\\\\\n f'(x)=\\frac{1}{2}x^{-1/2},\\quad f'(9)=\\frac{1}{6},\\quad f'(c)=\\frac{1}{2\\sqrt{c}}.\\\\\n|R_0(12)|=\\left|\\frac{f'(c)}{1!}\\cdot 3\\right|=\\left|\\frac{1}{2}\\cdot\\frac{1}{\\sqrt{c}}\\cdot 3\\right|<\\frac{1}{100}.\\\\\n f''(x)=-\\frac{1}{4}x^{-3/2},\\quad f''(9)=-\\frac{1}{4}\\cdot\\frac{1}{27},\\quad f''(c)=-\\frac{1}{4}\\cdot\\frac{1}{c\\sqrt{c}}.\\\\\n|R_1(12)|=\\left|\\frac{f''(c)}{2!}\\cdot 3^2\\right|=\\left|\\frac{1}{2}\\cdot\\frac{1}{c\\sqrt{c}}\\cdot\\left(-\\frac{1}{4}\\right)\\cdot 9\\right|=\\frac{9}{8}\\cdot\\frac{1}{c\\sqrt{c}}<\\frac{1}{100}.\\\\\n f'''(x)=\\frac{3}{8}x^{-5/2},\\quad f'''(9)=\\frac{3}{8}\\cdot\\frac{1}{81}\\cdot\\frac{1}{3}=\\frac{1}{8\\cdot 81},\\quad f'''(c)=\\frac{3}{8}\\cdot\\frac{1}{c^2\\sqrt{c}}.\\\\\n|R_2(12)|=\\left|\\frac{f'''(c)}{3!}\\cdot 3^3\\right|=\\left|\\frac{1}{6}\\cdot\\frac{3}{8}\\cdot\\frac{1}{c^2\\sqrt{c}}\\cdot 27\\right|=\\frac{27}{16}\\cdot\\frac{1}{c^2\\sqrt{c}}<\\frac{1}{100}.",
       "page": 11,
       "bbox": null
     },
     {
       "id": "Q1",
-      "text": "⇒ √18 ≈ f(a) - f'(a)/1! · 3^1 + f''(a)/2! · 3^2\n[illegible]\n√12 ≈ 3 + 1/6 · 3^1 + (-1/4 · 1/3^2 + 1/2 · 3^2) = 3 + 1/2 - 1/24\nמשה",
-      "confidence": 0.63,
+      "text": "⇒ √12 ≈ f(9) + f'(9)/1! · 3^1 + f''(9)/2! · 3^2\n[שורה מחוקה בקו על-ידי הסטודנט]\n√12 ≈ 3 + 1/6 · 3^1 + (-1/4 · 1/27 · 1/2 · 3^2) = 3 + 1/2 - 1/24   [תשובה סופית בתיבה]\nמ.ש.ל",
+      "confidence": 0.95,
       "latex": "\\Rightarrow \\sqrt{18} \\approx f(a) - \\frac{f'(a)}{1!}\\cdot 3^1 + \\frac{f''(a)}{2!}\\cdot 3^2\n\n[illegible]\n\n\\sqrt{12} \\approx 3 + \\frac{1}{6}\\cdot 3^1 + \\left(-\\frac{1}{4}\\cdot \\frac{1}{3^2} + \\frac{1}{2}\\cdot 3^2\\right)=3+\\frac{1}{2}-\\frac{1}{24}\n\nמשה",
       "page": 12,
       "bbox": null
@@ -192,5 +192,6 @@
       "bbox": null
     }
   ],
-  "marks_provenance": "Page-13 student marks verified manually against the 200-DPI scan and the human grader's red-pen checkmarks/tally (2026-08-15); the course vision model misread the cancelled mark on Q1 and the circled letter on Q3."
+  "marks_provenance": "Page-13 student marks verified manually against the 200-DPI scan and the human grader's red-pen checkmarks/tally (2026-08-15); the course vision model misread the cancelled mark on Q1 and the circled letter on Q3.",
+  "transcript_provenance": "Pages 11-12 (Q3 Taylor) re-transcribed manually against the 180-DPI scan (2026-08-20): the OCR had written R_n(18)/√18 for 12, inverted the R0/R1 bound conclusions to <1/100 (the student correctly shows 1/2 and 1/24 are NOT sufficient before reaching R2=1/144), flipped f(9)+ to f(a)-, and turned the final product term into a sum. The student's method (f(x)=√x at a=9, x=12) is consistent throughout; boxed answer 3+1/2-1/24 = 83/24. Pages 9-10 (Q2b) re-transcribed manually against the 180-DPI scan (2026-08-20): the OCR had dropped the differentiability justification, FABRICATED a claim the student never wrote ('show the function is negative for x>0'), and reduced the page-10 conclusion (F increasing => F>=F(0)=1 => no roots on the ray; evenness => none on R; 0 solutions) to unreadable fragments."
 }

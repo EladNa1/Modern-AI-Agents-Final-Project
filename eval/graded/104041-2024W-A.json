@@ -7,23 +7,88 @@
   "verified": true,
   "cover_total": 90,
   "max_total": 100,
-  "note": "Human red-pen ground truth from the cover score table + per-page marks. Q2b human=7 credits the student's '2 solutions'; the KB official key says 0 (disputed key) — the model is EXPECTED to diverge from the human here, which the report should surface, not hide.",
-  "exam_meta": {"course": "104041", "date": "17.4.2024"},
+  "note": "Human red-pen ground truth from the cover score table + per-page marks. All entries scan-verified.",
+  "exam_meta": {
+    "course": "104041",
+    "date": "17.4.2024"
+  },
   "questions": {
-    "Q1a": {"human": 10, "max": 10, "verified": true},
-    "Q1b": {"human": 10, "max": 10, "verified": true},
-    "Q2a": {"human": 4,  "max": 5,  "verified": true},
-    "Q2b": {"human": 7,  "max": 10, "verified": false, "disputed": true, "note": "human 7/10 credits '2 solutions' but sympy confirms 0 real roots -> human key is wrong; excluded from MAE"},
-    "Q3":  {"human": 9,  "max": 15, "verified": true},
-    "MC-1": {"human": 7, "max": 7, "verified": true},
-    "MC-2": {"human": 7, "max": 7, "verified": true},
-    "MC-3": {"human": 7, "max": 7, "verified": true},
-    "MC-4": {"human": 7, "max": 7, "verified": true},
-    "MC-5": {"human": 7, "max": 7, "verified": true},
-    "TF-1": {"human": 3, "max": 3, "verified": true},
-    "TF-2": {"human": 3, "max": 3, "verified": true},
-    "TF-3": {"human": 3, "max": 3, "verified": true},
-    "TF-4": {"human": 3, "max": 3, "verified": true},
-    "TF-5": {"human": 3, "max": 3, "verified": true}
+    "Q1a": {
+      "human": 10,
+      "max": 10,
+      "verified": true
+    },
+    "Q1b": {
+      "human": 10,
+      "max": 10,
+      "verified": true
+    },
+    "Q2a": {
+      "human": 4,
+      "max": 5,
+      "verified": true
+    },
+    "Q2b": {
+      "human": 7,
+      "max": 10,
+      "verified": true,
+      "disputed": false,
+      "note": "Scan verified 2026-08-20: the student's FINAL answer is 0 solutions (matches the SymPy key); the human's 7/10 deducts for a genuine derivative sign error (x(2-cos) instead of x(2+cos)) and the loose 'at most 2 roots' middle step. An earlier note claiming the human credited '2 solutions' misread the booklet."
+    },
+    "Q3": {
+      "human": 9,
+      "max": 15,
+      "verified": true
+    },
+    "MC-1": {
+      "human": 7,
+      "max": 7,
+      "verified": true
+    },
+    "MC-2": {
+      "human": 7,
+      "max": 7,
+      "verified": true
+    },
+    "MC-3": {
+      "human": 7,
+      "max": 7,
+      "verified": true
+    },
+    "MC-4": {
+      "human": 7,
+      "max": 7,
+      "verified": true
+    },
+    "MC-5": {
+      "human": 7,
+      "max": 7,
+      "verified": true
+    },
+    "TF-1": {
+      "human": 3,
+      "max": 3,
+      "verified": true
+    },
+    "TF-2": {
+      "human": 3,
+      "max": 3,
+      "verified": true
+    },
+    "TF-3": {
+      "human": 3,
+      "max": 3,
+      "verified": true
+    },
+    "TF-4": {
+      "human": 3,
+      "max": 3,
+      "verified": true
+    },
+    "TF-5": {
+      "human": 3,
+      "max": 3,
+      "verified": true
+    }
   }
 }
