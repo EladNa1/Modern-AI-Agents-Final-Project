@@ -37,3 +37,4 @@ CLAUDE.md
 
 # QA / grader-simulation artifacts (local only)
 evidence/
+grading-evidence-*/

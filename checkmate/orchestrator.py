@@ -128,6 +128,18 @@ def run_agent(images: list[ImageInput], instructions: str = "", source_label: st
         results: list[QuestionResult] = []
         aborted = False
         for group in groups:
+            # Projected ceiling check (6.3), BEFORE spending: if grading the next question
+            # at the run's average cost/time so far would cross a ceiling, stop now and
+            # return a provisional result -- never discover the overrun after the money is
+            # spent. (The post-question check below still catches an unusually large jump.)
+            done = len(results)
+            if done:
+                spent = log.cost_by_stage()["total"]
+                elapsed = time.time() - t0
+                if (spent + spent / done > CONFIG.max_run_cost_usd
+                        or elapsed + elapsed / done > CONFIG.max_run_seconds):
+                    aborted = True
+                    break
             merged = _merge_fragments(group["fragments"])
             q = merged if group["retrieved"] else ParsedFragment(
                 id=UNMATCHED, text=merged.text, latex=merged.latex,

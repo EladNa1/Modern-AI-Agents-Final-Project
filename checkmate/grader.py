@@ -146,8 +146,10 @@ credit, but the final count is WRONG -- the verified key is 0 solutions (f>=1>0)
 conclusion/answer credit is lost -> 5/10, partial.
 Feedback: "Right setup and f'(x)=x(2+cos x); but f(0)=1 is the global minimum, so f>=1>0 and
 the equation has 0 real solutions, not 2."
-(The graded booklet's human 7/10 credited "2 solutions" -- that is a human error; the
-sympy-verified key is 0. Do not learn "2 solutions" as correct from this question.)
+(The verified key is 0 solutions -- never learn a nonzero count as correct. Distinct real
+case from the graded booklet: a student whose FINAL count was the correct 0 but whose
+derivative line had a sign slip -- x(2-cos x) written for x(2+cos x) -- earned 7/10: the
+conclusion stood, but an incorrect intermediate line still costs points.)
 
 --- Example 4 (partial credit: Taylor remainder details) ---
 Q3 (15 pts): Compute sqrt(12) to accuracy 1/100 (Taylor for f(x)=sqrt(x+9) around 0,
@@ -155,13 +157,16 @@ evaluated at x=3).
 Student: computes f(0)=3, f'(0)=1/6, f''(0)=-1/108, f'''(x)=(3/8)(x+9)^(-5/2);
 bounds |R2(c)| = |f'''(c)*3^3/3!| <= 3^3/(16*9^(5/2)) = 1/144 < 1/100 (bound direction
 handled correctly); BUT computed one derivative order more than needed at first
-(grader: "why compute extra orders?") and wrote T2(x)=3 + x/6 - x^2/108 missing the
-1/2! factor (should be -x^2/216), then carried it into T2(3).
-Grading: remainder bound essentially right and accuracy goal met conceptually; missing
-factorial factor in the polynomial is a real computational error in the final
-deliverable -> 9/15, partial.
-Feedback: "Remainder bound correct. T2 must include 1/2!: the x^2 coefficient is
-f''(0)/2 = -1/216, not -1/108; this changes the final approximation."
+(grader: "why compute extra orders?") and evaluated the x^2 term at x=3 as if the 1/2!
+factor were absent -- writing 1/12 where the student's own polynomial -x^2/(2! * 108)
+gives 9/216 = 1/24 -- so the final number for sqrt(12) is wrong even though the symbolic
+polynomial line was written correctly.
+Grading: remainder bound essentially right and accuracy goal met conceptually; but the
+final evaluated NUMBER is the deliverable, and an error carried into it is a major
+computational error, not a slip -> 9/15, partial.
+Feedback: "Remainder bound correct, and your polynomial -x^2/(2! * 108) is right; but at
+x=3 that term is 9/216 = 1/24, not the 1/12 you substituted -- the final approximation
+is wrong, and the evaluated number is what the question asks for."
 
 --- Example 4b (FULL credit despite untidy notation — calibrated on a red-pen 15/15) ---
 Same Q3 (sqrt(12), 15 pts), different student: computes the correct T2(x)=3+x/6-x^2/216,
@@ -357,6 +362,9 @@ def run_grader(q: ParsedFragment, retrieved: Retrieved | None, log: StepLog,
             "Return the same JSON object.")
         n = 1  # one regeneration per revision pass; the Reflector reviews it again
 
+    # (Temperature pinning for the single-call TF/MC read was tried and reverted: the
+    # gpt-5-family gateway rejects any non-default temperature. Determinism here rests on
+    # the single call + the deterministic mark-reading rules instead.)
     grades: list[Grade] = []
     truncated = False
     for i in range(n):

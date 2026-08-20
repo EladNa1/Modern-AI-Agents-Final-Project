@@ -55,6 +55,15 @@ _NO_GRADING_RE = re.compile(
     r"בלי (?:לבדוק|ציון|בדיקה)|לא לבדוק|אל תבדוק|ללא ציון",
     re.IGNORECASE)
 
+# The negated clause INCLUDING its object ("do not grade an exam") -- stripped before the
+# exam-noun test, so the noun inside the negation cannot establish grading scope on its own.
+_NO_GRADING_STRIP_RE = re.compile(
+    r"\b(?:do\s*n[o']t|don't|without|no)\s+(?:grade|grading|score|scoring|mark|marking)\s*"
+    r"(?:an?y?\s+|the\s+|my\s+|this\s+)?(?:exam|test|quiz|booklet|scan|anything)?s?\b|"
+    r"(?:בלי|לא|אל|ללא)\s*(?:לבדוק|תבדוק|בדיקת|בדיקה|ציון)\s*(?:את\s+)?"
+    r"(?:ה?מבחן|ה?בוחן|ה?מחברת|כלום|שום דבר)?",
+    re.IGNORECASE)
+
 
 def classify(prompt: str) -> str:
     """'grading' | 'math_no_grading' | 'offtopic'.
@@ -66,9 +75,16 @@ def classify(prompt: str) -> str:
                ("check why my car is making a noise")."""
     p = prompt or ""
     has_math = bool(_MATH_RE.search(p))
+    negated = bool(_NO_GRADING_RE.search(p))
+    # A tutoring frame PLUS an explicit "do not grade" is unambiguously a lesson request --
+    # refuse even if an exam is mentioned ("Teach me step by step... Do not grade an exam").
+    if negated and _TUTOR_RE.search(p):
+        return "math_no_grading" if has_math else "offtopic"
     # An exam artifact makes it our domain regardless of phrasing -- "general feedback on
-    # my exam, no grading" is the legitimate feedback-only mode, not a refusal case.
-    if _EXAM_NOUN_RE.search(p):
+    # my exam, no grading" is the legitimate feedback-only mode, not a refusal case. But the
+    # negated clause's own object must not establish scope, so it is stripped first.
+    p_active = _NO_GRADING_STRIP_RE.sub(" ", p) if negated else p
+    if _EXAM_NOUN_RE.search(p_active):
         return "grading"
     # Without an exam artifact, explicit "do not grade" or a tutoring frame means a lesson
     # is being requested -- the one thing we do is not wanted.

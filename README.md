@@ -51,7 +51,7 @@ is logged in `steps[]` under the module that made it.)
 |-------|------|-----|
 | **Parser** | `checkmate/parser.py` | Vision OCR: transcribes each page faithfully, splits into questions, reads exam identity (course/date/מועד) off the cover, and re-reads faint regions (zoom, opt-in). A deterministic post-pass splits a merged True/False page into per-item `TF-n` fragments (zero LLM). Does **not** grade. |
 | **Router** | `checkmate/orchestrator.py` + `checkmate/guard.py` + `kb/exams.py` | Two autonomous decisions. **Scope guard**: refuses out-of-domain requests (and non-exam scans that match nothing in the KB) politely, BEFORE spending grader tokens — the refusal is logged as a Router step. **Exam scoping**: manual override → auto-detected from the scan → unscoped fallback. |
-| **Retriever** | `checkmate/retriever.py` | RAG **with a verification layer** — retrieval is checked, never trusted blindly: matches below a similarity floor (`MIN_SCORE`) are discarded so the agent grounds on *nothing* (and escalates) rather than on the wrong solution; retrieval is scoped to the exam identified from the scan; a strong content-overlap match outranks an unreliable id label; the Grader is instructed to reject a retrieved solution that doesn't match the question in front of it; and contested answer keys are checked symbolically offline with SymPy (the Q2b root-count key, where the check caught a human grading error). Pinecone semantic search + exact-id and content-overlap fallbacks over bundled JSON, plus top-k course-notes chunks. |
+| **Retriever** | `checkmate/retriever.py` | RAG **with a verification layer** — retrieval is checked, never trusted blindly: matches below a similarity floor (`MIN_SCORE`) are discarded so the agent grounds on *nothing* (and escalates) rather than on the wrong solution; retrieval is scoped to the exam identified from the scan; a strong content-overlap match outranks an unreliable id label; the Grader is instructed to reject a retrieved solution that doesn't match the question in front of it; and contested answer keys are checked symbolically offline with SymPy (the Q2b root-count key, settled by the check during a ground-truth dispute). Pinecone semantic search + exact-id and content-overlap fallbacks over bundled JSON, plus top-k course-notes chunks. |
 | **Grader** | `checkmate/grader.py` | Scores the student's actual method with partial credit + feedback. **Self-consistency**: grades N times, takes the median, escalates on disagreement. |
 | **Reflector** | `checkmate/reflector.py` | Critiques the proposed grade **against the retrieved evidence** (official solution + transcript in context); APPROVE / REVISE / ESCALATE. On REVISE the critique goes **back to the Grader**, which regrades conditioned on it (canonical Reflection loop à la Self-Refine/Reflexion, ≤N passes) — and may keep its grade if the critique is unjustified. An escalation is never cleared by a revision. |
 | *(reflection loop)* | `checkmate/orchestrator.py` | Control flow, **not a logged module**: groups fragments by question, runs the Grader⇄Reflector loop, applies a cross-exam consistency guard, and enforces the budget/wall-clock ceilings. Every LLM call inside it is logged under its own module above. |
@@ -198,11 +198,12 @@ Two sources embedded into **Pinecone** (1536-dim, `text-embedding-3-small`):
 Because near-identical questions recur across exams ("state the IVT"), retrieval is **scoped
 to the identified exam** — the disambiguating signal is the exam identity read off the scan,
 not the student's answer. Keys are tagged `verified` vs `authored`: a key is marked
-`verified` only after an offline SymPy check of its final answer — currently the one
-contested key, 2024W-A Q2b, where the check caught a human grading error (the printed
-equation `x²+x·sin x+cos x=0` has **0** real roots, not the 2 the red pen credited). All
-other keys are `authored` from the official solutions; proof-style questions have no
-machine-decidable key to verify.
+`verified` only after an offline SymPy check of its final answer — currently the once-
+contested key, 2024W-A Q2b, verified to be exactly **0** real roots (`f ≥ 1 > 0`) when our
+first reading of the red pen was in doubt. (A later scan re-audit showed the human's 7/10
+there was a legitimate deduction for a derivative sign slip — the key and the human agree;
+the SymPy check is what settled the dispute.) All other keys are `authored` from the
+official solutions; proof-style questions have no machine-decidable key to verify.
 
 ## 7. Evaluation + budget model
 
@@ -236,12 +237,15 @@ KB-verification tool, never in the request path.
 - **Grader reasoning ceiling** — the mini makes systematic math errors even with correct
   grounding; self-consistency catches *stochastic* disagreement but not *consistent* wrongness.
   A stronger grader model is the real lever, and it is blocked by the restricted key (§5).
-- **Few-shot Example 3** in `GRADER_SYSTEM` now teaches the SymPy-verified key (0 solutions)
-  and explicitly flags the graded booklet's human 7/10 as a human error the model must not
-  learn from.
-- **Evaluation corpus is tiny** — two graded booklets of one paper, one disputed ground truth.
-  Numbers are a regression tripwire, not a population estimate; further tuning waits on more
-  graded booklets (ideally a second distinct exam paper).
+- **Few-shot Example 3** in `GRADER_SYSTEM` teaches the SymPy-verified key (0 solutions)
+  plus the rubric lesson from the graded booklet: a correct final count with a sign slip in
+  the derivative line earns 7/10, not full marks — correct conclusions do not erase
+  incorrect intermediate work.
+- **Evaluation corpus is tiny** — two graded booklets of one paper (one ground-truth entry
+  was initially disputed until a scan re-audit resolved it in the human's favor). Numbers
+  are a regression tripwire, not a population estimate — `python scripts/regression_check.py`
+  re-checks the bundled captures against the human ground truth; further tuning waits on
+  more graded booklets (ideally a second distinct exam paper).
 
 ## 10. Repository layout
 

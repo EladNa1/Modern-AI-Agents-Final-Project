@@ -211,9 +211,20 @@ def retrieve(question_id: str, question_text: str, log: StepLog, exam: str | Non
     # parser's id guess alone must not resurrect the match -- no-match routes it to the
     # human-reviewed unmatched bucket instead of grading it against a look-alike question.
     if not found and not demoted:
-        found = _find_exact(want, exam)
-        if found:
-            method = "exact-id"
+        hit = _find_exact(want, exam)
+        # When semantic search RAN and actively scored this fragment below the trust floor,
+        # an open-question id rescue must be corroborated by the printed text -- content has
+        # already voted against the match once; the id alone is not enough evidence.
+        # (TF/MC ids come from the deterministic page split and stay authoritative; the
+        # no-semantic-available case keeps exact-id as the offline fallback.)
+        if hit and score is not None and not re.fullmatch(r"(tf|mc)\d+", want):
+            frag, prob = _tokens(question_text), _tokens(hit.entry.problem)
+            f1 = (2 * len(frag & prob) / (len(frag) + len(prob))) if frag and prob else 0.0
+            if f1 < CONFIRM_MIN_F1:
+                hit = None
+                demoted = True
+        if hit:
+            found, method = hit, "exact-id"
 
     if found:
         found.method, found.score = method, score  # surface match provenance downstream

@@ -55,8 +55,9 @@
 <body>
   <div class="title">CheckMate as a Reflection Agent</div>
   <div class="subtitle">The agent grades first, then critiques its own grade against retrieved course evidence.</div>
-  <div class="aux">input: scanned booklet (PDF / images) or a bundled sample scan<br>
-       also logged in steps[]: <b>Config</b> — run setup · <b>Zoom</b> — magnified re-read (opt-in)</div>
+  <div class="aux">input: scanned booklet (PDF / images) or a bundled sample scan · vision parsed once, cached per booklet<br>
+       also logged in steps[]: <b>Config</b> — run setup · <b>Zoom</b> — magnified re-read (opt-in)<br>
+       T/F + MC: one deterministic read, reflection skipped · ceilings $0.75 / 240s → stop early, provisional result</div>
 
   <!-- main row -->
   <div class="box llm"  style="left:64px;  top:236px;"><div class="chip">LLM · VISION</div><h2>Parser</h2><p>reads the booklet, transcribes the student's work, splits it into questions</p></div>
@@ -64,7 +65,8 @@
   <div class="box llm"  style="left:572px; top:236px;"><div class="chip">LLM</div><h2>Grader</h2><p>initial score + feedback on the student's own method; self-consistency ×N</p></div>
   <div class="box soft" style="left:826px; top:236px;"><h2>Initial grade</h2><p>score + partial credit + written feedback, per question</p></div>
   <div class="box llm"  style="left:1080px;top:236px;"><div class="chip">LLM</div><h2>Reflector</h2><p>self-critique against the evidence — APPROVE · REVISE · ESCALATE</p></div>
-  <div class="box dark" style="left:1334px;top:236px;"><h2>Final result</h2><p>grade + feedback + full steps[] trace — assembled by GradeBook (deterministic, zero-LLM)</p></div>
+  <div class="box det" style="left:1334px;top:236px;height:70px;padding-top:12px;"><h2 style="font-size:19px;margin-bottom:3px;">GradeBook</h2><p style="font-size:11.3px;">per-question entries · completion arithmetic · 0 LLM</p></div>
+  <div class="box dark" style="left:1334px;top:322px;height:64px;padding-top:11px;"><h2 style="font-size:19px;margin-bottom:3px;">Final result</h2><p style="font-size:11.3px;">grade + feedback + full trace</p></div>
 
   <div class="revisecap">Revise until confident · max N passes</div>
   <div class="critique">
@@ -108,7 +110,9 @@
     <line x1="532" y1="311" x2="568" y2="311" stroke="#9a9dab" stroke-width="3" marker-end="url(#a)"/>
     <line x1="786" y1="311" x2="822" y2="311" stroke="#9a9dab" stroke-width="3" marker-end="url(#a)"/>
     <line x1="1040" y1="311" x2="1076" y2="311" stroke="#9a9dab" stroke-width="3" marker-end="url(#a)"/>
-    <line x1="1294" y1="311" x2="1330" y2="311" stroke="#9a9dab" stroke-width="3" marker-end="url(#a)"/>
+    <line x1="1294" y1="311" x2="1330" y2="286" stroke="#9a9dab" stroke-width="3" marker-end="url(#a)"/>
+    <!-- GradeBook -> Final result (deterministic assembly) -->
+    <line x1="1440" y1="308" x2="1440" y2="318" stroke="#9a9dab" stroke-width="3" marker-end="url(#a)"/>
     <!-- reflection loop: Reflector -> critique -> Grader -->
     <path d="M 1150 388 C 1120 440, 1080 470, 1035 496" fill="none" stroke="#9a9dab" stroke-width="2.5" marker-end="url(#a)"/>
     <path d="M 585 472 C 595 445, 605 418, 618 392" fill="none" stroke="#9a9dab" stroke-width="2.5" marker-end="url(#a)"/>

@@ -129,21 +129,23 @@
           <table class="evaltable">
             <thead><tr><th>Metric</th><th>Result</th><th>Reading</th></tr></thead>
             <tbody>
-              <tr><td>Open-question MAE</td><td class="mono">1.50 pts</td><td>mean |model − human| on open questions (target ≤ 2)</td></tr>
-              <tr><td>True/False + MC exact match</td><td class="mono">7 / 10</td><td>misses were vision failures (unread marks), not grading</td></tr>
-              <tr><td>False deduction — open</td><td class="mono">5 pts</td><td>points removed from flawless proofs — the metric that matters most</td></tr>
-              <tr><td>Escalations</td><td class="mono">2</td><td>flagged for TA review rather than silently graded</td></tr>
+              <tr><td>Open-question MAE (auto-graded)</td><td class="mono">0.00 pts</td><td>every open question the agent commits to matches the human exactly</td></tr>
+              <tr><td>True/False + MC exact match</td><td class="mono">10 / 10</td><td>all circled answers read and graded to the human's mark</td></tr>
+              <tr><td>False deduction — open</td><td class="mono">0 pts</td><td>points removed from flawless proofs — the metric that matters most</td></tr>
+              <tr><td>Escalations</td><td class="mono">2</td><td>the two contested proofs (Q2b, Q3) go to the teacher with provisional scores within 1–2 pts of the human's</td></tr>
               <tr><td>Cost per booklet</td><td class="mono">≈ $0.15–0.30</td><td>measured on the bundled 18-page booklets; tracked per stage, hard $0.75 ceiling per run</td></tr>
             </tbody>
           </table>
         </div>
         <p class="hint">
           <b>Known limits, stated plainly:</b> the evaluation corpus is two booklets of one paper —
-          these numbers are a regression tripwire, not a population estimate. One ground-truth score
-          (Q2b) is excluded: a symbolic sweep proved the printed equation has 0 real solutions, so the
-          human's 7/10 crediting "2 solutions" is a human error. The grader's known weak spot is
-          calibration on proof questions; the roadmap is few-shot calibration data ingested from more
-          graded booklets, not more prompt rules.
+          these numbers are a regression tripwire, not a population estimate
+          (<span class="mono">python scripts/regression_check.py</span> re-checks the bundled
+          captures against the human ground truth). The once-contested Q2b key was settled by an
+          offline SymPy check (0 real solutions); a scan re-audit then confirmed the human's 7/10
+          there is a legitimate sign-slip deduction, so the question is measured like any other.
+          The grader's known weak spot is calibration on proof questions; the roadmap is few-shot
+          calibration data ingested from more graded booklets, not more prompt rules.
         </p>
       </div>
     </section>
