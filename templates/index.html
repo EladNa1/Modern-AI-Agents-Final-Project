@@ -309,12 +309,35 @@
         const card = el("section", "card");
         card.appendChild(el("p", "kicker", "Result — graded copy"));
         const head = el("div", "gradehead");
+        // Escalated points are PROVISIONAL — the badge leads with what the agent actually
+        // confirmed, and the pending points are shown separately (never folded into one
+        // number that overstates the automatic grade).
+        const escQs = meta.questions.filter((q) => q.status === "escalate");
+        const escPts = escQs.reduce((s, q) => s + (q.score || 0), 0);
+        const gbk = meta.gradebook || {};
+        const confirmed = (typeof gbk.auto_subtotal === "number") ? gbk.auto_subtotal : meta.total - escPts;
         const badge = el("div", "scorebadge");
-        badge.appendChild(el("span", "big", String(meta.total)));
+        badge.appendChild(el("span", "big", String(escPts > 0 ? confirmed : meta.total)));
         badge.appendChild(el("span", "den", "/ " + meta.max));
-        head.appendChild(badge);
-        const esc = meta.questions.filter((q) => q.status === "escalate").length;
-        head.appendChild(el("p", "summary", meta.questions.length + " questions graded with partial credit. " + (esc ? esc + " escalated to the teacher for review." : "None required human review.")));
+        if (escPts > 0) {
+          const col = el("div", "badgecol");
+          col.appendChild(badge);
+          col.appendChild(el("span", "pendpill", "+" + escPts + " pending teacher review"));
+          head.appendChild(col);
+        } else {
+          head.appendChild(badge);
+        }
+        let sumtxt = meta.questions.length + " questions graded with partial credit. ";
+        if (escPts > 0) {
+          sumtxt += "The agent confirmed " + confirmed + "/" + meta.max + "; " + escQs.map((q) => q.id).join(", ") +
+            " (" + escPts + " pts) is escalated to the teacher — those points stay provisional, so the final total is " +
+            confirmed + "–" + meta.total + " pending review.";
+        } else if (escQs.length) {
+          sumtxt += escQs.length + " item" + (escQs.length > 1 ? "s" : "") + " escalated to the teacher for review (no points at stake).";
+        } else {
+          sumtxt += "None required human review.";
+        }
+        head.appendChild(el("p", "summary", sumtxt));
         card.appendChild(head);
 
         const review = el("div", "review");
@@ -333,7 +356,9 @@
         else if ((kind === "image") && previewUrl) { const img = el("img", "scanimg"); img.src = previewUrl; img.alt = "Uploaded exam scan"; scanview.appendChild(img); }
         else if (kind === "pdf" && previewUrl) { const fr = document.createElement("iframe"); fr.className = "scanframe"; fr.src = previewUrl; scanview.appendChild(fr); }
         else { const ph = el("div", "docph"); ph.appendChild(el("div", "docic", "📝")); ph.appendChild(el("div", null, file ? file.name : "")); scanview.appendChild(ph); }
-        scanview.appendChild(el("span", "gradedstamp", "GRADED · " + meta.total + "/" + meta.max));
+        scanview.appendChild(el("span", "gradedstamp", escPts > 0
+          ? "GRADED · " + confirmed + "/" + meta.max + " · +" + escPts + " PENDING"
+          : "GRADED · " + meta.total + "/" + meta.max));
         scanwrap.appendChild(scanview);
         review.appendChild(scanwrap);
 

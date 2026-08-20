@@ -273,6 +273,15 @@ code { font-family: var(--mono); font-size: 0.92em; background: var(--pen-soft);
 
 .summary { color: var(--ink-soft); font-size: 14.5px; max-width: 52ch; }
 
+/* provisional (escalated) points: shown NEXT TO the confirmed score, never inside it */
+.badgecol { display: flex; flex-direction: column; align-items: center; gap: 8px; flex: 0 0 auto; }
+
+.pendpill {
+  font-family: var(--mono); font-size: 11.5px; font-weight: 600; color: var(--red);
+  border: 1.5px dashed var(--red); border-radius: 999px; padding: 3px 10px;
+  letter-spacing: 0.04em; background: rgba(255, 253, 248, 0.9); white-space: nowrap;
+}
+
 .review { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1.2fr); gap: 18px; }
 
 .scanview {
