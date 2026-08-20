@@ -64,7 +64,7 @@
   <div class="box llm"  style="left:572px; top:236px;"><div class="chip">LLM</div><h2>Grader</h2><p>initial score + feedback on the student's own method; self-consistency ×N</p></div>
   <div class="box soft" style="left:826px; top:236px;"><h2>Initial grade</h2><p>score + partial credit + written feedback, per question</p></div>
   <div class="box llm"  style="left:1080px;top:236px;"><div class="chip">LLM</div><h2>Reflector</h2><p>self-critique against the evidence — APPROVE · REVISE · ESCALATE</p></div>
-  <div class="box dark" style="left:1334px;top:236px;"><h2>Final result</h2><p>grade + feedback + full steps[] trace — assembled by GradeBook · Orchestrator</p></div>
+  <div class="box dark" style="left:1334px;top:236px;"><h2>Final result</h2><p>grade + feedback + full steps[] trace — assembled by GradeBook (deterministic, zero-LLM)</p></div>
 
   <div class="revisecap">Revise until confident · max N passes</div>
   <div class="critique">
@@ -76,7 +76,7 @@
 
   <div class="kb">
     <h3>Knowledge base</h3>
-    <p>official solutions per exam question · course lecture notes · Pinecone + bundled JSON · SymPy-verified keys</p>
+    <p>official solutions per exam question · course lecture notes · Pinecone + bundled JSON · contested keys SymPy-checked</p>
   </div>
 
   <div class="refuse"><h3>Polite refusal</h3><p>out-of-domain request or non-exam scan — zero grader tokens</p></div>
@@ -85,6 +85,7 @@
   <div class="note" style="left:1334px; top:398px; width:212px;">Approve → final result.<br>Still unsure after N passes → escalate.</div>
 
   <div class="lbl" style="left:180px; top:645px; color:#b45309; border-color:#f5cc94;">REFUSE</div>
+  <div class="lbl" style="left:492px; top:398px; color:#0d9488; border-color:#99d6cf;">exam scope</div>
   <div class="lbl" style="left:470px; top:452px; color:#0f766e; border-color:#99d6cf;">RAG evidence</div>
   <div class="lbl" style="left:800px; top:604px; color:#0f766e; border-color:#99d6cf;">RAG evidence</div>
   <div class="lbl" style="left:1348px; top:552px; color:#b91c1c; border-color:#f3b4b4;">ESCALATE</div>
@@ -113,6 +114,8 @@
     <path d="M 585 472 C 595 445, 605 418, 618 392" fill="none" stroke="#9a9dab" stroke-width="2.5" marker-end="url(#a)"/>
     <!-- REFUSE: Router down to refusal pill (stays left of the Retriever box) -->
     <path d="M 370 388 C 240 420, 130 540, 168 728" fill="none" stroke="#d97706" stroke-width="3" marker-end="url(#amber)"/>
+    <!-- exam scope: Router -> Retriever (the identified exam scopes every retrieval) -->
+    <path d="M 480 388 C 495 435, 460 465, 425 492" fill="none" stroke="#0d9488" stroke-width="2.8" marker-end="url(#green)"/>
     <!-- KB -> Retriever -->
     <path d="M 520 756 C 440 720, 385 690, 348 634" fill="none" stroke="#0f766e" stroke-width="3" marker-end="url(#green)"/>
     <!-- Retriever evidence -> Grader and -> critique -->

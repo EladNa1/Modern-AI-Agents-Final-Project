@@ -124,12 +124,15 @@ async def agent_info():
             "RAG that grounds each grade in the matching official solution AND in relevant course "
             "lecture notes), Grader (few-shot, partial credit, self-consistency), Reflector "
             "(self-critique that approves, revises, or escalates), and Zoom (opt-in magnified "
-            "re-read of faint regions); the GradeBook/Orchestrator assembles the final result. Retrieval "
+            "re-read of faint regions); the GradeBook assembles the final result deterministically "
+            "(logged as a zero-LLM step). Retrieval "
             "is VERIFIED, not trusted: matches below a similarity floor are discarded (the agent "
-            "grounds on nothing and escalates rather than on the wrong solution), retrieval is "
+            "grounds on nothing and escalates rather than on the wrong solution), borderline "
+            "matches must be corroborated by the printed question text, retrieval is "
             "scoped to the exam identified from the scan, the Grader must reject a retrieved "
-            "solution that does not match the question in front of it, and the answer key was "
-            "validated offline with a SymPy sweep. What it "
+            "solution that does not match the question in front of it, and contested answer keys "
+            "are checked symbolically offline with SymPy (e.g. the Q2b root-count key, where the "
+            "check caught a human grading error). What it "
             "CANNOT do: it does not set exam questions, does not tutor, and does not fabricate a "
             "rubric. Out-of-domain requests (anything that is not a Calculus 1 grading task) are "
             "refused politely by the Router's scope guard BEFORE any model call, so no tokens are "
@@ -254,6 +257,12 @@ async def execute(request: Request):
     if sample is not None:
         parsed = load_sample_parse(sample)
         result = run_agent([], instructions, sample["label"], sample["exam"], parsed=parsed)
+        # Honesty note: free-text instructions are never forwarded into the Grader/Reflector
+        # context (prompt-injection defense), so say so instead of silently ignoring them.
+        if instructions.strip() and isinstance(result.get("response"), str):
+            result["response"] += ("\n\nNote: free-text instructions are not forwarded to the "
+                                   "grading models (prompt-injection defense) — the booklet was "
+                                   "graded strictly against the official rubric.")
         # Attach the bundled page previews so the GUI can show WHAT was graded.
         if result.get("meta") is not None and sample.get("pages"):
             result["meta"]["sample_pages"] = [

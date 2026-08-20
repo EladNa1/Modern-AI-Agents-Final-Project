@@ -72,10 +72,11 @@ class GradeBook:
             else sum(e["max"] for e in self.entries.values())
         missing = self.missing()
         escalated = [q for q, e in self.entries.items() if e.get("status") == "escalate"]
-        # TA review list: escalated or flagged, ordered by points at stake (8.4).
+        # TA review list == the escalations, ordered by points at stake (8.4). Flags on
+        # non-escalated entries (e.g. a completed revision) are annotations, not review
+        # requests -- listing them here contradicted the "no review needed" summary.
         review = sorted(
-            ([q, e] for q, e in self.entries.items()
-             if e.get("status") == "escalate" or e.get("flags")),
+            ([q, e] for q, e in self.entries.items() if e.get("status") == "escalate"),
             key=lambda x: -x[1]["max"])
         report = {
             "status": self.status(),
@@ -85,8 +86,8 @@ class GradeBook:
             "missing_questions": missing,
             "escalated": escalated,
             "ta_review": [{"q": q, "max": e["max"],
-                           "reason": "escalate" if e.get("status") == "escalate"
-                           else ",".join(e.get("flags", []))} for q, e in review],
+                           "reason": "escalate" + (f" ({','.join(e['flags'])})" if e.get("flags") else "")}
+                          for q, e in review],
             "manifest_mismatch": bool(self.manifest and possible != self.manifest["expected_total"]),
             "cost": self.cost,
             "narrative": None,  # 8.4 narrative is a separate, flag-gated text-only call

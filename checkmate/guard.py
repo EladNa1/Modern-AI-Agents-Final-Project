@@ -108,11 +108,39 @@ _REFUSALS = {
         "Math content without grading intent — a solve/tutor request, which is out of scope."),
 }
 
+# Same refusals in Hebrew, served when the request itself is written in Hebrew (still zero
+# model tokens -- language detection is one regex over the prompt's characters).
+_REFUSALS_HE = {
+    "offtopic": (
+        "אני לא יכול לעזור בזה — CheckMate בודק אך ורק מחברות בחינה סרוקות של חדו״א 1 "
+        "(104041) בטכניון.\n\n"
+        "מה שאני כן יודע לעשות: לקרוא מחברת בחינה סרוקה (PDF או תמונות), לתת ציון לכל שאלה "
+        "לפי דרך הפתרון של הסטודנט עם ניקוד חלקי ומשוב כתוב, לעגן כל ציון בפתרון הרשמי, "
+        "ולהעביר כל מקרה לא ברור למרצה.\n\n"
+        "כדי להשתמש בי: העלו סריקת בחינה (או POST ל-/api/execute כ-multipart תחת `file`), "
+        "או ציינו בשם אחת מהמחברות המובנות. הבקשה לא נראתה כמשימת בדיקה של חדו״א 1, ולכן "
+        "לא הופעל מודל בדיקה ולא נצרכו טוקנים.",
+        "The request does not mention grading, an exam, or Calculus 1 material."),
+    "math_no_grading": (
+        "אני לא יכול לעזור בזה — CheckMate בודק מבחני חדו״א 1; הוא לא פותר תרגילים, לא "
+        "מלמד ולא מסביר חומר.\n\n"
+        "אם תרצו שעבודה כתובה של סטודנט תיבדק: העלו את הסריקה (multipart `file` על "
+        "/api/execute) או ציינו מחברת מובנית בשם, ואבדוק אותה מול הפתרונות הרשמיים עם ניקוד "
+        "חלקי ומשוב.\n\n"
+        "הבקשה ביקשה עזרה במתמטיקה ולא בדיקה, ולכן לא הופעל מודל ולא נצרכו טוקנים.",
+        "Math content without grading intent — a solve/tutor request, which is out of scope."),
+}
+
+_HEBREW_RE = re.compile(r"[֐-׿]")
+
 
 def refusal_payload(prompt: str, kind: str | None = None) -> dict:
-    """Spec-shaped /api/execute response for an out-of-scope request."""
+    """Spec-shaped /api/execute response for an out-of-scope request. The refusal text
+    follows the request's language (Hebrew in -> Hebrew out); the logged reason stays
+    English for trace consistency."""
     kind = kind or classify(prompt)
-    text, reason = _REFUSALS.get(kind, _REFUSALS["offtopic"])
+    table = _REFUSALS_HE if _HEBREW_RE.search(prompt or "") else _REFUSALS
+    text, reason = table.get(kind, table["offtopic"])
     step = {
         "module": "Router",
         "pattern": "Scope guard",

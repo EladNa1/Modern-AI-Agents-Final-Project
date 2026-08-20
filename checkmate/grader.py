@@ -10,6 +10,7 @@ Grade the built-in sample live:     python -m checkmate.grader --live
 from __future__ import annotations
 
 import math
+import re
 import sys
 
 from .config import CONFIG
@@ -246,7 +247,11 @@ must actually reflect that; never output a score that contradicts your own sente
 Write "feedback" and "justification" in ENGLISH, always — you may quote the student's
 Hebrew verbatim when pointing at a specific line, but the surrounding sentences are English.
 Feedback is PLAIN TEXT: never emit ANSI/terminal color codes, markdown emphasis markup,
-or JSON short escapes for LaTeX (write \\frac with a double backslash, never a bare \f)."""
+or JSON short escapes for LaTeX (write \\frac with a double backslash, never a bare \f).
+EQUIVALENCE CHECK before claiming an error: two expressions that evaluate to the same value
+are the SAME answer (e.g. -x^2/(2!*108) IS -x^2/216; 1/2 IS 3/6; an unsimplified form is not
+wrong). Before writing "you wrote X but it should be Y", numerically evaluate both — if they
+are equal, there is no error and no deduction."""
 
 
 def build_grader_user(q: ParsedFragment, retrieved: Retrieved | None,
@@ -303,11 +308,25 @@ def _is_tf_mc(qid: str) -> bool:
     return u.startswith("MC") or u.startswith("TF")
 
 
-def _samples_for(qid: str, max_points: int) -> int:
-    """Adaptive N (6.2): T/F+MC are all-or-nothing circled letters (one call); open questions
-    get the baseline; high-point open questions get more samples where partial credit swings."""
+# Transcript signals that a circled-answer item is NOT a clean single mark: cancelled or
+# overwritten circles, double answers, low-legibility notes. These are the cases where one
+# sample once returned the wrong letter (a real [0,7,7] majority-wrong happened here), so
+# they keep the strict multi-sample vote; clean marks are graded deterministically in one call.
+_TF_MC_RISK_RE = re.compile(
+    r"crossed|cancel|scribbl|overwritt|struck|smudg|illegible|unclear|ambiguous"
+    r"|two (?:answers|circles|marks)|both .{0,20}circled|מחוק|שתי תשובות|לא ברור",
+    re.IGNORECASE)
+
+
+def _samples_for(qid: str, max_points: int, q: ParsedFragment) -> int:
+    """Adaptive N (6.2): T/F+MC are all-or-nothing circled letters -- ONE call when the
+    transcribed mark is clean and confidently read (deterministic, no wasted tokens), the
+    full self-consistency vote when the transcript shows cancellations/ambiguity or the
+    Parser read the page with low confidence. Open questions get the baseline; high-point
+    open questions get more samples where partial credit swings."""
     if _is_tf_mc(qid):
-        return CONFIG.grader_samples_tf_mc
+        risky = (q.confidence or 0.0) < 0.75 or bool(_TF_MC_RISK_RE.search(q.text or ""))
+        return CONFIG.grader_samples_tf_mc if risky else 1
     if max_points >= CONFIG.high_point_threshold:
         return CONFIG.grader_samples_high
     return CONFIG.grader_samples
@@ -324,7 +343,7 @@ def run_grader(q: ParsedFragment, retrieved: Retrieved | None, log: StepLog,
     user, max_points = build_grader_user(q, retrieved, notes)
     # Classify by the KB's canonical id when we have it (the parser label is unreliable).
     qid = retrieved.entry.id if retrieved else q.id
-    n = _samples_for(qid, max_points)
+    n = _samples_for(qid, max_points, q)
     cap = CONFIG.grader_max_tokens_tf_mc if _is_tf_mc(qid) else CONFIG.grader_max_tokens
     if critique is not None:
         prev, crit_text = critique

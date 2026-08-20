@@ -53,9 +53,20 @@ def run_reflector(q: ParsedFragment, grade: Grade, retrieved: Retrieved | None, 
 
 
 def _normalize_reflection(text: str, max_points: int, usage: Usage, log: StepLog, user: str) -> Reflection:
-    raw = extract_json(text) or {}
-    action_raw = str(raw.get("action", "")).upper()
-    action = action_raw if action_raw in ("REVISE", "ESCALATE") else "APPROVE"
+    raw = extract_json(text)
+    # Fail CLOSED: an unparseable critique (or an action outside the contract) must not
+    # silently approve the grade it was supposed to check -- hand it to a human instead.
+    if not isinstance(raw, dict) or str(raw.get("action", "")).upper() not in (
+            "APPROVE", "REVISE", "ESCALATE"):
+        broken = Reflection(action="ESCALATE", score=None, feedback="",
+                            note="Reflector output was malformed — failing closed to human review.",
+                            confidence=0.0)
+        log.add("Reflector", REFLECTOR_SYSTEM, user,
+                {"action": broken.action, "note": broken.note,
+                 "unparseable_output": (text or "")[:400]},
+                "Reflection", usage)
+        return broken
+    action = str(raw.get("action")).upper()
 
     raw_score = raw.get("score")
     score_num = max(0.0, min(max_points, raw_score)) if isinstance(raw_score, (int, float)) else None

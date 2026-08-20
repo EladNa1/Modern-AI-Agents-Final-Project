@@ -37,8 +37,16 @@ def run_agent(images: list[ImageInput], instructions: str = "", source_label: st
     t0 = time.time()
     log = StepLog()
     # Log the active tuning config first, so every trace/eval number is attributable to it.
+    # Resolved runtime identities included (secret-free) so the production configuration is
+    # verifiable from the trace alone: which models actually answered, which vector backend.
+    from .env import HAS_PINECONE, LLMOD_EMBED_MODEL, LLMOD_GRADER_MODEL, LLMOD_MODEL, PINECONE_INDEX
     log.add("Config", "Active tuning config for this run (section 6).", "",
-            CONFIG.to_log(), "Config")
+            {**CONFIG.to_log(),
+             "resolved_models": {"chat": LLMOD_MODEL, "grader": LLMOD_GRADER_MODEL,
+                                 "embedding": LLMOD_EMBED_MODEL, "embedding_dim": 1536},
+             "vector_backend": (f"pinecone:{PINECONE_INDEX}" if HAS_PINECONE
+                                else "bundled-json (no vector db configured)")},
+            "Config")
 
     try:
         # `parsed` supplied -> reuse a cached transcription (6.1: never re-run vision on a
@@ -339,7 +347,8 @@ def _to_question_result(qid: str, grade: Grade, retrieved: Retrieved | None) -> 
     title = f"{display_id} · {topic}" if topic else display_id
     mark = "✓" if grade.status == "ok" else ("?" if grade.status == "escalate" else f"{grade.score}/{grade.max}")
     return QuestionResult(id=display_id, title=title, score=grade.score, max=grade.max,
-                          status=grade.status, mark=mark, feedback=grade.feedback)
+                          status=grade.status, mark=mark, feedback=grade.feedback,
+                          flags=list(grade.flags))
 
 
 def _year_from(date) -> str | None:
@@ -361,7 +370,9 @@ def _assemble(questions: list[QuestionResult], source: str, instructions: str, l
     lines = [
         f"CheckMate graded {', '.join(q.id for q in questions)}: {total} / {max_pts}.",
         scope_line, "",
-        *[f"{q.id} — {q.score}/{q.max}: {q.feedback}" for q in questions], "",
+        *[f"{q.id} — {q.score}/{q.max}"
+          + (f" [{', '.join(q.flags)}]" if q.flags else "")
+          + f": {q.feedback}" for q in questions], "",
         (f"⚠ {len(escalated)} question(s) escalated to the teacher: "
          f"{', '.join(q.id for q in escalated)} — their {sum(q.score for q in escalated):g} "
          "auto-scored point(s) are PROVISIONAL pending human review; the total may change."

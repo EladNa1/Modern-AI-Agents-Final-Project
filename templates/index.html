@@ -93,7 +93,7 @@
           self-consistency, critiqued by a reflector, and escalated to a human when the agent
           can't grade fairly. Every call is logged in the <code>steps[]</code> trace on the Grade tab.
         </p>
-        <figure class="archfig"><img src="/static/architecture.png" alt="CheckMate agent architecture — Parser, Router, Retriever, Grader, Reflector, Orchestrator" /></figure>
+        <figure class="archfig"><img src="/static/architecture.png" alt="CheckMate agent architecture — Parser, Router, Retriever, Grader, Reflector, GradeBook" /></figure>
         <div class="pipeline">
           <div class="pnode"><span class="pnum">1</span><b>Parser</b><p>Vision OCR reads each page, transcribes the student's work faithfully — including which option is circled — and reads the exam's identity off the cover.</p></div>
           <div class="pnode"><span class="pnum">2</span><b>Router</b><p>Two autonomous decisions: a scope guard that politely refuses anything that isn't a Calculus 1 grading task (zero tokens spent), and scoping grading to the identified exam — the exam identity comes from the scan, not from the answer.</p></div>
@@ -133,7 +133,7 @@
               <tr><td>True/False + MC exact match</td><td class="mono">7 / 10</td><td>misses were vision failures (unread marks), not grading</td></tr>
               <tr><td>False deduction — open</td><td class="mono">5 pts</td><td>points removed from flawless proofs — the metric that matters most</td></tr>
               <tr><td>Escalations</td><td class="mono">2</td><td>flagged for TA review rather than silently graded</td></tr>
-              <tr><td>Cost per booklet</td><td class="mono">≈ $0.05–0.20</td><td>estimated, tracked per stage, hard $0.75 ceiling per run</td></tr>
+              <tr><td>Cost per booklet</td><td class="mono">≈ $0.15–0.30</td><td>measured on the bundled 18-page booklets; tracked per stage, hard $0.75 ceiling per run</td></tr>
             </tbody>
           </table>
         </div>
@@ -348,6 +348,12 @@
           const tag = el("span", "tag " + (q.status === "ok" ? "ok" : q.status === "partial" ? "partial" : "escalate"), STATUS_LABEL[q.status]);
           right.appendChild(tag); right.appendChild(el("span", "qscore", q.score + "/" + q.max));
           h.appendChild(right); a.appendChild(h); a.appendChild(el("p", "annotfb", beautifyMath(q.feedback)));
+          // Reflection-loop annotations (revised, reflection_incomplete, ...) — never hidden.
+          if (q.flags && q.flags.length) {
+            const fl = el("p", "annotflags", "⚑ " + q.flags.join(" · "));
+            fl.style.cssText = "margin:.3rem 0 0;font-size:.72rem;letter-spacing:.03em;color:var(--muted,#8a8fa3);";
+            a.appendChild(fl);
+          }
           annots.appendChild(a);
         }
         review.appendChild(annots); card.appendChild(review); wrap.appendChild(card);

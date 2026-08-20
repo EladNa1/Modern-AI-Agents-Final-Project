@@ -161,6 +161,7 @@ def retrieve(question_id: str, question_text: str, log: StepLog, exam: str | Non
     found: Retrieved | None = None
     method = ""
     score = None
+    demoted = False  # semantic hit rejected by printed-text corroboration
 
     # Canonical T/F- and MC-numbered ids come from the deterministic page split (the printed
     # item numbering), not from the parser's guess -- for these, the exact-id match IS the
@@ -190,6 +191,7 @@ def retrieve(question_id: str, question_text: str, log: StepLog, exam: str | Non
                 if f1 < CONFIRM_MIN_F1:
                     found, method = None, ""
                     score = round(score, 3)
+                    demoted = True
         elif sem:
             score = sem["score"]  # queried, but below threshold -- record why
 
@@ -205,7 +207,10 @@ def retrieve(question_id: str, question_text: str, log: StepLog, exam: str | Non
             method = "content-overlap"
 
     # Fallback (offline / Pinecone miss): exact question-id over the bundled KB.
-    if not found:
+    # NOT after a corroboration demotion: content checks just rejected this fragment, so the
+    # parser's id guess alone must not resurrect the match -- no-match routes it to the
+    # human-reviewed unmatched bucket instead of grading it against a look-alike question.
+    if not found and not demoted:
         found = _find_exact(want, exam)
         if found:
             method = "exact-id"
@@ -222,7 +227,11 @@ def retrieve(question_id: str, question_text: str, log: StepLog, exam: str | Non
             response["caution"] = "semantic similarity below threshold — grounded by question id only"
     else:
         response = {"matched": None, "method": "searched" if HAS_PINECONE else "no-vector-db",
-                    "score": score, "reason": "no knowledge-base entry above the match threshold"}
+                    "score": score,
+                    "reason": ("semantic match rejected by printed-text corroboration; "
+                               "id-only grounding refused — escalating to a human"
+                               if demoted else
+                               "no knowledge-base entry above the match threshold")}
     log.add("Retriever",
             "Match the exam question to the knowledge base and return the official solution "
             "and point value for grounding the grade. Do not grade.",

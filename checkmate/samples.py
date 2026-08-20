@@ -25,7 +25,11 @@ SAMPLES: list[dict] = [
         "label": "Sample booklet 1 — 104041 2024 Winter Moed A (18-page scan, human-graded 90/100)",
         "file": "104041-2024W-A.json",
         "exam": "2024w moed A",
-        "aliases": r"sample\s*(?:booklet\s*)?1|2024\s*w(?:inter)?|winter\s*2024|moed\s*a|104041|מועד\s*א",
+        # `specific` names THIS booklet unambiguously; `aliases` are generic exam terms that
+        # only apply when no booklet is named explicitly (resolution is specific-first, so
+        # "sample booklet 2 from 104041" can never fall back to booklet 1 via "104041").
+        "specific": r"sample\s*(?:booklet\s*)?(?:#\s*)?1\b|booklet\s*1\b|first\s+(?:sample|booklet)|scored\s*90|\b90/100",
+        "aliases": r"2024\s*w(?:inter)?|winter\s*2024|moed\s*a|104041|מועד\s*א",
         # Rendered page previews bundled under static/ so the GUI can SHOW what was graded.
         "pages": 18,
         "pages_prefix": "/static/samples/sample1",
@@ -35,7 +39,8 @@ SAMPLES: list[dict] = [
         "label": "Sample booklet 2 — 104041 2024 Winter Moed A, second student (18-page scan, human-graded 93/100)",
         "file": "104041-2024W-A-93.json",
         "exam": "2024w moed A",
-        "aliases": r"sample\s*(?:booklet\s*)?2",
+        "specific": r"sample\s*(?:booklet\s*)?(?:#\s*)?2\b|booklet\s*2\b|second\s+(?:sample|booklet|student)|scored\s*93|\b93/100",
+        "aliases": r"(?!x)x",  # no generic aliases -- reachable only by name
         "pages": 18,
         "pages_prefix": "/static/samples/sample2",
     },
@@ -47,11 +52,14 @@ def list_samples() -> list[dict]:
 
 
 def resolve_sample(prompt: str) -> dict | None:
-    """Match a prompt to a bundled sample booklet (first match wins)."""
+    """Match a prompt to a bundled sample booklet. Explicit booklet names win over generic
+    exam aliases across ALL samples (two passes), so naming booklet 2 alongside a generic
+    term like the course number can never resolve to booklet 1."""
     p = prompt or ""
-    for s in SAMPLES:
-        if re.search(s["aliases"], p, re.IGNORECASE) and os.path.exists(os.path.join(_DIR, s["file"])):
-            return s
+    for key in ("specific", "aliases"):
+        for s in SAMPLES:
+            if re.search(s[key], p, re.IGNORECASE) and os.path.exists(os.path.join(_DIR, s["file"])):
+                return s
     return None
 
 

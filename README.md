@@ -37,20 +37,24 @@ parallel deterministic checker. Every stage is a Python module; nothing bolts a 
 onto the pipeline.
 
 ```
-scan → Parser → Router → Retriever → Grader → Reflector → Orchestrator → GradeBook → Result
-        vision   scope    RAG        self-     critique/   assemble +     per-Q report
-        OCR      to exam   (solution  consist.  approve/    completion     + final report
-                           + notes)   median-N  escalate    (arithmetic)
+scan → Parser → Router → Retriever → Grader ⇄ Reflector → GradeBook → Result
+        vision   scope    RAG        self-      critique/    assemble + completion
+        OCR      to exam  (solution  consist.   approve/     (arithmetic, zero-LLM)
+                          + notes)   median-N   escalate
 ```
+
+(The reflection loop itself — grouping fragments, allocating passes, enforcing ceilings —
+is control flow in `checkmate/orchestrator.py`, not a model stage: every LLM call it makes
+is logged in `steps[]` under the module that made it.)
 
 | Stage | File | Job |
 |-------|------|-----|
 | **Parser** | `checkmate/parser.py` | Vision OCR: transcribes each page faithfully, splits into questions, reads exam identity (course/date/מועד) off the cover, and re-reads faint regions (zoom, opt-in). A deterministic post-pass splits a merged True/False page into per-item `TF-n` fragments (zero LLM). Does **not** grade. |
 | **Router** | `checkmate/orchestrator.py` + `checkmate/guard.py` + `kb/exams.py` | Two autonomous decisions. **Scope guard**: refuses out-of-domain requests (and non-exam scans that match nothing in the KB) politely, BEFORE spending grader tokens — the refusal is logged as a Router step. **Exam scoping**: manual override → auto-detected from the scan → unscoped fallback. |
-| **Retriever** | `checkmate/retriever.py` | RAG **with a verification layer** — retrieval is checked, never trusted blindly: matches below a similarity floor (`MIN_SCORE`) are discarded so the agent grounds on *nothing* (and escalates) rather than on the wrong solution; retrieval is scoped to the exam identified from the scan; a strong content-overlap match outranks an unreliable id label; the Grader is instructed to reject a retrieved solution that doesn't match the question in front of it; and the answer key itself was validated offline with a SymPy sweep. Pinecone semantic search + exact-id and content-overlap fallbacks over bundled JSON, plus top-k course-notes chunks. |
+| **Retriever** | `checkmate/retriever.py` | RAG **with a verification layer** — retrieval is checked, never trusted blindly: matches below a similarity floor (`MIN_SCORE`) are discarded so the agent grounds on *nothing* (and escalates) rather than on the wrong solution; retrieval is scoped to the exam identified from the scan; a strong content-overlap match outranks an unreliable id label; the Grader is instructed to reject a retrieved solution that doesn't match the question in front of it; and contested answer keys are checked symbolically offline with SymPy (the Q2b root-count key, where the check caught a human grading error). Pinecone semantic search + exact-id and content-overlap fallbacks over bundled JSON, plus top-k course-notes chunks. |
 | **Grader** | `checkmate/grader.py` | Scores the student's actual method with partial credit + feedback. **Self-consistency**: grades N times, takes the median, escalates on disagreement. |
 | **Reflector** | `checkmate/reflector.py` | Critiques the proposed grade **against the retrieved evidence** (official solution + transcript in context); APPROVE / REVISE / ESCALATE. On REVISE the critique goes **back to the Grader**, which regrades conditioned on it (canonical Reflection loop à la Self-Refine/Reflexion, ≤N passes) — and may keep its grade if the critique is unjustified. An escalation is never cleared by a revision. |
-| **Orchestrator** | `checkmate/orchestrator.py` | Runs the pipeline, groups fragments by question, applies a cross-exam consistency guard, enforces the budget ceiling, and assembles the result + GradeBook. |
+| *(reflection loop)* | `checkmate/orchestrator.py` | Control flow, **not a logged module**: groups fragments by question, runs the Grader⇄Reflector loop, applies a cross-exam consistency guard, and enforces the budget/wall-clock ceilings. Every LLM call inside it is logged under its own module above. |
 | **GradeBook** | `checkmate/gradebook.py` | Accumulates per-question entries; decides completion **arithmetically** from the KB manifest (never model-detected); emits the final report + status. |
 
 Supporting modules: `config.py` (all tuning knobs), `llm.py` (gateway client + cost model +
@@ -193,9 +197,12 @@ Two sources embedded into **Pinecone** (1536-dim, `text-embedding-3-small`):
 
 Because near-identical questions recur across exams ("state the IVT"), retrieval is **scoped
 to the identified exam** — the disambiguating signal is the exam identity read off the scan,
-not the student's answer. Keys are tagged `verified` vs `authored`; an offline SymPy sweep
-confirms decidable keys (it already caught the disputed 2024W-A Q2b: the printed equation
-`x²+x·sin x+cos x=0` has **0** real roots — the graded booklet's human 7/10 is a human error).
+not the student's answer. Keys are tagged `verified` vs `authored`: a key is marked
+`verified` only after an offline SymPy check of its final answer — currently the one
+contested key, 2024W-A Q2b, where the check caught a human grading error (the printed
+equation `x²+x·sin x+cos x=0` has **0** real roots, not the 2 the red pen credited). All
+other keys are `authored` from the official solutions; proof-style questions have no
+machine-decidable key to verify.
 
 ## 7. Evaluation + budget model
 

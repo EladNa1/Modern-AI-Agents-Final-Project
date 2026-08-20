@@ -95,6 +95,9 @@ class QuestionResult:
     status: str  # "ok" | "partial" | "escalate"
     mark: str    # short margin stamp, e.g. "✓" / "3/5"
     feedback: str
+    # Reflection/aggregation annotations (e.g. "revised", "reflection_incomplete") --
+    # surfaced so nothing the loop noticed is hidden from the final result.
+    flags: list = field(default_factory=list)
 
 
 @dataclass
