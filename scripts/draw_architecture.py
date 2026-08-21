@@ -124,7 +124,7 @@ def main() -> None:
 
     # knowledge base, centered under Retriever
     box(ax, 0.375, BY, 0.235, BH, "Knowledge base",
-        "Pinecone index + bundled JSON\nofficial solutions per exam question\ncourse lecture notes (semantic top-k)\nverified by an offline SymPy sweep",
+        "Pinecone index + bundled JSON\nofficial solutions per exam question\ncourse lecture notes (semantic top-k)",
         KB, fs=11, sfs=8.2)
     arrow(ax, (0.4925, BY + BH + 0.012), (0.4925, Y - 0.004), color=KB, lw=2.2)
     ax.text(0.503, 0.53, "grounding evidence", fontsize=8.2, color=KB, ha="left", va="center")

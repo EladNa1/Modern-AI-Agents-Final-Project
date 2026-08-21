@@ -57,7 +57,7 @@
   <div class="title">CheckMate as a Reflection Agent</div>
   <div class="subtitle">The agent grades first, then critiques its own grade against retrieved course evidence.</div>
   <div class="aux">input: scanned booklet (PDF / images) or a bundled sample scan · vision parsed once, cached per booklet<br>
-       T/F + MC: one deterministic read, reflection skipped<br>
+       T/F + MC: one read when the transcribed mark is clean and confidently read, 3-sample vote when it is not · reflection skipped<br>
        ceilings: $0.75 run · 240s run · 120s parse · 45s per call → stop early, provisional result</div>
 
   <!-- main row -->
@@ -80,7 +80,7 @@
 
   <div class="kb">
     <h3>Knowledge base</h3>
-    <p>official solutions per exam question · course lecture notes · Pinecone + bundled JSON · contested keys SymPy-checked</p>
+    <p>official solutions per exam question · course lecture notes · Pinecone + bundled JSON</p>
   </div>
 
   <div class="refuse"><h3>Polite refusal</h3><p>out-of-domain request or non-exam scan — zero grader tokens</p></div>
