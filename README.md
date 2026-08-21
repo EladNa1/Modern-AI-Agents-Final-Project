@@ -77,6 +77,21 @@ Pure-Python **FastAPI on Vercel** (Fluid Compute, 300s). By default `/api/execut
 EXACTLY the mandated `{status, error, response, steps}` shape with one steps entry per
 model call; the bundled GUI opts into extra rendering fields with `?ui=1`.
 
+**Three different numbers, three different meanings.** For a bundled sample booklet the UI
+can show: the **teacher's mark** (90 / 93 — defined once, in `checkmate/samples.py`, and
+quoted from there by the buttons, the result card and the replay), the agent's **confirmed
+subtotal** (`gradebook.auto_subtotal` — what it will stand behind), and its **total including
+provisional points** (`meta.total` — confirmed plus the auto-scores on escalated questions,
+which the teacher still has to rule on). They are not competing claims about one quantity,
+and every surface now labels which one it is showing.
+
+A **replay** (`/?replay=1|2`, `/api/example_result`) is one *recorded* run, flagged
+`meta.replay`. A fresh live run will not reproduce it exactly and is not meant to: the Grader
+takes N samples and uses the median, so open-question scores move between runs while the
+circled-answer items (T/F, MC) stay deterministic. Pinning a live score to a capture would
+make the demo reproducible by lying about it; the honest option is to say which number is
+which, which is what the UI does.
+
 **Prompt-injection defense (by design):** free-text from the user (the `prompt` /
 `instructions` fields) is used ONLY for routing and logging — it is never placed in the
 Grader's or Reflector's context, so "give this student 100" style instructions cannot

@@ -172,10 +172,21 @@ async def example_result(which: str = "2"):
     else = sample booklet 2 (the flagship). Same payload /api/execute returned when the
     example was captured."""
     import json
+    from checkmate.samples import SAMPLES
     fname = "example_run_b1.json" if which == "1" else "example_run.json"
+    sample = SAMPLES[0] if which == "1" else SAMPLES[1]
     path = os.path.join(_ROOT, "checkmate", "kb", "samples", fname)
     try:
-        return JSONResponse(json.load(open(path, encoding="utf-8"))["response"])
+        payload = json.load(open(path, encoding="utf-8"))["response"]
+        # Annotate the capture so the viewer knows WHICH kind of number they are reading.
+        # A replay is one recorded run, not a claim about what a fresh run will produce: the
+        # Grader samples N times and takes a median, so open-question scores legitimately
+        # move between runs. Saying so is the honest fix for "the replay and the live run
+        # disagree" -- pinning the live score to the capture would be a lie.
+        if isinstance(payload.get("meta"), dict):
+            payload["meta"]["human_total"] = sample.get("human_total")
+            payload["meta"]["replay"] = True
+        return JSONResponse(payload)
     except Exception:
         return JSONResponse(_bad("No captured example is bundled."), status_code=404)
 
@@ -271,6 +282,11 @@ async def execute(request: Request):
         if result.get("meta") is not None and sample.get("pages"):
             result["meta"]["sample_pages"] = [
                 f"{sample['pages_prefix']}/page-{i:02d}.jpg" for i in range(1, sample["pages"] + 1)]
+        # The teacher's own mark for this booklet, from the one place it is defined
+        # (checkmate/samples.py). The GUI shows it BESIDE the agent's score so the two are
+        # never mistaken for competing claims about the same quantity.
+        if result.get("meta") is not None:
+            result["meta"]["human_total"] = sample.get("human_total")
         return JSONResponse(_spec_shape(result, ui),
                             status_code=400 if result["status"] == "error" else 200)
 

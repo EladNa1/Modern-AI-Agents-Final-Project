@@ -25,6 +25,10 @@ SAMPLES: list[dict] = [
         "label": "Sample booklet 1 — 104041 2024 Winter Moed A (18-page scan, human-graded 90/100)",
         "file": "104041-2024W-A.json",
         "exam": "2024w moed A",
+        # THE authoritative human mark for this booklet -- the one number every surface
+        # (GUI button, result card, replay) quotes, so the teacher's grade can never appear
+        # as two different figures depending on where you read it.
+        "human_total": 90,
         # `specific` names THIS booklet unambiguously; `aliases` are generic exam terms that
         # only apply when no booklet is named explicitly (resolution is specific-first, so
         # "sample booklet 2 from 104041" can never fall back to booklet 1 via "104041").
@@ -39,6 +43,7 @@ SAMPLES: list[dict] = [
         "label": "Sample booklet 2 — 104041 2024 Winter Moed A, second student (18-page scan, human-graded 93/100)",
         "file": "104041-2024W-A-93.json",
         "exam": "2024w moed A",
+        "human_total": 93,
         "specific": r"sample\s*(?:booklet\s*)?(?:#\s*)?2\b|booklet\s*2\b|second\s+(?:sample|booklet|student)|scored\s*93|\b93/100",
         "aliases": r"(?!x)x",  # no generic aliases -- reachable only by name
         "pages": 18,
@@ -48,7 +53,8 @@ SAMPLES: list[dict] = [
 
 
 def list_samples() -> list[dict]:
-    return [{"id": s["id"], "label": s["label"], "exam": s["exam"]} for s in SAMPLES]
+    return [{"id": s["id"], "label": s["label"], "exam": s["exam"],
+             "human_total": s.get("human_total")} for s in SAMPLES]
 
 
 def resolve_sample(prompt: str) -> dict | None:
