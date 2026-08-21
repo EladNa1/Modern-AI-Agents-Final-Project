@@ -12,6 +12,7 @@ from __future__ import annotations
 import math
 import re
 import sys
+import time
 
 from .config import CONFIG
 from .env import LLMOD_GRADER_MODEL
@@ -339,11 +340,17 @@ def _samples_for(qid: str, max_points: int, q: ParsedFragment) -> int:
 
 def run_grader(q: ParsedFragment, retrieved: Retrieved | None, log: StepLog,
                notes: list[NotesChunk] | None = None,
-               critique: "tuple[Grade, str] | None" = None) -> Grade:
+               critique: "tuple[Grade, str] | None" = None,
+               deadline: float | None = None) -> Grade:
     """Grade the question. `critique` = (previous_grade, reflector_critique_text) puts the
     Grader into a REVISION pass -- the canonical Reflection loop: the critique returns to
     the GENERATOR, which regrades conditioned on it (single sample; the Reflector re-checks
-    the result on the next pass anyway)."""
+    the result on the next pass anyway).
+
+    `deadline` (a time.time() value) stops EXTRA self-consistency samples once the run is
+    at the wire: the first sample always runs (a question already started must produce a
+    grade), further samples are dropped and the shortfall is flagged rather than silently
+    reported as a full N-sample vote."""
     notes = notes or []
     user, max_points = build_grader_user(q, retrieved, notes)
     # Classify by the KB's canonical id when we have it (the parser label is unreliable).
@@ -367,7 +374,13 @@ def run_grader(q: ParsedFragment, retrieved: Retrieved | None, log: StepLog,
     # the single call + the deterministic mark-reading rules instead.)
     grades: list[Grade] = []
     truncated = False
+    samples_cut = False
     for i in range(n):
+        # Never start an EXTRA sample past the run deadline -- but always take the first,
+        # since abandoning a question mid-flight would leave it with no grade at all.
+        if i > 0 and deadline is not None and time.time() > deadline:
+            samples_cut = True
+            break
         text, usage = chat(GRADER_SYSTEM, user, max_tokens=cap,
                            json_mode=True, model=LLMOD_GRADER_MODEL)
         if usage.get("completion", 0) >= cap:  # output hit the token cap -> likely cut off
@@ -385,6 +398,8 @@ def run_grader(q: ParsedFragment, retrieved: Retrieved | None, log: StepLog,
     final = _aggregate_grades(grades, max_points, is_tf_mc=_is_tf_mc(qid))
     if truncated and "output_truncated" not in final.flags:
         final.flags.append("output_truncated")
+    if samples_cut and "samples_cut_by_deadline" not in final.flags:
+        final.flags.append("samples_cut_by_deadline")
     # Deterministic reconciliation of the N samples -- no LLM call; logged so the trace
     # shows the decision (median, disagreement escalation, lone-outlier handling).
     log.add("Grader",
@@ -393,8 +408,9 @@ def run_grader(q: ParsedFragment, retrieved: Retrieved | None, log: StepLog,
             "band; on open questions a lone outlier against unanimous full marks is treated "
             "as sampling noise and left to the Reflector.",
             f"samples={[g.score for g in grades]} (max {max_points}, n={n})",
-            {**final.__dict__, "n": n, "max_tokens": cap, "truncated": truncated,
-             "llm_calls": 0},
+            {**final.__dict__, "n": n, "samples_taken": len(grades),
+             "max_tokens": cap, "truncated": truncated,
+             "samples_cut_by_deadline": samples_cut, "llm_calls": 0},
             "Self-consistency median")
     return final
 

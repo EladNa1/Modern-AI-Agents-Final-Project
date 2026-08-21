@@ -47,12 +47,17 @@ scan → Parser → Router → Retriever → Grader ⇄ Reflector → GradeBook 
 is control flow in `checkmate/orchestrator.py`, not a model stage: every LLM call it makes
 is logged in `steps[]` under the module that made it.)
 
+Every row below is a module name that appears verbatim in `steps[]`, in the architecture
+diagram, and in `/api/agent_info` — the course grades that consistency.
+
 | Stage | File | Job |
 |-------|------|-----|
-| **Parser** | `checkmate/parser.py` | Vision OCR: transcribes each page faithfully, splits into questions, reads exam identity (course/date/מועד) off the cover, and re-reads faint regions (zoom, opt-in). A deterministic post-pass splits a merged True/False page into per-item `TF-n` fragments (zero LLM). Does **not** grade. |
+| **Config** | `checkmate/config.py` | Zero-LLM run-setup snapshot, logged as the FIRST step of every run: the active tuning knobs, the resolved model ids (chat / grader / embedding), and the vector backend — so any number in the trace is attributable to the configuration that produced it. |
+| **Parser** | `checkmate/parser.py` | Vision OCR: transcribes each page faithfully, splits into questions, reads exam identity (course/date/מועד) off the cover, and re-reads faint regions (zoom, opt-in). A deterministic post-pass splits a merged True/False page into per-item `TF-n` fragments (zero LLM). Bounded by its own wall-clock deadline (`parse_deadline_seconds`): past it no NEW vision call is started, pages in flight finish, and skipped pages are reported in the trace rather than silently dropped. Does **not** grade. |
+| **Zoom** | `checkmate/zoom.py` | Parser **Pass 2**, opt-in (`CHECKMATE_ZOOM=1`), logged under its own module name when it runs: re-reads a low-confidence fragment from a magnified crop of its own region. Off by default, so it does not appear in a default trace. |
 | **Router** | `checkmate/orchestrator.py` + `checkmate/guard.py` + `kb/exams.py` | Two autonomous decisions. **Scope guard**: refuses out-of-domain requests (and non-exam scans that match nothing in the KB) politely, BEFORE spending grader tokens — the refusal is logged as a Router step. **Exam scoping**: manual override → auto-detected from the scan → unscoped fallback. |
 | **Retriever** | `checkmate/retriever.py` | RAG **with a verification layer** — retrieval is checked, never trusted blindly: matches below a similarity floor (`MIN_SCORE`) are discarded so the agent grounds on *nothing* (and escalates) rather than on the wrong solution; retrieval is scoped to the exam identified from the scan; a strong content-overlap match outranks an unreliable id label; the Grader is instructed to reject a retrieved solution that doesn't match the question in front of it; and contested answer keys are checked symbolically offline with SymPy (the Q2b root-count key, settled by the check during a ground-truth dispute). Pinecone semantic search + exact-id and content-overlap fallbacks over bundled JSON, plus top-k course-notes chunks. |
-| **Grader** | `checkmate/grader.py` | Scores the student's actual method with partial credit + feedback. **Self-consistency**: grades N times, takes the median, escalates on disagreement. |
+| **Grader** | `checkmate/grader.py` | Scores the student's actual method with partial credit + feedback. **Self-consistency**: grades N times, takes the median, escalates on disagreement. At the run deadline the extra samples are dropped (the first always runs) and the grade is flagged `samples_cut_by_deadline` — never reported as a full N-sample vote it did not take. |
 | **Reflector** | `checkmate/reflector.py` | Critiques the proposed grade **against the retrieved evidence** (official solution + transcript in context); APPROVE / REVISE / ESCALATE. On REVISE the critique goes **back to the Grader**, which regrades conditioned on it (canonical Reflection loop à la Self-Refine/Reflexion, ≤N passes) — and may keep its grade if the critique is unjustified. An escalation is never cleared by a revision. |
 | *(reflection loop)* | `checkmate/orchestrator.py` | Control flow, **not a logged module**: groups fragments by question, runs the Grader⇄Reflector loop, applies a cross-exam consistency guard, and enforces the budget/wall-clock ceilings. Every LLM call inside it is logged under its own module above. |
 | **GradeBook** | `checkmate/gradebook.py` | Accumulates per-question entries; decides completion **arithmetically** from the KB manifest (never model-detected); emits the final report + status. |
@@ -71,6 +76,21 @@ downstream is live), and out-of-domain prompts get a polite zero-token refusal. 
 Pure-Python **FastAPI on Vercel** (Fluid Compute, 300s). By default `/api/execute` returns
 EXACTLY the mandated `{status, error, response, steps}` shape with one steps entry per
 model call; the bundled GUI opts into extra rendering fields with `?ui=1`.
+
+**Three different numbers, three different meanings.** For a bundled sample booklet the UI
+can show: the **teacher's mark** (90 / 93 — defined once, in `checkmate/samples.py`, and
+quoted from there by the buttons, the result card and the replay), the agent's **confirmed
+subtotal** (`gradebook.auto_subtotal` — what it will stand behind), and its **total including
+provisional points** (`meta.total` — confirmed plus the auto-scores on escalated questions,
+which the teacher still has to rule on). They are not competing claims about one quantity,
+and every surface now labels which one it is showing.
+
+A **replay** (`/?replay=1|2`, `/api/example_result`) is one *recorded* run, flagged
+`meta.replay`. A fresh live run will not reproduce it exactly and is not meant to: the Grader
+takes N samples and uses the median, so open-question scores move between runs while the
+circled-answer items (T/F, MC) stay deterministic. Pinning a live score to a capture would
+make the demo reproducible by lying about it; the honest option is to say which number is
+which, which is what the UI does.
 
 **Prompt-injection defense (by design):** free-text from the user (the `prompt` /
 `instructions` fields) is used ONLY for routing and logging — it is never placed in the
@@ -174,9 +194,22 @@ question always go in full (truncation of either is logged as a defect, not a tu
 ### Cost / budget — `checkmate/config.py`
 | Knob | Value | Meaning |
 |------|-------|---------|
-| `price_input_per_1k` | **$0.00025** | ⚠ ESTIMATE — set the real gateway input rate |
-| `price_output_per_1k` | **$0.00100** | ⚠ ESTIMATE — set the real gateway output rate |
+| `price_input_per_1k` | **$0.00075** | ⚠ ESTIMATE — set the real gateway input rate |
+| `price_output_per_1k` | **$0.00300** | ⚠ ESTIMATE — set the real gateway output rate |
+| `price_embed_per_1k` | **$0.00002** | embedding tokens (Retriever queries) — cheap, but counted |
 | `max_run_cost_usd` | **$0.75** | per-run ceiling; the run aborts before the next question if exceeded |
+
+### Run ceilings (time) — `checkmate/config.py`, `checkmate/llm.py`
+Vercel kills the whole request at **300s** (`vercel.json` `maxDuration`). Three nested
+bounds keep a run inside it — a cost ceiling alone cannot, because it is only checked
+*between* calls and cannot interrupt one already in flight.
+
+| Knob | Value | File | Meaning | Env override |
+|------|-------|------|---------|--------------|
+| `LLM_TIMEOUT_SECONDS` | **45s** | llm.py | per-call HTTP timeout. Without it the OpenAI SDK defaults to a **600s** read timeout — twice the platform limit, so a single hung call returns nothing at all | `CHECKMATE_LLM_TIMEOUT` |
+| `LLM_MAX_RETRIES` | **1** | llm.py | SDK retries per call (its default is 2, which triples the worst case) | `CHECKMATE_LLM_RETRIES` |
+| `parse_deadline_seconds` | **120s** | config.py | the Parser's share: past it no NEW vision call starts, so a long upload cannot consume the run before a single question is graded | `CHECKMATE_PARSE_DEADLINE` |
+| `max_run_seconds` | **240s** | config.py | run guard: checked before each question (absolute, plus a projection from the average so far) and inside the Grader's sample loop | `CHECKMATE_MAX_RUN_SECONDS` |
 
 ### Models — `checkmate/env.py` (env-driven)
 | Knob | Value | Meaning |

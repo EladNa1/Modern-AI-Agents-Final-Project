@@ -12,9 +12,9 @@ from .config import CONFIG
 from .models import ImageInput
 
 RENDER_DPI = 150  # enough for handwritten-math OCR; keeps the base64 payload small
-# Page cap lives in the config (CONFIG.render_max_pages, env CHECKMATE_MAX_PAGES). Default 12
-# keeps a run inside Vercel's 300s ceiling; an 18-page booklet needs it raised or its later
-# sections (T/F, MC) never reach the parser.
+# Page cap lives in the config (CONFIG.render_max_pages, env CHECKMATE_MAX_PAGES). Default 24
+# covers the full 18-20 page booklets; the parser reads pages concurrently and is bounded by
+# CONFIG.parse_deadline_seconds, so the page cap no longer carries the timing guarantee alone.
 
 
 @dataclass

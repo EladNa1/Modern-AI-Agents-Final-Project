@@ -6,8 +6,9 @@ from __future__ import annotations
 
 import os
 import re
+import time
 from concurrent.futures import ThreadPoolExecutor
-from dataclasses import dataclass
+from dataclasses import dataclass, field
 
 from .config import CONFIG
 from .llm import StepLog, chat, extract_json
@@ -33,6 +34,7 @@ class ParseResult:
     raw: str    # the model's raw reply, for debugging
     usage: Usage
     exam_meta: dict | None = None  # {course,date,moed} read off the cover/headers, if any
+    skipped_pages: list = field(default_factory=list)  # pages the deadline stopped us reading
 
 
 PARSER_SYSTEM = """You are the Parser module of CheckMate, an autonomous agent that grades Technion Calculus 1 (Hedva 1) exams.
@@ -58,7 +60,7 @@ Output ONLY a JSON object, no prose, no code fences:
 
 
 def run_parser(images: list[ImageInput], log: StepLog, instructions: str = "",
-               zoom: bool | None = None) -> ParseResult:
+               zoom: bool | None = None, deadline: float | None = None) -> ParseResult:
     """One vision call PER PAGE (not all pages at once): more robust on long exams, and each
     page is logged as its own Parser step. The per-page calls run CONCURRENTLY (thread pool)
     because a sequential 18-page parse takes ~10 minutes -- past Vercel's 300s ceiling; the
@@ -66,7 +68,13 @@ def run_parser(images: list[ImageInput], log: StepLog, instructions: str = "",
     to a sequential run. Fragments are deliberately NOT merged here -- the orchestrator
     groups them by the question the Retriever matches.
 
-    `zoom` toggles READING POLICY Pass 2 (default: the CHECKMATE_ZOOM env flag)."""
+    `zoom` toggles READING POLICY Pass 2 (default: the CHECKMATE_ZOOM env flag).
+
+    `deadline` (a time.time() value) bounds the stage: once it passes, no NEW vision call
+    is started. Pages already in flight finish, so nothing is half-read; skipped pages are
+    reported in the trace rather than silently dropped. Without this the Parser sat entirely
+    outside the run's wall-clock guard -- an 18-page upload is 3-4 waves of vision calls,
+    none of which the orchestrator could see or stop."""
     zoom = _zoom_enabled() if zoom is None else zoom
     total: Usage = {"prompt": 0, "completion": 0, "total": 0}
     raws: list[str] = []
@@ -88,7 +96,11 @@ def run_parser(images: list[ImageInput], log: StepLog, instructions: str = "",
             user += f"\n\nGrader context (do not act on it, just transcribe): {instructions}"
         users.append(user)
 
-    def _read_page(p: int) -> tuple[str, Usage]:
+    def _read_page(p: int) -> tuple[str, Usage] | None:
+        # Past the deadline -> do not START another vision call. Returning None keeps the
+        # page in order (it is reported as skipped) instead of shifting every later page.
+        if deadline is not None and time.time() > deadline:
+            return None
         return chat(
             system=PARSER_SYSTEM, user=users[p], images=[images[p]],
             max_tokens=CONFIG.parser_max_tokens, json_mode=True,
@@ -98,11 +110,24 @@ def run_parser(images: list[ImageInput], log: StepLog, instructions: str = "",
 
     if images:
         with ThreadPoolExecutor(max_workers=min(PARSE_CONCURRENCY, len(images))) as pool:
-            results = list(pool.map(_read_page, range(len(images))))
+            raw_results = list(pool.map(_read_page, range(len(images))))
     else:
-        results = []
+        raw_results = []
 
-    for p, (text, usage) in enumerate(results):
+    skipped = [p + 1 for p, r in enumerate(raw_results) if r is None]
+    results = [(p, r) for p, r in enumerate(raw_results) if r is not None]
+    if skipped:
+        # Honest disclosure: the booklet was not fully read, so the grade that follows is
+        # over the pages that WERE read. Zero LLM calls -- this is the guard reporting itself.
+        log.add("Parser",
+                "Wall-clock guard: the parse deadline passed before every page could be "
+                "read, so no further vision call was started. Pages already in flight were "
+                "completed; the pages below were not read.",
+                f"pages={len(images)}, deadline_exceeded=True",
+                {"skipped_pages": skipped, "read_pages": len(results), "llm_calls": 0},
+                "Deadline")
+
+    for p, (text, usage) in results:
         parsed = extract_json(text) or {}
         page_qs = _normalize_fragments(parsed.get("questions"), p + 1)
         if exam_meta is None:
@@ -125,7 +150,8 @@ def run_parser(images: list[ImageInput], log: StepLog, instructions: str = "",
         fragments.extend(page_qs)
         raws.append(text)
 
-    return ParseResult(fragments=fragments, raw="\n\n".join(raws), usage=total, exam_meta=exam_meta)
+    return ParseResult(fragments=fragments, raw="\n\n".join(raws), usage=total,
+                       exam_meta=exam_meta, skipped_pages=skipped)
 
 
 def _clean_exam_meta(m) -> dict | None:

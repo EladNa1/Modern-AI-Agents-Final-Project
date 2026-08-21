@@ -4,6 +4,7 @@ Port of lib/llm.ts.
 from __future__ import annotations
 
 import json
+import os
 import re
 
 from openai import OpenAI
@@ -11,13 +12,22 @@ from openai import OpenAI
 from .env import LLMOD_BASE_URL, LLMOD_EMBED_MODEL, LLMOD_KEY, LLMOD_MODEL
 from .models import ImageInput, Step, Usage
 
+# Vercel kills the whole request at 300s (vercel.json maxDuration). The SDK's own defaults
+# -- a 600s read timeout with 2 retries -- can block for FAR longer than that and return
+# nothing at all, so the run's wall-clock guard (CONFIG.max_run_seconds) never gets a turn:
+# it is checked between calls and cannot interrupt one in flight. Bound every call instead,
+# so a stalled gateway surfaces as a handled error inside the run rather than a platform 504.
+LLM_TIMEOUT_SECONDS = float(os.environ.get("CHECKMATE_LLM_TIMEOUT") or 45)
+LLM_MAX_RETRIES = int(os.environ.get("CHECKMATE_LLM_RETRIES") or 1)
+
 _client: OpenAI | None = None
 
 
 def _client_singleton() -> OpenAI:
     global _client
     if _client is None:
-        _client = OpenAI(base_url=LLMOD_BASE_URL, api_key=LLMOD_KEY)
+        _client = OpenAI(base_url=LLMOD_BASE_URL, api_key=LLMOD_KEY,
+                         timeout=LLM_TIMEOUT_SECONDS, max_retries=LLM_MAX_RETRIES)
     return _client
 
 

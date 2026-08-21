@@ -73,8 +73,8 @@
 
         <div class="controls">
           <button class="btn" id="gradeBtn" disabled>Run Agent</button>
-          <button class="btn btnsmall" id="sampleBtn" style="margin-left:.6rem">Try sample booklet 1 (student scored 90)</button>
-          <button class="btn btnsmall" id="sample2Btn" style="margin-left:.4rem">Sample booklet 2 (student scored 93)</button>
+          <button class="btn btnsmall" id="sampleBtn" style="margin-left:.6rem">Try sample booklet 1 (human graded 90/100)</button>
+          <button class="btn btnsmall" id="sample2Btn" style="margin-left:.4rem">Sample booklet 2 (human graded 93/100)</button>
           <span class="hint" id="gradeHint" style="margin-left:.6rem">CheckMate auto-detects the exam from the scan's cover/headers.</span>
         </div>
       </div>
@@ -339,8 +339,23 @@
         } else {
           sumtxt += "None required human review.";
         }
+        if (typeof meta.human_total === "number") {
+          sumtxt += " The teacher marked this booklet " + meta.human_total + "/" + meta.max +
+            " — shown for comparison; it is the human's grade, not the agent's.";
+        }
         head.appendChild(el("p", "summary", sumtxt));
         card.appendChild(head);
+        if (meta.replay) {
+          // A replay is ONE recorded run. The Grader samples N times and medians, so a live
+          // re-run moves on the open questions. Say it rather than let the viewer read the
+          // difference as a bug.
+          const rb = el("div", "annot partial");
+          rb.appendChild(el("p", "annotfb",
+            "Replay of a captured run — zero LLM calls. A fresh live run will not reproduce these " +
+            "numbers exactly: the Grader takes N samples and uses the median, so open-question " +
+            "scores move between runs. The circled-answer items (T/F, MC) are deterministic and do not."));
+          card.appendChild(rb);
+        }
 
         const review = el("div", "review");
         const scanwrap = el("div", "scanwrap"); const scanview = el("div", "scanview");
@@ -458,8 +473,8 @@
     }
 
     $("gradeBtn").addEventListener("click", () => doGrade(null));
-    $("sampleBtn").addEventListener("click", () => doSample(1, "sampleBtn", "Try sample booklet 1 (student scored 90)"));
-    $("sample2Btn").addEventListener("click", () => doSample(2, "sample2Btn", "Sample booklet 2 (student scored 93)"));
+    $("sampleBtn").addEventListener("click", () => doSample(1, "sampleBtn", "Try sample booklet 1 (human graded 90/100)"));
+    $("sample2Btn").addEventListener("click", () => doSample(2, "sample2Btn", "Sample booklet 2 (human graded 93/100)"));
 
     // Dev aid: /?replay=1 (booklet 1) or /?replay=2 (booklet 2) renders the bundled
     // captured run through the normal result view — zero LLM calls — so the GUI can be

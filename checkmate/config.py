@@ -60,6 +60,10 @@ class AgentConfig:
     # --- Run ceilings (6.3) ---
     max_run_seconds: int = 240         # wall-clock guard under Vercel's 300s hard limit:
                                        # stop before the next question past this point
+    parse_deadline_seconds: int = 120  # the Parser's own share of that budget: past this
+                                       # point no NEW vision call is started, so a long
+                                       # upload cannot consume the whole run before a
+                                       # single question has been graded
 
     # --- Token budgets (per stage), by question type (6.4) ---
     parser_max_tokens: int = 2500
@@ -83,6 +87,7 @@ def load_config() -> AgentConfig:
         max_revise_passes=_int("CHECKMATE_MAX_REVISE_PASSES", 2, 0, 3),
         render_max_pages=_int("CHECKMATE_MAX_PAGES", 24, 1, 60),
         max_run_seconds=_int("CHECKMATE_MAX_RUN_SECONDS", 240, 30, 290),
+        parse_deadline_seconds=_int("CHECKMATE_PARSE_DEADLINE", 120, 15, 280),
     )
 
 

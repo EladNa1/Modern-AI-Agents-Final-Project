@@ -8,9 +8,18 @@ Two record kinds share one index (filter with {"kind": {"$eq": ...}}):
 """
 from __future__ import annotations
 
+import os
+
 from pinecone import Pinecone, ServerlessSpec
 
 from ..env import EMBED_DIM, PINECONE_API_KEY, PINECONE_INDEX
+
+# Retrieval runs BEFORE the grading loop (one query per transcribed fragment), so it sits
+# outside the run's wall-clock guard -- and the SDK ships with no request timeout, so a slow
+# Pinecone hangs on an SSL read until Vercel kills the whole request at 300s. The Retriever
+# already treats an exception as "Pinecone unavailable" and degrades to the bundled-JSON
+# fallback, so a bounded failure is strictly better than an unbounded wait.
+PINECONE_TIMEOUT_SECONDS = int(os.environ.get("CHECKMATE_PINECONE_TIMEOUT") or 10)
 
 _pc: Pinecone | None = None
 
@@ -18,7 +27,7 @@ _pc: Pinecone | None = None
 def _client() -> Pinecone:
     global _pc
     if _pc is None:
-        _pc = Pinecone(api_key=PINECONE_API_KEY)
+        _pc = Pinecone(api_key=PINECONE_API_KEY, timeout=PINECONE_TIMEOUT_SECONDS)
     return _pc
 
 
