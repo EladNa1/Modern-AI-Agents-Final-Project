@@ -52,15 +52,23 @@ def run_agent(images: list[ImageInput], instructions: str = "", source_label: st
         # `parsed` supplied -> reuse a cached transcription (6.1: never re-run vision on a
         # booklet already parsed; re-parse only when the parser itself changes).
         if parsed is None:
-            parsed = run_parser(images, log, instructions)
+            parsed = run_parser(images, log, instructions,
+                                deadline=t0 + CONFIG.parse_deadline_seconds)
         else:
             log.add("Parser", "Cached transcription reused (no vision call).", "",
                     {"cached": True, "fragments": len(parsed.fragments),
                      "exam_meta": parsed.exam_meta}, "Cache")
         if not parsed.fragments:
-            return {"status": "error",
-                    "error": "The Parser could not read any question from the scan. Try a clearer image.",
-                    "response": None, "steps": _steps(log)}
+            # Say WHICH failure this was: an unreadable scan and a parse that ran out of
+            # wall-clock need different advice, and blaming the image for our own timeout
+            # would send the user off to rescan a perfectly good booklet.
+            if getattr(parsed, "skipped_pages", None):
+                err = (f"The parse deadline ({CONFIG.parse_deadline_seconds}s) passed before any "
+                       "page could be read, so nothing was graded. Try a shorter PDF, or raise "
+                       "CHECKMATE_PARSE_DEADLINE.")
+            else:
+                err = "The Parser could not read any question from the scan. Try a clearer image."
+            return {"status": "error", "error": err, "response": None, "steps": _steps(log)}
 
         # Resolve which exam to scope retrieval to. A caller-provided exam wins (manual
         # override from the UI); otherwise auto-detect it from the exam identity the Parser
@@ -132,6 +140,12 @@ def run_agent(images: list[ImageInput], instructions: str = "", source_label: st
             # at the run's average cost/time so far would cross a ceiling, stop now and
             # return a provisional result -- never discover the overrun after the money is
             # spent. (The post-question check below still catches an unusually large jump.)
+            # Absolute check first, and NOT gated on having finished a question: a long
+            # parse can burn the whole budget before question 1, and the projection below
+            # cannot run with no completed question to average over.
+            if time.time() - t0 > CONFIG.max_run_seconds:
+                aborted = True
+                break
             done = len(results)
             if done:
                 spent = log.cost_by_stage()["total"]
@@ -172,7 +186,8 @@ def run_agent(images: list[ImageInput], instructions: str = "", source_label: st
 
             query = f"{q.text} {q.latex or ''}"
             notes = retrieve_notes(query, log)
-            grade = run_grader(q, retrieved, log, notes)
+            grade = run_grader(q, retrieved, log, notes,
+                               deadline=t0 + CONFIG.max_run_seconds)
 
             # Reflection loop (7.3): passes allocated by stakes, T/F+MC skipped (no argument to
             # critique), and a cumulative per-question token budget that exits early -- a grade
@@ -200,7 +215,8 @@ def run_agent(images: list[ImageInput], instructions: str = "", source_label: st
                 was_escalated = grade.status == "escalate"
                 crit_text = (refl.feedback or refl.note or "").strip() or "(no critique text)"
                 before_rev = log.usage["total"]
-                regrade = run_grader(q, retrieved, log, notes, critique=(grade, crit_text))
+                regrade = run_grader(q, retrieved, log, notes, critique=(grade, crit_text),
+                                     deadline=t0 + CONFIG.max_run_seconds)
                 refl_tokens += log.usage["total"] - before_rev
                 if was_escalated and regrade.status != "escalate":
                     regrade = Grade(**{**regrade.__dict__, "status": "escalate"})

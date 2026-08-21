@@ -19,6 +19,7 @@
   .box h2 { font-size: 22px; font-weight: 700; margin-bottom: 7px; }
   .soft h2 { font-size: 20px; }
   .box p { font-size: 12.3px; line-height: 1.45; opacity: .9; }
+  .box p .sub { display: inline-block; margin-top: 7px; font-size: 11px; opacity: .8; }
   .chip { position: absolute; top: -13px; left: 50%; transform: translateX(-50%);
           background: #312e81; color: #fff; font-size: 11px; font-weight: 700; letter-spacing: .4px;
           padding: 4px 11px; border-radius: 7px; }
@@ -56,11 +57,12 @@
   <div class="title">CheckMate as a Reflection Agent</div>
   <div class="subtitle">The agent grades first, then critiques its own grade against retrieved course evidence.</div>
   <div class="aux">input: scanned booklet (PDF / images) or a bundled sample scan · vision parsed once, cached per booklet<br>
-       also logged in steps[]: <b>Config</b> — run setup · <b>Zoom</b> — magnified re-read (opt-in)<br>
-       T/F + MC: one deterministic read, reflection skipped · ceilings $0.75 / 240s → stop early, provisional result</div>
+       T/F + MC: one deterministic read, reflection skipped<br>
+       ceilings: $0.75 run · 240s run · 120s parse · 45s per call → stop early, provisional result</div>
 
   <!-- main row -->
-  <div class="box llm"  style="left:64px;  top:236px;"><div class="chip">LLM · VISION</div><h2>Parser</h2><p>reads the booklet, transcribes the student's work, splits it into questions</p></div>
+  <div class="box det" style="left:64px; top:136px; height:72px; padding-top:10px;"><h2 style="font-size:18px;margin-bottom:2px;">Config</h2><p style="font-size:11px;line-height:1.35;">run-setup snapshot &middot; models &middot; ceilings &middot; 0 LLM</p></div>
+  <div class="box llm"  style="left:64px;  top:236px;"><div class="chip">LLM · VISION</div><h2>Parser</h2><p>reads the booklet, transcribes the student's work, splits it into questions<span class="sub">Pass 2 &middot; <b>Zoom</b> &mdash; magnified re-read of faint regions (opt-in)</span></p></div>
   <div class="box det"  style="left:318px; top:236px;"><div class="chip">0 TOKENS</div><h2>Router</h2><p>scope guard — refuses non-grading requests; resolves the exam</p></div>
   <div class="box llm"  style="left:572px; top:236px;"><div class="chip">LLM</div><h2>Grader</h2><p>initial score + feedback on the student's own method; self-consistency ×N</p></div>
   <div class="box soft" style="left:826px; top:236px;"><h2>Initial grade</h2><p>score + partial credit + written feedback, per question</p></div>
@@ -105,6 +107,8 @@
       <marker id="purple" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse">
         <path d="M0 0 L10 5 L0 10 z" fill="#4f46e5"/></marker>
     </defs>
+    <!-- Config -> Parser (the run-setup snapshot is logged before any page is read) -->
+    <line x1="100" y1="210" x2="100" y2="232" stroke="#9a9dab" stroke-width="2.5" marker-end="url(#a)"/>
     <!-- main flow -->
     <line x1="278" y1="311" x2="314" y2="311" stroke="#9a9dab" stroke-width="3" marker-end="url(#a)"/>
     <line x1="532" y1="311" x2="568" y2="311" stroke="#9a9dab" stroke-width="3" marker-end="url(#a)"/>
