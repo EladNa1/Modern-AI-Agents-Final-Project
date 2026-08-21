@@ -79,6 +79,42 @@ for fname, has_truth, label in BOOKLETS:
     else:
         check(f"{fname}: summary says none", "No questions required human review" in resp["response"])
 
+    # --- Trace question-id integrity (audit f4b64c4) -------------------------------
+    # A Grader/Reflector step must name the question it is actually grading. The prompt
+    # header used to carry ParsedFragment.id -- the label the vision Parser read off the
+    # handwriting -- while the grounding block beneath it carried the KB id that retrieval
+    # had matched. So a step could be headed "Question Q2b" while quoting Q1b's official
+    # solution, and an MC item could be headed "Q3" while a different, real Q3 existed on
+    # the same exam. Two assertions, both falsifiable against a real capture:
+    #   1. every header id is a question this run actually graded
+    #   2. the header id equals the KB id of the solution quoted in the SAME prompt
+    graded_ids = {q["id"] for q in meta["questions"]}
+    hdr_re = {
+        "Grader": re.compile(r"\AGrade question (.+?)\. Maximum score:"),
+        "Reflector": re.compile(r"\AQuestion (.+?) \(max \d+ points\)\."),
+    }
+    ground_re = re.compile(r"(?m)^Question (.+?) — worth [0-9]+ points\.$")
+    unknown: list[str] = []
+    mismatched: list[str] = []
+    for s in resp["steps"]:
+        pat = hdr_re.get(s["module"])
+        if pat is None:
+            continue
+        up = s["prompt"]["User_prompt"]
+        m = pat.match(up)
+        if not m:
+            continue
+        header = m.group(1)
+        if header not in graded_ids:
+            unknown.append(f'{s["module"]}:{header}')
+        g = ground_re.search(up)
+        if g and g.group(1) != header:
+            mismatched.append(f'{s["module"]}:{header}!={g.group(1)}')
+    check(f"{fname}: trace ids name a graded question", not unknown,
+          f"{len(unknown)} bad, e.g. {sorted(set(unknown))[:6]}")
+    check(f"{fname}: trace id matches the solution quoted in the same prompt", not mismatched,
+          f"{len(mismatched)} bad, e.g. {sorted(set(mismatched))[:6]}")
+
     for q in meta["questions"]:
         qid = q["id"]
         if qid == "Unmatched work":

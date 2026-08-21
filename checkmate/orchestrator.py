@@ -185,7 +185,11 @@ def run_agent(images: list[ImageInput], instructions: str = "", source_label: st
                 continue
 
             query = f"{q.text} {q.latex or ''}"
-            notes = retrieve_notes(query, log)
+            # Course lecture notes cannot inform an all-or-nothing circled letter, and
+            # T/F+MC already skip reflection for exactly that reason (reflect_tf_mc).
+            # Skip the embedding call and its trace entry rather than retrieve context
+            # no downstream stage will read.
+            notes = [] if _is_tf_mc(qid) else retrieve_notes(query, log)
             grade = run_grader(q, retrieved, log, notes,
                                deadline=t0 + CONFIG.max_run_seconds)
 
@@ -194,6 +198,7 @@ def run_agent(images: list[ImageInput], instructions: str = "", source_label: st
             # that ran out of review budget is flagged, not silently accepted.
             passes = _reflection_passes(qid, grade.max)
             refl_tokens = 0
+            contested = 0.0   # largest Grader/Reflector score gap seen on this question
             for _ in range(passes):
                 if refl_tokens >= CONFIG.max_reflection_tokens_per_q:
                     if "reflection_incomplete" not in grade.flags:
@@ -202,6 +207,8 @@ def run_agent(images: list[ImageInput], instructions: str = "", source_label: st
                 before = log.usage["total"]
                 refl = run_reflector(q, grade, retrieved, log)
                 refl_tokens += log.usage["total"] - before
+                if refl.score is not None:
+                    contested = max(contested, abs(refl.score - grade.score))
                 if refl.action == "APPROVE":
                     break
                 if refl.action == "ESCALATE":
@@ -221,6 +228,25 @@ def run_agent(images: list[ImageInput], instructions: str = "", source_label: st
                 if was_escalated and regrade.status != "escalate":
                     regrade = Grade(**{**regrade.__dict__, "status": "escalate"})
                 grade = regrade
+
+            # Escalation trigger #2 (audit f4b64c4). The spread test in the Grader
+            # catches an UNSTABLE grader; it cannot catch a confident one that is simply
+            # wrong. When the Reflector -- reading the same official solution -- proposes
+            # a materially different score, the grade is contested however tightly the
+            # samples agreed, and regardless of whether the conditioned regrade then kept
+            # its original number (in the audited run every REVISE was reverted, so this
+            # signal was being discarded entirely). Route it to the human instead.
+            band = max(CONFIG.reflector_disagreement_floor,
+                       CONFIG.reflector_disagreement_frac * grade.max)
+            if contested > band and grade.status != "escalate":
+                flags = list(grade.flags)
+                if "reflector_disagreement" not in flags:
+                    flags.append("reflector_disagreement")
+                grade = Grade(**{**grade.__dict__, "status": "escalate", "flags": flags,
+                                 "feedback": (
+                                     f"The reviewer disputed this grade by {contested:g} "
+                                     f"point(s), beyond the {band:g}-point tolerance; sent "
+                                     f"to a human for review. " + grade.feedback)})
 
             results.append(_to_question_result(q.id, grade, retrieved))
             gb.add(qid, entry_from_grade(grade, retrieved))
