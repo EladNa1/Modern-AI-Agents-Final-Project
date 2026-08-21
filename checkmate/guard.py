@@ -48,10 +48,16 @@ _TUTOR_RE = re.compile(
     r"תלמד|למד אותי|תסביר|הסבר|צעד אחר צעד",
     re.IGNORECASE)
 
-# Explicit negation of grading ("do not grade", "without grading") -- the user is telling
-# us the one thing we do is NOT wanted.
+# Explicit negation of grading ("do not grade", "without grading", "instead of grading") --
+# the user is telling us the one thing we do is NOT wanted. "instead of" is its own idiom:
+# it negates by SUBSTITUTION rather than by a negative particle ("tutor me ... instead of
+# grading an exam"), so it needs its own alternation -- without it the bare noun "exam" won
+# and the request was routed as a grading job.
 _NO_GRADING_RE = re.compile(
     r"\b(?:do\s*n[o']t|don't|without|no)\s+(?:grade|grading|scoring|marking)\b|"
+    r"\binstead\s+of\s+(?:grade|grading|scoring|marking|checking)\b|"
+    r"\brather\s+than\s+(?:grade|grading|scoring|marking|checking)\b|"
+    r"במקום (?:לבדוק|בדיקה|לתת ציון)|"
     r"בלי (?:לבדוק|ציון|בדיקה)|לא לבדוק|אל תבדוק|ללא ציון",
     re.IGNORECASE)
 
@@ -60,6 +66,9 @@ _NO_GRADING_RE = re.compile(
 _NO_GRADING_STRIP_RE = re.compile(
     r"\b(?:do\s*n[o']t|don't|without|no)\s+(?:grade|grading|score|scoring|mark|marking)\s*"
     r"(?:an?y?\s+|the\s+|my\s+|this\s+)?(?:exam|test|quiz|booklet|scan|anything)?s?\b|"
+    r"\b(?:instead\s+of|rather\s+than)\s+(?:grade|grading|score|scoring|mark|marking|checking)\s*"
+    r"(?:an?y?\s+|the\s+|my\s+|this\s+)?(?:exam|test|quiz|booklet|scan|anything)?s?\b|"
+    r"במקום\s*(?:לבדוק|בדיקת|בדיקה|לתת ציון)\s*(?:את\s+)?(?:ה?מבחן|ה?בוחן|ה?מחברת)?|"
     r"(?:בלי|לא|אל|ללא)\s*(?:לבדוק|תבדוק|בדיקת|בדיקה|ציון)\s*(?:את\s+)?"
     r"(?:ה?מבחן|ה?בוחן|ה?מחברת|כלום|שום דבר)?",
     re.IGNORECASE)
