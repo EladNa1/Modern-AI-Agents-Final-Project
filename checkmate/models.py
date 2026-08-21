@@ -100,6 +100,20 @@ class QuestionResult:
     flags: list = field(default_factory=list)
 
 
+def canonical_qid(q: "ParsedFragment", retrieved: "Retrieved | None") -> str:
+    """The question's real identity for labelling: the KB id when retrieval matched it,
+    else the Parser's read label as a last resort.
+
+    `ParsedFragment.id` is only what the vision Parser read off the handwriting -- on a
+    real booklet it comes back as "Q2b" for Q1b, as a bare "ב", or as the page-index
+    fallback "Q{i+1}" that has nothing to do with the exam's numbering. It must never be
+    the id shown in a prompt header or a trace entry: the model would be told it is
+    grading one question while being handed another question's official solution.
+    (Audit f4b64c4: 10 of 15 questions were labelled with an id that was not theirs, two
+    of them with ids belonging to other real questions on the same exam.)"""
+    return retrieved.entry.id if retrieved else (q.id or "")
+
+
 @dataclass
 class Step:
     """Brief-shaped trace entry: {module, prompt:{System_prompt,User_prompt}, response}."""

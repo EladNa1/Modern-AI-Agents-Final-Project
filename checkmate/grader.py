@@ -17,7 +17,7 @@ import time
 from .config import CONFIG
 from .env import LLMOD_GRADER_MODEL
 from .llm import StepLog, chat, extract_json
-from .models import Grade, NotesChunk, ParsedFragment, Retrieved, Usage
+from .models import Grade, NotesChunk, ParsedFragment, Retrieved, Usage, canonical_qid
 
 GRADER_SYSTEM = """PERSONA
 You are a senior teaching assistant grading Technion Calculus 1 (Hedva 1, 104041) exams.
@@ -302,7 +302,7 @@ def build_grader_user(q: ParsedFragment, retrieved: Retrieved | None,
         notes_block = f"\n\n=== COURSE MATERIAL (supporting context, not authoritative) ===\n{joined}"
 
     user = (
-        f"Grade question {q.id}. Maximum score: {max_points} points.\n\n"
+        f"Grade question {canonical_qid(q, retrieved)}. Maximum score: {max_points} points.\n\n"
         f"=== OFFICIAL SOLUTION (grounding) ===\n{grounding}{notes_block}\n\n"
         f"=== STUDENT WORK ===\n{student}\n\nReturn only the JSON object."
     )
@@ -354,7 +354,7 @@ def run_grader(q: ParsedFragment, retrieved: Retrieved | None, log: StepLog,
     notes = notes or []
     user, max_points = build_grader_user(q, retrieved, notes)
     # Classify by the KB's canonical id when we have it (the parser label is unreliable).
-    qid = retrieved.entry.id if retrieved else q.id
+    qid = canonical_qid(q, retrieved)
     n = _samples_for(qid, max_points, q)
     cap = CONFIG.grader_max_tokens_tf_mc if _is_tf_mc(qid) else CONFIG.grader_max_tokens
     if critique is not None:
@@ -385,7 +385,7 @@ def run_grader(q: ParsedFragment, retrieved: Retrieved | None, log: StepLog,
                            json_mode=True, model=LLMOD_GRADER_MODEL)
         if usage.get("completion", 0) >= cap:  # output hit the token cap -> likely cut off
             truncated = True
-        grades.append(_normalize_grade(q.id, max_points, q.confidence, text))
+        grades.append(_normalize_grade(qid, max_points, q.confidence, text))
         # Spec: steps[] must describe EVERY LLM call -- each self-consistency sample is its
         # own entry carrying the model's actual response for that call.
         raw = extract_json(text)

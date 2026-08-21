@@ -7,7 +7,7 @@ from __future__ import annotations
 from .config import CONFIG
 from .env import LLMOD_GRADER_MODEL
 from .llm import StepLog, chat, extract_json
-from .models import Grade, ParsedFragment, Reflection, Retrieved, Usage
+from .models import Grade, ParsedFragment, Reflection, Retrieved, Usage, canonical_qid
 
 REFLECTOR_SYSTEM = """You are the Reflector module of CheckMate, grading Technion Calculus 1 exams. You receive a PROPOSED grade for one question, the student's transcribed work, and the official solution. Critique the proposed grade against that evidence — do not re-grade from scratch, judge whether the grade is fair and grounded.
 
@@ -30,14 +30,15 @@ def run_reflector(q: ParsedFragment, grade: Grade, retrieved: Retrieved | None, 
     if retrieved:
         e = retrieved.entry
         note_line = f"Grading note: {e.notes}" if e.notes else ""
-        grounding = (f"Official solution:\n{e.official_solution}\n\n"
+        grounding = (f"Question {e.id} — worth {e.points} points.\n\n"
+                     f"Official solution:\n{e.official_solution}\n\n"
                      f"Correct final answer: {e.final_answer or 'n/a'}\n{note_line}")
     else:
         grounding = "No official solution was retrieved."
 
     latex_line = f"\nLaTeX:\n{q.latex}" if q.latex else ""
     user = (
-        f"Question {q.id} (max {grade.max} points).\n\n"
+        f"Question {canonical_qid(q, retrieved)} (max {grade.max} points).\n\n"
         f"=== PROPOSED GRADE ===\n"
         f"score: {grade.score}/{grade.max} (status {grade.status}, confidence {grade.confidence})\n"
         f"feedback: {grade.feedback}\n"
