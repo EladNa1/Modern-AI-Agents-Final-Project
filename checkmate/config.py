@@ -37,6 +37,14 @@ class AgentConfig:
     high_point_threshold: int = 15     # a question worth >= this uses grader_samples_high
     disagreement_frac: float = 0.25    # escalate when spread > max(floor, frac * max_points)
     disagreement_floor: float = 1.5
+    # Second escalation trigger (audit f4b64c4): sample spread only detects an UNSTABLE
+    # grader. A tight cluster around a wrong score sails straight through -- the audited
+    # live run drew [12, 12, 11, 13, 12] on a question the human scored 9, and escalated
+    # nothing. A grade the Reflector materially disputes is contested even when the
+    # samples agreed, so that gap is its own signal. Band is tighter than the spread
+    # band above: this is one considered second opinion, not sampling noise.
+    reflector_disagreement_frac: float = 0.12
+    reflector_disagreement_floor: float = 1.5
 
     # --- Reflection (orchestrator + reflector stages), 7.3 ---
     max_revise_passes: int = 2               # cap for high-stakes open questions
