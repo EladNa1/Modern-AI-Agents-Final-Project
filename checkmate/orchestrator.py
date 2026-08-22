@@ -248,6 +248,17 @@ def run_agent(images: list[ImageInput], instructions: str = "", source_label: st
             # A dispute the loop DID resolve (the Grader accepted the critique and the
             # Reflector approved, or the regrade landed on the proposal) is the Reflection
             # loop working as designed and commits normally.
+            # A review that ran out of token budget mid-loop never finished checking the
+            # grade it was reviewing -- an unfinished review must not commit. (APPROVE
+            # always breaks the loop before the budget check, so `approved` here is
+            # necessarily False; kept in the condition for clarity.)
+            if ("reflection_incomplete" in grade.flags and not approved
+                    and grade.status != "escalate"):
+                grade = Grade(**{**grade.__dict__, "status": "escalate",
+                                 "feedback": ("The review budget ran out before the "
+                                              "reflection loop finished checking this grade; "
+                                              "sent to a human rather than committing an "
+                                              "unfinished review. " + grade.feedback)})
             contested = (abs(last_proposal - grade.score)
                          if (last_proposal is not None and not approved) else 0.0)
             band = max(CONFIG.reflector_disagreement_floor,

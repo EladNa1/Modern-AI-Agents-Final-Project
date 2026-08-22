@@ -45,7 +45,10 @@ _MATH_RE = re.compile(
 # "step by step" describe a lesson, not a grading job -- even when grading verbs appear.
 _TUTOR_RE = re.compile(
     r"\b(teach|explain|tutor|walk me through|show me how|step[- ]by[- ]step|how (?:do|to))\b|"
-    r"תלמד|למד אותי|תסביר|הסבר|צעד אחר צעד",
+    # imperative solve/answer requests ("Solve this exam question for me") are lesson
+    # requests too -- an object determiner keeps this from firing on descriptive uses
+    r"\b(?:solve|answer|compute|calculate)\s+(?:this|that|the|my|these|a|an)\b|"
+    r"תלמד|למד אותי|תסביר|הסבר|צעד אחר צעד|פתור|תפתור|פתרי|לפתור",
     re.IGNORECASE)
 
 # Explicit negation of grading ("do not grade", "without grading", "instead of grading") --
