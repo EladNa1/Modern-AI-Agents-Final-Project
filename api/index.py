@@ -79,7 +79,7 @@ async def team_info():
         "group_batch_order_number": "2_09",
         "team_name": "הסוכנים",
         "students": [
-            {"name": "Elad Nahalieli", "email": "nelad@campus.technion.ac.il"},
+            {"name": "Elad Nachalieli", "email": "nelad@campus.technion.ac.il"},
             {"name": "Shiri Haboob", "email": "shiri.haboob@campus.technion.ac.il"},
             {"name": "Yaron Mozes", "email": "yaron.mozes@campus.technion.ac.il"},
         ],

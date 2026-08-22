@@ -30,6 +30,10 @@ should see.
    report (auto-graded subtotal vs. total-including-unreviewed, missing questions, a TA-review
    queue), and the full `steps[]` execution trace.
 
+**Data stores.** One vector index (Pinecone) and no relational database: the agent is
+stateless per request — each run's state lives in its own trace and result — so there is
+nothing for a primary DB (the spec's Supabase) to hold. (Detailed in §8.)
+
 ## 3. Architecture — the Reflection Agent (seven logged modules)
 
 The design's answer to a capacity-limited grader is **self-critique + grounding**, not a

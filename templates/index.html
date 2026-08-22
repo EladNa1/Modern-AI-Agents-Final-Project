@@ -116,6 +116,7 @@
           <div class="rule"><b>Self-checked</b><p>Median of N independent grades; the reflector critiques against evidence, and a revision can never clear an escalation.</p></div>
           <div class="rule"><b>Fail-safe</b><p>Illegible work, missing solutions, or disagreeing samples escalate to a TA — flagged, never silently guessed.</p></div>
           <div class="rule"><b>Budget-aware</b><p>Each booklet is parsed once and cached; cost is tracked per stage with a hard per-run ceiling.</p></div>
+          <div class="rule"><b>Stateless — one datastore</b><p>The agent keeps no relational state between requests (each run lives entirely in its own trace and result), so it uses a single Pinecone vector index and no primary database — the course spec's Supabase would have nothing to hold.</p></div>
         </div>
       </div>
     </section>
@@ -178,7 +179,7 @@
         <p class="kicker">Team</p>
         <h2>CheckMate · <span class="coursename">Modern AI Agents</span></h2>
         <ul class="teamlist">
-          <li><b>Elad Nahalieli</b><span class="mono">nelad@campus.technion.ac.il</span></li>
+          <li><b>Elad Nachalieli</b><span class="mono">nelad@campus.technion.ac.il</span></li>
           <li><b>Shiri Haboob</b><span class="mono">shiri.haboob@campus.technion.ac.il</span></li>
           <li><b>Yaron Mozes</b><span class="mono">yaron.mozes@campus.technion.ac.il</span></li>
         </ul>
@@ -430,6 +431,7 @@
       trace.appendChild(el("p", "kicker", "Execution trace"));
       trace.appendChild(el("h2", null, "steps[] — every call the agent made"));
       trace.appendChild(el("p", "hint", data.steps.length + " steps, in order — module, prompt, and response. Scroll inside the list; click a step to expand it."));
+      trace.appendChild(el("p", "hint", "This view uses the ?ui=1 opt-in, which adds meta and a per-step pattern label on top of the contract. A plain POST /api/execute returns exactly the mandated { status, error, response, steps } shape, with { module, prompt, response } steps."));
       const traceList = el("div", "tracelist");
       traceList.style.maxHeight = "65vh"; traceList.style.overflowY = "auto";
       data.steps.forEach((s, i) => {
