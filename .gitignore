@@ -41,3 +41,11 @@ evidence/
 grading-evidence-*/
 grading_run/
 grading_evidence*/
+
+# Demo-day deck + slide-probe scripts — local only, moved out of the repo (2026-08-22).
+# Nothing in the pipeline imports them; they only bloated the clone.
+presentation/
+*.pptx
+
+# Live-capture audit evidence (raw HTTP responses from probe runs) — local only
+.audit_*/
