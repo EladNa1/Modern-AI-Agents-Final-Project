@@ -284,6 +284,10 @@ def build_grader_user(q: ParsedFragment, retrieved: Retrieved | None,
             f"Official solution:\n{e.official_solution}",
             f"Correct final answer: {e.final_answer}" if e.final_answer else "",
             f"Grading note: {e.notes}" if e.notes else "",
+            ("The grading note's calibration anchors are BINDING rubric, not suggestions: "
+             "when the student's work matches an anchored error pattern, award the anchored "
+             "score exactly — do not deduct more or less than the anchor for that pattern."
+             if e.notes and "alibration anchor" in e.notes else ""),
         ] if part)
     else:
         grounding = "No official solution was retrieved for this question."

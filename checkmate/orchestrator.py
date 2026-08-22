@@ -198,7 +198,11 @@ def run_agent(images: list[ImageInput], instructions: str = "", source_label: st
             # that ran out of review budget is flagged, not silently accepted.
             passes = _reflection_passes(qid, grade.max)
             refl_tokens = 0
-            contested = 0.0   # largest Grader/Reflector score gap seen on this question
+            # The Reflector's LAST proposed score, and whether it signed off. The
+            # disagreement trigger below uses the RESIDUAL gap at loop end -- a critique the
+            # Grader accepted is the loop converging (the point of REVISE), not a dispute.
+            last_proposal: float | None = None
+            approved = False
             for _ in range(passes):
                 if refl_tokens >= CONFIG.max_reflection_tokens_per_q:
                     if "reflection_incomplete" not in grade.flags:
@@ -208,8 +212,9 @@ def run_agent(images: list[ImageInput], instructions: str = "", source_label: st
                 refl = run_reflector(q, grade, retrieved, log)
                 refl_tokens += log.usage["total"] - before
                 if refl.score is not None:
-                    contested = max(contested, abs(refl.score - grade.score))
+                    last_proposal = refl.score
                 if refl.action == "APPROVE":
+                    approved = True
                     break
                 if refl.action == "ESCALATE":
                     grade = Grade(**{**grade.__dict__, "status": "escalate"})
@@ -232,10 +237,14 @@ def run_agent(images: list[ImageInput], instructions: str = "", source_label: st
             # Escalation trigger #2 (audit f4b64c4). The spread test in the Grader
             # catches an UNSTABLE grader; it cannot catch a confident one that is simply
             # wrong. When the Reflector -- reading the same official solution -- proposes
-            # a materially different score, the grade is contested however tightly the
-            # samples agreed, and regardless of whether the conditioned regrade then kept
-            # its original number (in the audited run every REVISE was reverted, so this
-            # signal was being discarded entirely). Route it to the human instead.
+            # a materially different score and the loop ends WITHOUT resolving it (the
+            # regrade reverted, or the passes/token budget ran out mid-dispute), the grade
+            # is contested however tightly the samples agreed -- route it to the human.
+            # A dispute the loop DID resolve (the Grader accepted the critique and the
+            # Reflector approved, or the regrade landed on the proposal) is the Reflection
+            # loop working as designed and commits normally.
+            contested = (abs(last_proposal - grade.score)
+                         if (last_proposal is not None and not approved) else 0.0)
             band = max(CONFIG.reflector_disagreement_floor,
                        CONFIG.reflector_disagreement_frac * grade.max)
             if contested > band and grade.status != "escalate":
