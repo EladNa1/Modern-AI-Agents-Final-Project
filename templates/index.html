@@ -54,7 +54,8 @@
         <h2>Upload the scanned booklet</h2>
         <p class="hint">
           PDF or image (PNG/JPG). CheckMate renders every page, reads the handwriting,
-          auto-detects which exam it is from the cover, and grades against that exam's official solutions.
+          detects which exam it is from the cover/headers when the scan shows them (the bundled
+          samples pin the exam explicitly), and grades against that exam's official solutions.
         </p>
 
         <div class="dropzone" id="dropzone" role="button" tabindex="0">
@@ -75,7 +76,7 @@
           <button class="btn" id="gradeBtn" disabled>Run Agent</button>
           <button class="btn btnsmall" id="sampleBtn" style="margin-left:.6rem">Try sample booklet 1 (human graded 90/100)</button>
           <button class="btn btnsmall" id="sample2Btn" style="margin-left:.4rem">Sample booklet 2 (human graded 93/100)</button>
-          <span class="hint" id="gradeHint" style="margin-left:.6rem">CheckMate auto-detects the exam from the scan's cover/headers.</span>
+          <span class="hint" id="gradeHint" style="margin-left:.6rem">Uploads: the exam is detected from the scan's cover/headers when shown. Samples: pinned explicitly.</span>
         </div>
       </div>
 

@@ -87,13 +87,21 @@ def load_sample_parse(sample: dict):
 def available_samples_text() -> str:
     """Helpful in-scope response when no sample was named and no file was attached."""
     lines = [
-        "That looks like a grading request, but no exam scan is attached and no sample "
-        "booklet was named.",
+        # Deliberately NON-committal about the request's domain: this branch is reachable by
+        # any prompt containing an exam noun ("grade my sourdough bread baking exam"), and
+        # asserting "that looks like a grading request" about bread was wrong (audit round
+        # 13). State what CheckMate does and what it needs; claim nothing about the ask.
+        "CheckMate grades scanned Technion Calculus 1 (Hedva 1) exam booklets. No scan is "
+        "attached and no bundled booklet was named, so there is nothing to grade.",
         "",
-        "Either upload a scanned exam (multipart `file` on /api/execute, or the upload box in "
-        "the UI), or name one of the bundled sample booklets in your prompt:",
+        "To grade a booklet: upload the scanned exam (multipart `file` on /api/execute, or "
+        "the upload box in the UI), or name one of the bundled sample booklets in your "
+        "prompt:",
         *[f'  - "{s["id"]}" — {s["label"]}' for s in SAMPLES],
         "",
         'Example: {"prompt": "Grade sample booklet 1"}',
+        "",
+        "(If you were asking about something other than grading a Calculus 1 exam, that is "
+        "outside CheckMate's scope.)",
     ]
     return "\n".join(lines)

@@ -7,7 +7,7 @@
   "response": {
     "status": "ok",
     "error": null,
-    "response": "That looks like a grading request, but no exam scan is attached and no sample booklet was named.\n\nEither upload a scanned exam (multipart `file` on /api/execute, or the upload box in the UI), or name one of the bundled sample booklets in your prompt:\n  - \"sample-1\" — Sample booklet 1 — 104041 2024 Winter Moed A (18-page scan, human-graded 90/100)\n  - \"sample-2\" — Sample booklet 2 — 104041 2024 Winter Moed A, second student (18-page scan, human-graded 93/100)\n\nExample: {\"prompt\": \"Grade sample booklet 1\"}",
+    "response": "CheckMate grades scanned Technion Calculus 1 (Hedva 1) exam booklets. No scan is attached and no bundled booklet was named, so there is nothing to grade.\n\nTo grade a booklet: upload the scanned exam (multipart `file` on /api/execute, or the upload box in the UI), or name one of the bundled sample booklets in your prompt:\n  - \"sample-1\" — Sample booklet 1 — 104041 2024 Winter Moed A (18-page scan, human-graded 90/100)\n  - \"sample-2\" — Sample booklet 2 — 104041 2024 Winter Moed A, second student (18-page scan, human-graded 93/100)\n\nExample: {\"prompt\": \"Grade sample booklet 1\"}\n\n(If you were asking about something other than grading a Calculus 1 exam, that is outside CheckMate's scope.)",
     "steps": [
       {
         "module": "Router",

@@ -259,7 +259,11 @@ traces full of APPROVE prove agreement, not rubber-stamping. `python
 scripts/demo_reflection_teeth.py` seeds deliberately WRONG grades and records the live
 Reflector rejecting both (`eval/examples/05_reflection_teeth.json`): a 10/10 seeded onto
 work with the anchored sign-slip error is REVISEd to the anchored 7/10, and a 3/10 seeded
-onto a complete correct proof is rejected and revised upward.
+onto a complete correct proof is rejected and revised upward (to 6 — not all the way back
+to 10: the wrong seed pulls the reviewer, which is exactly why revisions beyond the
+tolerance band escalate instead of committing). Roadmap: a blind-critique variant — the
+Reflector reasons from the work and the rubric before seeing the proposed score — to
+remove that anchoring pull entirely.
 
 **Budget rules (hard):** vision is the scarce call. Each booklet is parsed **once** and its
 transcription cached to `eval/ocr_cache/` (keyed by a parser-source hash); re-runs where only

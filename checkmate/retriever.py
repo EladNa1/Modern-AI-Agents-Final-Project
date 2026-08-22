@@ -177,6 +177,7 @@ def retrieve(question_id: str, question_text: str, log: StepLog, exam: str | Non
     method = ""
     score = None
     demoted = False  # semantic hit rejected by printed-text corroboration
+    corroborated_f1: float | None = None  # F1 that CONFIRMED a below-band semantic match
 
     # Canonical T/F- and MC-numbered ids come from the deterministic page split (the printed
     # item numbering), not from the parser's guess -- for these, the exact-id match IS the
@@ -210,6 +211,8 @@ def retrieve(question_id: str, question_text: str, log: StepLog, exam: str | Non
                     found, method = None, ""
                     score = round(score, 3)
                     demoted = True
+                else:
+                    corroborated_f1 = round(f1, 3)
         elif sem:
             score = sem["score"]  # queried, but below threshold -- record why
 
@@ -249,6 +252,10 @@ def retrieve(question_id: str, question_text: str, log: StepLog, exam: str | Non
         response = {"matched": found.entry.id, "method": method, "score": score,
                     "exam": found.exam, "course": found.course, "points": found.entry.points,
                     "final_answer": found.entry.final_answer}
+        # A semantic hit below the confirm band stood ONLY because the printed question
+        # text corroborated it -- say so in the trace, with the F1 that confirmed it.
+        if corroborated_f1 is not None:
+            response["corroborated"] = {"below_band": True, "printed_text_f1": corroborated_f1}
         # Honesty marker: an exact-id match reached AFTER semantic search scored below the
         # trust floor is id-based grounding that content could not confirm -- downstream
         # review (Reflector / human) should know retrieval is weaker here.
