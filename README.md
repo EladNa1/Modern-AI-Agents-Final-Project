@@ -30,7 +30,7 @@ should see.
    report (auto-graded subtotal vs. total-including-unreviewed, missing questions, a TA-review
    queue), and the full `steps[]` execution trace.
 
-## 3. Architecture — a six-stage Reflection Agent
+## 3. Architecture — the Reflection Agent (seven logged modules)
 
 The design's answer to a capacity-limited grader is **self-critique + grounding**, not a
 parallel deterministic checker. Every stage is a Python module; nothing bolts a new stage

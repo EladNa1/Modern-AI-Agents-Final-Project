@@ -18,12 +18,15 @@ import re
 # Exam ARTIFACTS (nouns, word-bounded in English): a prompt naming one of these is about
 # an exam, so grading intent is established on its own.
 _EXAM_NOUN_RE = re.compile(
-    r"\b(exam|quiz|booklet|scan|moed|final|midterm|sample)s?\b|"
+    r"\b(exam|quiz|booklet|scan|midterm)s?\b|"
+    # "final", "sample" and "moed" are too generic alone ("final score of the game",
+    # "sample of my resume", "מועד ההגעה של הטיסה" -- audit round 14): require exam context.
+    r"\bfinals?\s+(?:exam|test|grade)\b|\bsample\s+booklets?\b|\bmoed\s*[ab12אב]\b|"
     # bare "test" is too generic ("driving test", "test my patience") -- require course or
     # grading context around it
     r"\b(?:calculus|math|scanned|graded|this)\s+test\b|\btest\s+booklet\b|"
     r"104041|104042|104195|"
-    r"מבחן|בוחן|מועד|טופס|מחברת|סריקה",
+    r"מבחן|בוחן|מועד\s*[אב]|טופס|מחברת|סריקה",
     re.IGNORECASE)
 
 # Grading VERBS (word-bounded in English). A bare verb is NOT enough -- "please CHECK why

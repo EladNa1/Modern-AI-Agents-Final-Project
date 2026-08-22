@@ -260,6 +260,26 @@ wrong). Before writing "you wrote X but it should be Y", numerically evaluate bo
 are equal, there is no error and no deduction."""
 
 
+# The FEW-SHOT block above is calibrated on ONE booklet's red-pen scores (2024 Winter
+# Moed A) -- worked examples that teach that exam's rubric. Feeding them to any OTHER
+# exam leaks question-specific point splits into unrelated grading (audit round 14), so
+# the block is stripped when the retrieved exam differs. String surgery on the constant
+# keeps the calibrated exam's prompt BYTE-IDENTICAL to GRADER_SYSTEM.
+_FEWSHOT_START = "FEW-SHOT (calibrated on the RED-PEN"
+_FEWSHOT_END = "--- Example 5 (do NOT escalate) ---"
+_CALIBRATED_EXAM = "2024w moed A"
+
+
+def grader_system_for(exam: str | None) -> str:
+    if exam == _CALIBRATED_EXAM:
+        return GRADER_SYSTEM
+    i = GRADER_SYSTEM.find(_FEWSHOT_START)
+    j = GRADER_SYSTEM.find(_FEWSHOT_END)
+    if i == -1 or j == -1:
+        return GRADER_SYSTEM
+    return GRADER_SYSTEM[:i] + "FEW-SHOT (grading-policy examples)\n" + GRADER_SYSTEM[j:]
+
+
 def build_grader_user(q: ParsedFragment, retrieved: Retrieved | None,
                       notes: list[NotesChunk]) -> tuple[str, int]:
     """Assemble the user message (grounding + student work). Returns (message, max_points).
@@ -376,6 +396,7 @@ def run_grader(q: ParsedFragment, retrieved: Retrieved | None, log: StepLog,
     # (Temperature pinning for the single-call TF/MC read was tried and reverted: the
     # gpt-5-family gateway rejects any non-default temperature. Determinism here rests on
     # the single call + the deterministic mark-reading rules instead.)
+    system = grader_system_for(retrieved.exam if retrieved else None)
     grades: list[Grade] = []
     truncated = False
     samples_cut = False
@@ -385,7 +406,7 @@ def run_grader(q: ParsedFragment, retrieved: Retrieved | None, log: StepLog,
         if i > 0 and deadline is not None and time.time() > deadline:
             samples_cut = True
             break
-        text, usage = chat(GRADER_SYSTEM, user, max_tokens=cap,
+        text, usage = chat(system, user, max_tokens=cap,
                            json_mode=True, model=LLMOD_GRADER_MODEL)
         if usage.get("completion", 0) >= cap:  # output hit the token cap -> likely cut off
             truncated = True
@@ -394,7 +415,7 @@ def run_grader(q: ParsedFragment, retrieved: Retrieved | None, log: StepLog,
         # own entry carrying the model's actual response for that call.
         raw = extract_json(text)
         raw = raw if isinstance(raw, dict) else {"unparseable_output": (text or "")[:400]}
-        log.add("Grader", GRADER_SYSTEM, user,
+        log.add("Grader", system, user,
                 {"sample": f"{i + 1}/{n}", **raw},
                 "Few-shot · revision pass" if critique is not None else f"Few-shot · sample {i + 1}/{n}",
                 usage)

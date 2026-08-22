@@ -90,8 +90,9 @@
         <p class="kicker">How it works</p>
         <h2>A Reflection Agent — grade, then self-critique</h2>
         <p class="hint">
-          Six stages — plus a zero-LLM Config snapshot step and the Parser's opt-in Zoom pass
-          (a magnified re-read of faint regions), both logged in the trace. Each grade is
+          Seven logged modules — six pipeline stages plus a zero-LLM Config snapshot; the
+          Parser's opt-in Zoom pass (a magnified re-read of faint regions) logs under its own
+          module name when enabled. Each grade is
           grounded in the retrieved official solution, sampled for self-consistency, critiqued
           by a reflector, and escalated to a human when the agent can't grade fairly. Every
           call is logged in the <code>steps[]</code> trace on the Grade tab.
