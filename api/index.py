@@ -251,6 +251,12 @@ async def execute(request: Request):
                 else f"{name} ({kb} KB, {render.page_count} page{plural})")
 
         result = run_agent(images, instructions, source_label, exam)
+        # Same honesty note as the sample path: instructions are accepted but quarantined
+        # from every model prompt (prompt-injection defense) -- say so, on every path.
+        if instructions.strip() and isinstance(result.get("response"), str):
+            result["response"] += ("\n\nNote: free-text instructions are not forwarded to the "
+                                   "grading models (prompt-injection defense) — the booklet was "
+                                   "graded strictly against the official rubric.")
         return JSONResponse(_spec_shape(result, ui),
                             status_code=400 if result["status"] == "error" else 200)
 

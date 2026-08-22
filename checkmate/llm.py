@@ -78,7 +78,10 @@ def chat(system: str, user: str, images: list[ImageInput] | None = None,
     _C0 = r"[\x00-\x08\x0b\x0c\x0e-\x1f]"
     text = re.sub(_C0 + r"(?=sqrt|int|frac|sum|lim|pi\b)", "\\\\", text)
     text = re.sub(_C0 + r"(?=_)", r"\\int", text)   # \x17_0^1 -> \int_0^1
-    text = re.sub(_C0 + r"(?=\d)", "√", text)        # \x1a12  -> √12
+    # A control char before a bare digit is ambiguous (an eaten \sqrt, an eaten \int, or
+    # nothing at all) -- guessing √ here INVENTED radicals in real feedback ("√3 + 1/2"
+    # for a plain 3, "√4x" for an integral; audit round 9). Strip it instead: dropping an
+    # unknown symbol is honest, fabricating one is not.
     text = re.sub(_C0, "", text)
     return text, usage
 

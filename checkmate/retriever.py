@@ -70,6 +70,21 @@ def _entry_from_metadata(m: dict) -> Retrieved:
     )
 
 
+def _rehydrate(found: Retrieved, exam: str | None) -> Retrieved:
+    """Pinecone is the MATCHING index, not the source of truth. Its metadata is a snapshot
+    from ingest time -- edits to the bundled solutions/notes (e.g. a corrected grading
+    note) would otherwise keep serving stale text to the Grader until a re-index (audit
+    round 9: a retracted Q2b note survived in old vector metadata and steered live
+    grades). Re-load the matched entry from the bundled KB by id; keep the Pinecone copy
+    only if the id is somehow absent locally."""
+    local = _find_exact(_norm_id(found.entry.id), found.exam or exam)
+    if local:
+        local.exam = found.exam or local.exam
+        local.course = found.course or local.course
+        return local
+    return found
+
+
 def _find_semantic(text: str, exam: str | None, log: StepLog | None = None):
     """Pinecone semantic query over SOLUTION records only. Returns {"found","score"} or None.
     Never raises -- a Pinecone outage must not break grading."""
@@ -87,7 +102,7 @@ def _find_semantic(text: str, exam: str | None, log: StepLog | None = None):
         meta = (top.get("metadata") if isinstance(top, dict) else getattr(top, "metadata", None)) if top else None
         if not meta or (score or 0) < MIN_SCORE:
             return {"found": None, "score": score or 0}
-        return {"found": _entry_from_metadata(dict(meta)), "score": score or 0}
+        return {"found": _rehydrate(_entry_from_metadata(dict(meta)), exam), "score": score or 0}
     except Exception:
         return None  # treat as "Pinecone unavailable"
 
