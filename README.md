@@ -269,7 +269,9 @@ python -m uvicorn api.index:app --reload --port 8000   # http://localhost:8000
 
 Without keys the app still serves the full API contract via a deterministic mock, so every
 endpoint works with no secrets. Tech: **Python · FastAPI + Jinja on Vercel** · OpenAI-compatible
-LLMod.ai gateway · Pinecone · PyMuPDF (PDF render + ink detection).
+LLMod.ai gateway · Pinecone · PyMuPDF (PDF render + ink detection). Pinecone is the only
+datastore by design: the agent is stateless per request (each run's state lives in its own
+trace and result), so there is no relational data for a primary database (Supabase) to hold.
 
 ## 9. Known limitations
 
