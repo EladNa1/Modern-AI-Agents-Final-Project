@@ -68,7 +68,8 @@ guard primitive), `zoom.py` (Pass-2 re-read), `eval.py` (offline eval harness), 
 solutions + Pinecone client + exam registry).
 
 **Interface:** `POST /api/execute` (multipart `file`, optional `exam`) → `{ status, error,
-response, steps, meta }`. The JSON contract `{ "prompt": "…" }` is fully supported: a prompt
+response, steps }` (the GUI opts into an extra `meta` field with `?ui=1`). The JSON
+contract `{ "prompt": "…" }` is fully supported: a prompt
 naming a bundled sample booklet (e.g. `"Grade sample booklet 1"`) runs the REAL pipeline on
 its pre-cached vision transcription (`checkmate/samples.py` — only OCR is cached, everything
 downstream is live), and out-of-domain prompts get a polite zero-token refusal. Also
@@ -78,8 +79,9 @@ EXACTLY the mandated `{status, error, response, steps}` shape with one steps ent
 model call; the bundled GUI opts into extra rendering fields with `?ui=1`.
 
 **Three different numbers, three different meanings.** For a bundled sample booklet the UI
-can show: the **teacher's mark** (90 / 93 — defined once, in `checkmate/samples.py`, and
-quoted from there by the buttons, the result card and the replay), the agent's **confirmed
+can show: the **teacher's mark** (90 / 93 — defined once, in `checkmate/samples.py`, attached
+to every sample result as `meta.human_total` and quoted from there by the result card and the
+replay; the static button labels repeat the same numbers), the agent's **confirmed
 subtotal** (`gradebook.auto_subtotal` — what it will stand behind), and its **total including
 provisional points** (`meta.total` — confirmed plus the auto-scores on escalated questions,
 which the teacher still has to rule on). They are not competing claims about one quantity,
@@ -150,7 +152,7 @@ redeploy.
 |------|-------|---------|--------------|
 | `grader_samples` | **3** | N samples for open/proof questions | `CHECKMATE_GRADER_SAMPLES` |
 | `grader_samples_high` | **5** | N for high-point open questions (≥ threshold) | `CHECKMATE_GRADER_SAMPLES_HIGH` |
-| `grader_samples_tf_mc` | **3** | N for True/False + MC — median-of-3 (a single call proved unstable in eval) | `CHECKMATE_GRADER_SAMPLES_TFMC` |
+| `grader_samples_tf_mc` | **3** | vote size for RISKY T/F + MC items only (cancelled/overwritten marks, low parse confidence — a real majority-wrong vote happened here); a clean, confidently-read circled mark grades in ONE call | `CHECKMATE_GRADER_SAMPLES_TFMC` |
 | `high_point_threshold` | **15** | ≥ this ⇒ use `grader_samples_high` | — |
 | `disagreement_frac` | **0.25** | escalate when sample spread > max(floor, frac·max) | — |
 | `disagreement_floor` | **1.5** | floor (pts) for the disagreement threshold | — |
@@ -163,6 +165,8 @@ redeploy.
 | `reflection_high_threshold` | **15** | ≥ this ⇒ full `max_revise_passes` | — |
 | `reflect_tf_mc` | **False** | reflect on T/F + MC? (skipped) | — |
 | `max_reflection_tokens_per_q` | **2200** | cumulative reflector token budget/question → early exit + `reflection_incomplete` | — |
+| `reflector_disagreement_frac` | **0.12** | escalate when the loop ends with a RESIDUAL Grader/Reflector gap > max(floor, frac·max) — a dispute the loop resolved commits | — |
+| `reflector_disagreement_floor` | **1.5** | floor (pts) for that residual-disagreement band | — |
 
 ### Parser / vision — `checkmate/config.py`, `pdf.py`, `parser.py`, `zoom.py`, `ink.py`
 | Knob | Value | File | Meaning | Env override |
@@ -189,6 +193,8 @@ question always go in full (truncation of either is logged as a defect, not a tu
 | Knob | Value | Meaning |
 |------|-------|---------|
 | `MIN_SCORE` | **0.5** | min cosine similarity to trust a semantic solution match |
+| `SEMANTIC_CONFIRM_BAND` | **0.6** | semantic hits below this need printed-text corroboration to stand |
+| `CONFIRM_MIN_F1` | **0.2** | token-F1 with the printed problem text required to corroborate a borderline (or id-only) match — below it the fragment routes to the unmatched bucket |
 | `NOTES_MIN_SCORE` | **0.3** | min similarity for a course-notes chunk |
 | solution top-k / notes k | **1 / 3** | exact solution match; supporting-notes breadth |
 
