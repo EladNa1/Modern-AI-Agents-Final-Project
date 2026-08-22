@@ -316,7 +316,7 @@ async def execute(request: Request):
     # alive in keyless environments.)
     if prompt.strip() and HAS_LLM:
         return JSONResponse(_spec_shape({
-            "status": "ok", "error": None, "response": available_samples_text(),
+            "status": "ok", "error": None, "response": available_samples_text(prompt),
             "steps": [{
                 "module": "Router", "pattern": "Scope guard",
                 "prompt": {

@@ -26,7 +26,9 @@ _EXAM_NOUN_RE = re.compile(
     # grading context around it
     r"\b(?:calculus|math|scanned|graded|this)\s+test\b|\btest\s+booklet\b|"
     r"104041|104042|104195|"
-    r"מבחן|בוחן|מועד\s*[אב]|טופס|מחברת|סריקה",
+    # בחינה is THE everyday Hebrew word for an exam -- its absence refused legitimate
+    # Hebrew grading requests outright (audit round 15).
+    r"מבחן|בוחן|בחינה|בחינת|מועד\s*[אב]|טופס|מחברת|סריקה",
     re.IGNORECASE)
 
 # Grading VERBS (word-bounded in English). A bare verb is NOT enough -- "please CHECK why
@@ -94,12 +96,20 @@ def classify(prompt: str) -> str:
     math     = course-domain content without grading intent (solve/tutor request).
     offtopic = everything else -- including grading verbs about non-exam things
                ("check why my car is making a noise")."""
-    p = prompt or ""
+    # Normalize Hebrew gershayim/geresh (״ U+05F4, ׳ U+05F3) to ASCII quotes BEFORE any
+    # matching: "חדו״א" typed with the proper Hebrew punctuation failed the חדו\"?א pattern
+    # and got legitimate Hebrew requests refused (audit round 15).
+    p = (prompt or "").replace("״", '"').replace("׳", "'")
     has_math = bool(_MATH_RE.search(p))
     negated = bool(_NO_GRADING_RE.search(p))
     # A tutoring frame PLUS an explicit "do not grade" is unambiguously a lesson request --
     # refuse even if an exam is mentioned ("Teach me step by step... Do not grade an exam").
     if negated and _TUTOR_RE.search(p):
+        return "math_no_grading" if has_math else "offtopic"
+    # AUTHORING is not grading: "Write me a new Calculus 1 exam with an answer key" names
+    # an exam but asks us to SET one -- the description promises we never do that. A
+    # grading verb restores scope ("grade the exam I wrote for my students").
+    if _AUTHOR_RE.search(p) and not _GRADING_VERB_RE.search(p):
         return "math_no_grading" if has_math else "offtopic"
     # Tutor/solve intent outranks a BARE exam noun: "Teach me how to solve this Calculus
     # exam question" is a lesson request that happens to mention an exam. An explicit
@@ -145,7 +155,7 @@ _REFUSALS = {
         "The request does not mention grading, an exam, or Calculus 1 material."),
     "math_no_grading": (
         "I can't help with that — CheckMate GRADES Calculus 1 exams; it does not solve "
-        "exercises, tutor, or explain course material.\n\n"
+        "exercises, tutor, explain course material, or write new exams and questions.\n\n"
         "If you want a student's written work assessed: upload the scanned exam (multipart "
         "`file` on /api/execute) or name a bundled sample booklet, and I'll grade it against "
         "the official solutions with partial credit and feedback.\n\n"
@@ -169,13 +179,21 @@ _REFUSALS_HE = {
         "The request does not mention grading, an exam, or Calculus 1 material."),
     "math_no_grading": (
         "אני לא יכול לעזור בזה — CheckMate בודק מבחני חדו״א 1; הוא לא פותר תרגילים, לא "
-        "מלמד ולא מסביר חומר.\n\n"
+        "מלמד, לא מסביר חומר ולא מחבר מבחנים או שאלות חדשות.\n\n"
         "אם תרצו שעבודה כתובה של סטודנט תיבדק: העלו את הסריקה (multipart `file` על "
         "/api/execute) או ציינו מחברת מובנית בשם, ואבדוק אותה מול הפתרונות הרשמיים עם ניקוד "
         "חלקי ומשוב.\n\n"
         "הבקשה ביקשה עזרה במתמטיקה ולא בדיקה, ולכן לא הופעל מודל ולא נצרכו טוקנים.",
         "Math content without grading intent — a solve/tutor request, which is out of scope."),
 }
+
+# Authoring intent: a request to CREATE exam material rather than grade it.
+_AUTHOR_RE = re.compile(
+    r"\b(?:write|create|compose|generate|make|draft|design)\s+(?:me\s+|us\s+)?"
+    r"(?:a|an|the|some|new|\d+)\b[^.?!]{0,60}?\b(?:exams?|quiz(?:zes)?|questions?|tests?)\b|"
+    r"(?:צור|תיצור|חבר|תחבר|לחבר|כתוב|תכתוב|לכתוב|הכן|תכין|להכין)\b[^.?!]{0,40}?"
+    r"(?:מבחן|בוחן|בחינה|שאלות)",
+    re.IGNORECASE)
 
 _HEBREW_RE = re.compile(r"[֐-׿]")
 

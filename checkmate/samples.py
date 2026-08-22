@@ -84,8 +84,24 @@ def load_sample_parse(sample: dict):
                        exam_meta=d.get("exam_meta"))
 
 
-def available_samples_text() -> str:
-    """Helpful in-scope response when no sample was named and no file was attached."""
+def available_samples_text(prompt: str = "") -> str:
+    """Helpful in-scope response when no sample was named and no file was attached.
+    Language-matched like the refusal branches: a Hebrew request gets a Hebrew answer
+    (audit round 15 -- this branch answered Hebrew prompts in English)."""
+    import re as _re
+    if _re.search(r"[֐-׿]", prompt or ""):
+        return "\n".join([
+            "CheckMate בודק מחברות בחינה סרוקות של חדו״א 1 (104041) בטכניון. לא צורפה "
+            "סריקה ולא צוינה מחברת מובנית בשם — אין מה לבדוק.",
+            "",
+            "כדי לבדוק מחברת: העלו את סריקת הבחינה (multipart `file` על /api/execute או "
+            "תיבת ההעלאה בממשק), או ציינו בשם אחת מהמחברות המובנות:",
+            *[f'  - "{s["id"]}" — {s["label"]}' for s in SAMPLES],
+            "",
+            'דוגמה: {"prompt": "Grade sample booklet 1"}',
+            "",
+            "(אם התכוונתם למשהו אחר שאינו בדיקת בחינה בחדו״א 1 — זה מחוץ לתחום של CheckMate.)",
+        ])
     lines = [
         # Deliberately NON-committal about the request's domain: this branch is reachable by
         # any prompt containing an exam noun ("grade my sourdough bread baking exam"), and
