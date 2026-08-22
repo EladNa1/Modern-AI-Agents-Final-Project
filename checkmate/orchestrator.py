@@ -28,13 +28,16 @@ UNMATCHED = "Unmatched work"  # bucket for transcribed work that matches no KB q
 
 
 def run_agent(images: list[ImageInput], instructions: str = "", source_label: str = "",
-              exam: str | None = None, parsed=None) -> dict:
+              exam: str | None = None, parsed=None, started_at: float | None = None) -> dict:
     # Fallback: no key configured or nothing to look at -> deterministic mock.
     if not HAS_LLM or (not images and parsed is None):
         return run_mock_agent(source_label, instructions or "")
 
     instructions = (instructions or "").strip()
-    t0 = time.time()
+    # The wall clock starts when the REQUEST arrived (upload read + PDF render included),
+    # not when grading begins -- Vercel's 300s covers the whole request, so the guard must
+    # measure the same thing (audit round 10).
+    t0 = started_at or time.time()
     log = StepLog()
     # Log the active tuning config first, so every trace/eval number is attributable to it.
     # Resolved runtime identities included (secret-free) so the production configuration is
@@ -208,8 +211,10 @@ def run_agent(images: list[ImageInput], instructions: str = "", source_label: st
             # Grader accepted is the loop converging (the point of REVISE), not a dispute.
             last_proposal: float | None = None
             approved = False
+            revision_jump = 0.0   # size of the LAST revision the loop applied
             for _ in range(passes):
-                if refl_tokens >= CONFIG.max_reflection_tokens_per_q:
+                if (refl_tokens >= CONFIG.max_reflection_tokens_per_q
+                        or time.time() - t0 > CONFIG.max_run_seconds):
                     if "reflection_incomplete" not in grade.flags:
                         grade.flags.append("reflection_incomplete")
                     break
@@ -237,6 +242,7 @@ def run_agent(images: list[ImageInput], instructions: str = "", source_label: st
                 refl_tokens += log.usage["total"] - before_rev
                 if was_escalated and regrade.status != "escalate":
                     regrade = Grade(**{**regrade.__dict__, "status": "escalate"})
+                revision_jump = abs(regrade.score - grade.score)
                 grade = regrade
 
             # Escalation trigger #2 (audit f4b64c4). The spread test in the Grader
@@ -259,10 +265,25 @@ def run_agent(images: list[ImageInput], instructions: str = "", source_label: st
                                               "reflection loop finished checking this grade; "
                                               "sent to a human rather than committing an "
                                               "unfinished review. " + grade.feedback)})
-            contested = (abs(last_proposal - grade.score)
-                         if (last_proposal is not None and not approved) else 0.0)
             band = max(CONFIG.reflector_disagreement_floor,
                        CONFIG.reflector_disagreement_frac * grade.max)
+            # A LARGE revision that nobody re-checked must not commit either (audit round
+            # 10: a critique talked the Grader from a correct anchored 7/10 up to 10/10 and
+            # the loop ended right there). Small accepted revisions are the loop working;
+            # a jump beyond the disagreement band needs a follow-up APPROVE -- otherwise a
+            # human decides between the two positions.
+            if (revision_jump > band and not approved and grade.status != "escalate"):
+                flags = list(grade.flags)
+                if "unreviewed_large_revision" not in flags:
+                    flags.append("unreviewed_large_revision")
+                grade = Grade(**{**grade.__dict__, "status": "escalate", "flags": flags,
+                                 "feedback": (
+                                     f"A revision moved this grade by {revision_jump:g} "
+                                     f"point(s) (beyond the {band:g}-point band) and the loop "
+                                     "ended before re-checking it; sent to a human rather than "
+                                     "committing an unreviewed swing. " + grade.feedback)})
+            contested = (abs(last_proposal - grade.score)
+                         if (last_proposal is not None and not approved) else 0.0)
             if contested > band and grade.status != "escalate":
                 flags = list(grade.flags)
                 if "reflector_disagreement" not in flags:
@@ -458,6 +479,12 @@ def _assemble(questions: list[QuestionResult], source: str, instructions: str, l
          ) if escalated else "No questions required human review.",
         (f"⚠ Run stopped early at a ceiling (${CONFIG.max_run_cost_usd:.2f} budget / "
          f"{CONFIG.max_run_seconds}s wall-clock) — remaining questions were not graded.") if aborted else "",
+        (lambda missing: (
+            f"⚠ Booklet INCOMPLETE against the exam manifest: {len(missing)} question(s) "
+            f"were not found in the scan ({', '.join(missing[:10])}"
+            f"{'…' if len(missing) > 10 else ''}) — the total above covers only what was "
+            "scanned and is NOT a full-exam score.") if missing else "")(
+            gradebook.missing() if gradebook else []),
         f"Estimated cost: ${cost['total']:.4f}.",
     ]
 

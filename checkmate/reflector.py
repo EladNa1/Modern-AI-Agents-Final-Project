@@ -27,6 +27,12 @@ solution does not require are NOT grounds to propose a deduction — proposing o
 a dispute where none exists. REVISE downward only for a concrete mathematical error or a
 missing required step you can NAME AND QUOTE from the student's work.
 
+Anchor discipline: calibration anchors in the grading note are BINDING rubric for you too.
+When the proposed grade equals the anchored score for the error pattern actually on the page,
+APPROVE it — never REVISE a grade to contradict an anchor (in particular, never revise an
+anchored deduction up to full marks because the conclusion happens to survive the error).
+If you believe an anchor itself is wrong for this work, ESCALATE; do not override it.
+
 Output ONLY a JSON object, no prose, no code fences:
 {"action":"APPROVE|REVISE|ESCALATE","score":<number 0..max, or null>,"feedback":"<corrected student-facing feedback if REVISE, else empty>","note":"<one line: why>","confidence":<0..1>}
 Write "feedback" and "note" in ENGLISH, always (student's Hebrew may be quoted verbatim)."""

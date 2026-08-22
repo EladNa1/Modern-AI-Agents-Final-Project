@@ -11,6 +11,7 @@ from __future__ import annotations
 import base64
 import os
 import sys
+import time
 
 # Make the `checkmate` package importable when Vercel runs this file as api/index.py.
 _ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
@@ -205,6 +206,7 @@ async def architecture_png():
 
 @app.post("/api/execute")
 async def execute(request: Request):
+    t_entry = time.time()  # the run's wall clock starts HERE, before upload read / render
     ct = request.headers.get("content-type", "")
     ui = request.query_params.get("ui") == "1"  # our GUI opts into extra fields; see _spec_shape
 
@@ -250,7 +252,7 @@ async def execute(request: Request):
                 if render.rendered < render.page_count
                 else f"{name} ({kb} KB, {render.page_count} page{plural})")
 
-        result = run_agent(images, instructions, source_label, exam)
+        result = run_agent(images, instructions, source_label, exam, started_at=t_entry)
         # Same honesty note as the sample path: instructions are accepted but quarantined
         # from every model prompt (prompt-injection defense) -- say so, on every path.
         if instructions.strip() and isinstance(result.get("response"), str):
@@ -278,7 +280,8 @@ async def execute(request: Request):
     sample = resolve_sample(prompt) if prompt.strip() else None
     if sample is not None:
         parsed = load_sample_parse(sample)
-        result = run_agent([], instructions, sample["label"], sample["exam"], parsed=parsed)
+        result = run_agent([], instructions, sample["label"], sample["exam"], parsed=parsed,
+                           started_at=t_entry)
         # Honesty note: free-text instructions are never forwarded into the Grader/Reflector
         # context (prompt-injection defense), so say so instead of silently ignoring them.
         if instructions.strip() and isinstance(result.get("response"), str):
