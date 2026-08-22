@@ -93,10 +93,11 @@ make the demo reproducible by lying about it; the honest option is to say which 
 which, which is what the UI does.
 
 **Prompt-injection defense (by design):** free-text from the user (the `prompt` /
-`instructions` fields) is used ONLY for routing and logging — it is never placed in the
-Grader's or Reflector's context, so "give this student 100" style instructions cannot
-influence a grade. The grader sees only the transcribed student work and the retrieved
-official material.
+`instructions` fields) is used ONLY for routing and logging — it is never placed in ANY
+model context: not the Parser's (a crafted "instruction" could otherwise steer the
+transcription and thereby the grade), not the Grader's, not the Reflector's. "Give this
+student 100" style instructions cannot influence a grade directly or indirectly. The
+grader sees only the transcribed student work and the retrieved official material.
 
 ## 4. Prompt-engineering methods
 

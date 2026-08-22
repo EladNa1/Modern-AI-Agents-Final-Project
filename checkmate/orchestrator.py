@@ -40,12 +40,14 @@ def run_agent(images: list[ImageInput], instructions: str = "", source_label: st
     # Resolved runtime identities included (secret-free) so the production configuration is
     # verifiable from the trace alone: which models actually answered, which vector backend.
     from .env import HAS_PINECONE, LLMOD_EMBED_MODEL, LLMOD_GRADER_MODEL, LLMOD_MODEL, PINECONE_INDEX
+    from .kb.pinecone import PINECONE_TIMEOUT_SECONDS
     log.add("Config", "Active tuning config for this run (section 6).", "",
             {**CONFIG.to_log(),
              "resolved_models": {"chat": LLMOD_MODEL, "grader": LLMOD_GRADER_MODEL,
                                  "embedding": LLMOD_EMBED_MODEL, "embedding_dim": 1536},
              "vector_backend": (f"pinecone:{PINECONE_INDEX}" if HAS_PINECONE
-                                else "bundled-json (no vector db configured)")},
+                                else "bundled-json (no vector db configured)"),
+             "pinecone_timeout_seconds": PINECONE_TIMEOUT_SECONDS},
             "Config")
 
     try:

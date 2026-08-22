@@ -58,7 +58,8 @@
   <div class="subtitle">The agent grades first, then critiques its own grade against retrieved course evidence.</div>
   <div class="aux">input: scanned booklet (PDF / images) or a bundled sample scan · vision parsed once, cached per booklet<br>
        T/F + MC: one read when the transcribed mark is clean and confidently read, 3-sample vote when it is not · reflection skipped<br>
-       ceilings: $0.75 run · 240s run · 120s parse · 45s per call → stop early, provisional result</div>
+       ceilings: $0.75 run · 240s run · 120s parse · 45s per call → stop early, provisional result<br>
+       models: MB5R2CF-azure/gpt-5.4-mini · text-embedding-3-small · Pinecone — resolved IDs logged in Config</div>
 
   <!-- main row -->
   <div class="box det" style="left:64px; top:136px; height:72px; padding-top:10px;"><h2 style="font-size:18px;margin-bottom:2px;">Config</h2><p style="font-size:11px;line-height:1.35;">run-setup snapshot &middot; models &middot; ceilings &middot; 0 LLM</p></div>
@@ -84,7 +85,7 @@
   </div>
 
   <div class="refuse"><h3>Polite refusal</h3><p>out-of-domain request or non-exam scan — zero grader tokens</p></div>
-  <div class="human"><h3>Human TA review</h3><p>disagreeing samples · illegible work · missing solution — never a silent guess</p></div>
+  <div class="human"><h3>Human TA review</h3><p>disagreeing samples · illegible work · missing solution · unmatched writing — never a silent guess</p></div>
 
   <div class="note" style="left:1334px; top:398px; width:212px;">Approve → final result.<br>Still unsure after N passes → escalate.</div>
 
@@ -93,6 +94,7 @@
   <div class="lbl" style="left:470px; top:452px; color:#0f766e; border-color:#99d6cf;">RAG evidence</div>
   <div class="lbl" style="left:800px; top:604px; color:#0f766e; border-color:#99d6cf;">RAG evidence</div>
   <div class="lbl" style="left:1348px; top:552px; color:#b91c1c; border-color:#f3b4b4;">ESCALATE</div>
+  <div class="lbl" style="left:860px; top:678px; color:#b91c1c; border-color:#f3b4b4;">unmatched writing</div>
 
   <svg class="overlay" viewBox="0 0 1600 900">
     <defs>
@@ -133,6 +135,10 @@
     <path d="M 438 585 C 850 660, 1180 620, 1200 396" fill="none" stroke="#0f766e" stroke-width="2.8" marker-end="url(#green)"/>
     <!-- ESCALATE: Reflector down-right to human pill -->
     <path d="M 1245 388 C 1300 500, 1355 630, 1375 748" fill="none" stroke="#dc2626" stroke-width="3" marker-end="url(#red)"/>
+    <!-- Router routes UNMATCHED writing straight to the human (ESCALATE_UNMATCHED, no LLM):
+         drawn dashed + thinner as the secondary escalation edge -->
+    <path d="M 450 388 C 470 560, 540 680, 760 706 C 980 730, 1150 745, 1288 756" fill="none"
+          stroke="#dc2626" stroke-width="2" stroke-dasharray="7 6" marker-end="url(#red)"/>
   </svg>
 </body>
 </html>
