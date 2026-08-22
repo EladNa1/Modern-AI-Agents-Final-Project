@@ -133,6 +133,25 @@ for fname, has_truth, label in BOOKLETS:
             check(f"{fname}: {qid} within {TOLERANCE} of human", abs(q["score"] - human) <= TOLERANCE,
                   f"agent {q['score']} vs human {human}")
 
+# --- Retrieval negative control (audit round 11): content from ANOTHER exam, under this
+# exam's scope, with an id the KB does not hold, must produce NO match (-> the escalated
+# unmatched bucket), never a look-alike grounding. Offline: Pinecone is forced off so the
+# check exercises the content-overlap + exact-id fallbacks deterministically.
+sys.path.insert(0, ROOT)
+import checkmate.retriever as _retr  # noqa: E402
+from checkmate.llm import StepLog as _StepLog  # noqa: E402
+
+_had = _retr.HAS_PINECONE
+_retr.HAS_PINECONE = False
+try:
+    foreign = _retr.retrieve(
+        "Q9x", "Find the eigenvalues of the matrix A and prove the rank-nullity theorem "
+               "for the linear transformation T", _StepLog(), exam="2024w moed A")
+    check("negative control: foreign-exam content finds no match", foreign is None,
+          str(foreign and foreign.entry.id))
+finally:
+    _retr.HAS_PINECONE = _had
+
 print()
 print("REGRESSION:", "ALL GREEN" if not fails else f"{len(fails)} FAILED: {fails}")
 sys.exit(1 if fails else 0)

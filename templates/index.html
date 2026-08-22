@@ -140,8 +140,11 @@
           </table>
         </div>
         <p class="hint">
-          <b>Known limits, stated plainly:</b> the evaluation corpus is two booklets of one paper —
-          these numbers are a regression tripwire, not a population estimate
+          <b>Known limits, stated plainly:</b> the evaluation corpus is two booklets of one paper,
+          and the Grader's few-shot examples are calibrated on this same booklet's red-pen scores —
+          so these numbers measure consistency-with-calibration, not held-out generalization
+          (a third, unseen booklet is the roadmap). They are a regression tripwire, not a
+          population estimate
           (<span class="mono">python scripts/regression_check.py</span> re-checks the bundled
           captures against the human ground truth). The once-contested Q2b key was settled by an
           offline SymPy check (0 real solutions); a scan re-audit then confirmed the human's 7/10

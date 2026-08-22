@@ -45,9 +45,15 @@ _MATH_RE = re.compile(
 # "step by step" describe a lesson, not a grading job -- even when grading verbs appear.
 _TUTOR_RE = re.compile(
     r"\b(teach|explain|tutor|walk me through|show me how|step[- ]by[- ]step|how (?:do|to))\b|"
-    # imperative solve/answer requests ("Solve this exam question for me") are lesson
-    # requests too -- an object determiner keeps this from firing on descriptive uses
-    r"\b(?:solve|answer|compute|calculate)\s+(?:this|that|the|my|these|a|an)\b|"
+    # imperative solve/answer requests are lesson requests too. Determiners AND question
+    # nouns both count as objects ("solve THIS", "solve QUESTION 3", "answer Q3") -- the
+    # determiner-only version let "solve question 3 from the exam" through (audit round 11).
+    # Descriptive uses stay safe: "solved" has no word boundary, and a grading verb
+    # ("check how the student solved...") overrides tutor intent in classify().
+    r"\b(?:solve|answer|compute|calculate)\s+(?:this|that|the|my|these|a|an"
+    r"|questions?|problems?|exercises?|q\s*\d|ex\.?\s*\d)\b|"
+    # "write (out) the (official) solution" is a request to produce a solution, not grade one
+    r"\bwrite\s+(?:out\s+)?(?:the\s+|a\s+)?(?:official\s+|full\s+|complete\s+)?solutions?\b|"
     r"תלמד|למד אותי|תסביר|הסבר|צעד אחר צעד|פתור|תפתור|פתרי|לפתור",
     re.IGNORECASE)
 

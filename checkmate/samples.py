@@ -29,11 +29,13 @@ SAMPLES: list[dict] = [
         # (GUI button, result card, replay) quotes, so the teacher's grade can never appear
         # as two different figures depending on where you read it.
         "human_total": 90,
-        # `specific` names THIS booklet unambiguously; `aliases` are generic exam terms that
-        # only apply when no booklet is named explicitly (resolution is specific-first, so
-        # "sample booklet 2 from 104041" can never fall back to booklet 1 via "104041").
+        # A paid grading run starts ONLY from an explicit booklet name (or an uploaded
+        # file). Generic exam terms ("104041", "moed a") used to alias to this booklet and
+        # silently started a real run the caller never asked for -- e.g. a solve request
+        # that mentioned the course number (audit round 11). Those now fall through to the
+        # zero-cost NEED_INPUT explainer, which lists the samples by name.
         "specific": r"sample\s*(?:booklet\s*)?(?:#\s*)?1\b|booklet\s*1\b|first\s+(?:sample|booklet)|scored\s*90|\b90/100",
-        "aliases": r"2024\s*w(?:inter)?|winter\s*2024|moed\s*a|104041|מועד\s*א",
+        "aliases": r"(?!x)x",  # no generic aliases -- reachable only by name
         # Rendered page previews bundled under static/ so the GUI can SHOW what was graded.
         "pages": 18,
         "pages_prefix": "/static/samples/sample1",
