@@ -89,6 +89,12 @@ def classify(prompt: str) -> str:
     # refuse even if an exam is mentioned ("Teach me step by step... Do not grade an exam").
     if negated and _TUTOR_RE.search(p):
         return "math_no_grading" if has_math else "offtopic"
+    # Tutor/solve intent outranks a BARE exam noun: "Teach me how to solve this Calculus
+    # exam question" is a lesson request that happens to mention an exam. An explicit
+    # grading VERB restores scope -- "walk me through grading sample booklet 1" and
+    # "how do you grade booklet 1" are still grading jobs.
+    if _TUTOR_RE.search(p) and not _GRADING_VERB_RE.search(p):
+        return "math_no_grading" if (has_math or _EXAM_NOUN_RE.search(p)) else "offtopic"
     # An exam artifact makes it our domain regardless of phrasing -- "general feedback on
     # my exam, no grading" is the legitimate feedback-only mode, not a refusal case. But the
     # negated clause's own object must not establish scope, so it is stripped first.

@@ -167,7 +167,10 @@ def retrieve(question_id: str, question_text: str, log: StepLog, exam: str | Non
     # item numbering), not from the parser's guess -- for these, the exact-id match IS the
     # ground truth and outranks semantic search (whose near-identical short statements
     # otherwise cross-match siblings: one statement absorbs another's fragment).
-    if re.fullmatch(r"(tf|mc)\d+", want):
+    # ONLY when the exam is identified: an id alone ("TF-1", "Q2") exists on every exam, so
+    # an unscoped id lookup would grab whichever exam happens to sit first in the KB.
+    # Without exam scope we fail CLOSED -- semantic/content only, else unmatched -> human.
+    if exam and re.fullmatch(r"(tf|mc)\d+", want):
         found = _find_exact(want, exam)
         if found:
             method = "exact-id"
@@ -210,7 +213,7 @@ def retrieve(question_id: str, question_text: str, log: StepLog, exam: str | Non
     # NOT after a corroboration demotion: content checks just rejected this fragment, so the
     # parser's id guess alone must not resurrect the match -- no-match routes it to the
     # human-reviewed unmatched bucket instead of grading it against a look-alike question.
-    if not found and not demoted:
+    if not found and not demoted and exam:
         hit = _find_exact(want, exam)
         # When semantic search RAN and actively scored this fragment below the trust floor,
         # an open-question id rescue must be corroborated by the printed text -- content has

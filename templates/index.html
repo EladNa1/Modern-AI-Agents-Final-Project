@@ -89,9 +89,11 @@
         <p class="kicker">How it works</p>
         <h2>A Reflection Agent — grade, then self-critique</h2>
         <p class="hint">
-          Six stages. Each grade is grounded in the retrieved official solution, sampled for
-          self-consistency, critiqued by a reflector, and escalated to a human when the agent
-          can't grade fairly. Every call is logged in the <code>steps[]</code> trace on the Grade tab.
+          Six stages — plus a zero-LLM Config snapshot step and the Parser's opt-in Zoom pass
+          (a magnified re-read of faint regions), both logged in the trace. Each grade is
+          grounded in the retrieved official solution, sampled for self-consistency, critiqued
+          by a reflector, and escalated to a human when the agent can't grade fairly. Every
+          call is logged in the <code>steps[]</code> trace on the Grade tab.
         </p>
         <figure class="archfig"><img src="/static/architecture.png" alt="CheckMate agent architecture — Parser, Router, Retriever, Grader, Reflector, GradeBook" /></figure>
         <div class="pipeline">
@@ -398,7 +400,19 @@
           }
           annots.appendChild(a);
         }
-        review.appendChild(annots); card.appendChild(review); wrap.appendChild(card);
+        review.appendChild(annots); card.appendChild(review);
+        // The card above renders meta; the spec contract's actual `response` string is a
+        // first-class output too — show it verbatim so nothing the API returned is hidden.
+        if (typeof data.response === "string" && data.response) {
+          const d = document.createElement("details"); d.className = "step";
+          const sum = document.createElement("summary");
+          sum.appendChild(el("span", "stepmod", "Verbatim response — the spec `response` field, exactly as the API returned it"));
+          sum.appendChild(el("span", "chev", "▸")); d.appendChild(sum);
+          const pre = el("pre", null, data.response);
+          pre.style.cssText = "white-space:pre-wrap;font-size:.78rem;line-height:1.5;margin:.6rem 0 0;max-height:40vh;overflow-y:auto;";
+          d.appendChild(pre); card.appendChild(d);
+        }
+        wrap.appendChild(card);
       }
 
       // Execution trace
