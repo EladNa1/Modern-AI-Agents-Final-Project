@@ -150,7 +150,12 @@
           offline SymPy check (0 real solutions); a scan re-audit then confirmed the human's 7/10
           there is a legitimate sign-slip deduction, so the question is measured like any other.
           The grader's known weak spot is calibration on proof questions; the roadmap is few-shot
-          calibration data ingested from more graded booklets, not more prompt rules.
+          calibration data ingested from more graded booklets, not more prompt rules. And because
+          a healthy run gives the Reflector nothing to fix (its APPROVEs prove agreement, not
+          rubber-stamping), <span class="mono">scripts/demo_reflection_teeth.py</span> seeds
+          deliberately wrong grades and records the live Reflector rejecting both — a 10/10 on
+          anchored-error work is revised to the anchored 7/10
+          (<span class="mono">eval/examples/05_reflection_teeth.json</span>).
         </p>
       </div>
     </section>

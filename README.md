@@ -254,6 +254,13 @@ key and the human agree.)
 rate *and severity*** (points removed from flawless work), escalation **precision/recall**, and
 **estimated cost by stage** — under the `max_run_cost_usd` ceiling.
 
+**The Reflector's teeth, demonstrated:** a healthy run gives the reviewer nothing to fix, so
+traces full of APPROVE prove agreement, not rubber-stamping. `python
+scripts/demo_reflection_teeth.py` seeds deliberately WRONG grades and records the live
+Reflector rejecting both (`eval/examples/05_reflection_teeth.json`): a 10/10 seeded onto
+work with the anchored sign-slip error is REVISEd to the anchored 7/10, and a 3/10 seeded
+onto a complete correct proof is rejected and revised upward.
+
 **Budget rules (hard):** vision is the scarce call. Each booklet is parsed **once** and its
 transcription cached to `eval/ocr_cache/` (keyed by a parser-source hash); re-runs where only
 the grader/reflector/config changed reuse the cache for free. Cost is instrumented per stage
