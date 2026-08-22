@@ -1,7 +1,7 @@
 {
   "title": "Out-of-domain request — polite refusal, zero tokens",
   "request": {
-    "prompt": "How do I make sourdough bread?"
+    "prompt": "How do I bake sourdough bread?"
   },
   "elapsed_seconds": 0.0,
   "response": {
@@ -13,7 +13,7 @@
         "module": "Router",
         "prompt": {
           "System_prompt": "Decide whether the incoming request is a Calculus 1 exam-grading task. If it is not (off-domain, or a solve/tutor request), refuse politely and stop -- do not invoke the Parser, Retriever, Grader, or Reflector, and do not spend model tokens on an out-of-domain request.",
-          "User_prompt": "How do I make sourdough bread?"
+          "User_prompt": "How do I bake sourdough bread?"
         },
         "response": {
           "in_scope": false,
